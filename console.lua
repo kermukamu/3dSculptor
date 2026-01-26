@@ -27,52 +27,47 @@ function Console.new(x, y, w, h, host)
 
 	self.args = {}
 	self.commands = {
-		["listCommands"] = function() self:comListCommands() end,
-		["help"] = function() self:comHelp() end,
-		["load"] = function() self:comLoadModel() end,
-		["save"] = function() self:comSaveModel() end,
-		["addVertex"] = function() self:comAddVertex() end,
-		["removeVertex"] = function() self:comRemoveVertex() end,
-		["connect"] = function() self:comConnect() end,
-		["disconnect"] = function() self:comDisconnect() end,
-		["vertexNumbering"] = function() self:comVertexNumbering() end,
-		["vertexCoords"] = function() self:comVertexCoords() end,
-		["spinXZ"] = function() self:comSpinXZ() end,
-		["spinYZ"] = function() self:comSpinYZ() end,
-		["setDistance"] = function() self:comSetDistance() end,
-		["clear"] = function() self:comClear() end,
-		["drawCircle"] = function() self:comDrawCircle() end
+		["listCommands"] = {function() self:comListCommands() end, "Lists all commands, use 'listCommands'"},
+		["listModelerControls"] = {function() self:comListModelerControls() end, "Lists all modeler controls, use 'listModelerControls'"},
+		["help"] = {function() self:comHelp() end, "Gets information about a command, use 'help [command/control]'"},
+		["load"] = {function() self:comLoadModel() end, "Loads a model, use 'load [filename]'"},
+		["save"] = {function() self:comSaveModel() end, "Saves a model, use 'save [filename]'"},
+		["addVertex"] = {function() self:comAddVertex() end, "Adds a vertex, use 'addVertex [x] [y] [z]'"},
+		["removeVertex"] = {function() self:comRemoveVertex() end, "Removes a vertex, use 'removeVertex [vertex]'"},
+		["connect"] = {function() self:comConnect() end, "Connects two vertices, use 'connect [vertex1] [vertex2]"},
+		["disconnect"] = {function() self:comDisconnect() end, "Disconnects two vertices, use 'disconnect [vertex1] [vertex2]"},
+		["vertexNumbering"] = {function() self:comVertexNumbering() end, "Toggles vertexNumbering, use 'vertexNumbering [true/false]'"},
+		["vertexCoords"] = {function() self:comVertexCoords() end, "Toggles vertexCoords, use 'vertexNumbering [true/false]'"},
+		["spinXZ"] = {function() self:comSpinXZ() end, "Sets XZ spinning speed, use 'spinXZ [speed]'"},
+		["spinYZ"] = {function() self:comSpinYZ() end, "Sets YZ spinning speed, use 'spinYZ [speed]'"},
+		["setDistance"] = {function() self:comSetDistance() end, "Sets view distance to model, use 'scale [scale]'"},
+		["clear"] = {function() self:comClear() end, "Clears the model, use 'clear'"},
+		["drawCircle"] = {function() self:comDrawCircle() end, "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"}
 	}
 	self.response = ""
 	return self
 end
 
 function Console:comListCommands()
-	self.response = "listCommands, help, load, save, addVertex, connect, vertexNumbering, " .. 
-		"vertexCoords, spinXZ, spinYZ, setDistance, clear, drawCircle"
+	self.response = ""
+	for k, _ in pairs(self.commands) do
+		self.response = self.response .. k .. ", "
+	end
+end
+
+function Console:comListModelerControls() 
+	self.response = ""
+	for k, _ in pairs(self.host.modeler.keyActions) do
+		self.response = self.response .. k .. ", "
+	end
 end
 
 function Console:comHelp()
-	local helpDictionary = {
-		["listCommands"] = "Lists all commands, use 'listCommands'",
-		["help"] = "Gets information about a command, use 'help [command]'",
-		["load"] = "Loads a model, use 'load [filename]'",
-		["save"] = "Saves a model, use 'save [filename]'",
-		["addVertex"] = "Adds a vertex, use 'addVertex [x] [y] [z]'",
-		['removeVertex'] = "Removes a vertex, use 'removeVertex [vertex]'",
-		["connect"] = "Connects two vertices, use 'connect [vertex1] [vertex2]",
-		["disconnect"] = "Disconnects two vertices, use 'disconnect [vertex1] [vertex2]",
-		["vertexNumbering"] = "Toggles vertexNumbering, use 'vertexNumbering [true/false]'",
-		["vertexCoords"] = "Toggles vertexCoords, use 'vertexNumbering [true/false]'",
-		["spinXZ"] = "Sets XZ spinning speed, use 'spinXZ [speed]'",
-		["spinYZ"] = "Sets YZ spinning speed, use 'spinYZ [speed]'",
-		["setDistance"] = "Sets view distance to model, use 'scale [scale]'",
-		["clear"] = "Clears the model, use 'clear'",
-		["drawCircle"] = "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"
-	}
-	local fromDict = helpDictionary[self.args[1]]
-	if fromDict ~= nil then
-		self.response = fromDict
+	local arg = self.args[1]
+	if self.commands[arg] ~= nil then
+		self.response = self.commands[arg][2]
+	else
+		self.response = "No command given, use 'help [command]'"
 	end
 end
 
@@ -288,7 +283,7 @@ function Console:runLine(line)
 	end
 	local command = self.commands[table.remove(self.args, 1)]
 	if command then
-		command()
+		command[1]()
 	else
 		self.response = "Unknown command" 
 	end
