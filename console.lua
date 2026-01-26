@@ -256,6 +256,9 @@ function Console:textInput(t)
 	self.text = self.text .. t
 end
 
+function Console:mousePressed(mx, my, button)
+end
+
 function Console:keyPressed(key)
 	if key == "return" then
 		self:runLine(self.text)
