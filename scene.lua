@@ -33,6 +33,8 @@ function Scene.new(title, screenWidth, screenHeight)
 	local modelerY = yOffset
 
 	self.modeler = Modeler.new(modelerX, modelerY, modelerW, modelerH, self)
+
+	self.activeSection = self.modeler
 	return self
 end
 
@@ -48,6 +50,7 @@ end
 
 function Scene:keyPressed(key)
 	self.console:keyPressed(key)
+	self.modeler:keyPressed(key)
 end
 
 function Scene:textInput(t)
@@ -55,6 +58,17 @@ function Scene:textInput(t)
 end
 
 function Scene:mousePressed(mx, my, button)
+	if self:isWithinSection(mx, my, self.modeler.x, self.modeler.y,
+		self.modeler.w, self.modeler.h) then
+		self.activeSection = self.modeler
+	end
+
+	self.activeSection:mousePressed(mx, my, button)
+end
+
+function Scene:isWithinSection(x, y, secX, secY, secW, secH)
+	return (secX < x and x < (secX + secW)) and
+			(secY < y and y < (secY + secH))
 end
 
 return {Scene = Scene}
