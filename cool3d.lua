@@ -9,6 +9,8 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
 	self.points = {} -- AKA vertices
 	self.lines = {}
 	self.lineWidth = 1 or 1
+    self.dx = 0
+    self.dy = 0
 	self.dz = modelDistance
 	self.angleXZ = 0
     self.angleYZ = 0
@@ -21,7 +23,6 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.y2d = y2d or 0
     self.axisX = 250
     self.axisY = 250
-
 	return self
 end
 
@@ -82,25 +83,8 @@ function Cool3d:project(xyz)
     return {x / z, y / z}
 end
 
-function Cool3d:translate_x(xyz, dx)
-    local x = xyz[1]
-    local y = xyz[2]
-    local z = xyz[3]
-    return {x + dx, y, z}
-end
-
-function Cool3d:translate_y(xyz, dy)
-    local x = xyz[1]
-    local y = xyz[2]
-    local z = xyz[3]
-    return {x, y + dy, z}
-end
-
-function Cool3d:translate_z(xyz, dz)
-	local x = xyz[1]
-	local y = xyz[2]
-	local z = xyz[3]
-	return {x, y, z + dz}
+function Cool3d:translate_xyz(xyz, dxyz)
+    return {xyz[1] + dxyz[1], xyz[2] + dxyz[2], xyz[3] + dxyz[3]}
 end
 
 function Cool3d:rotate_xz(xyz, angle)
@@ -147,7 +131,7 @@ function Cool3d:drawModel()
         -- Rotations and translations
         local p = self:rotate_xz(self.points[i], self.angleXZ)
         p = self:rotate_yz(p, self.angleYZ)
-        p = self:translate_z(p, self.dz)
+        p = self:translate_xyz(p, {self.dx, self.dy, self.dz})
 
         local z = p[3]
         zvals[i] = z
@@ -216,7 +200,7 @@ function Cool3d:drawAxis()
         -- Rotations and translations
         local p = self:rotate_xz(points[i], self.angleXZ)
         p = self:rotate_yz(p, self.angleYZ)
-        p = self:translate_z(p, self.dz)
+        p = self:translate_xyz(p, {self.dx, self.dy, self.dz})
 
         local z = p[3]
         zvals[i] = z
@@ -302,19 +286,55 @@ function Cool3d:disconnect(v1, v2)
     end
 end
 
-function Cool3d:deepcopy(orig) -- Implementation from lua-users.org/wiki/CopyTable
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[deepcopy(orig_key)] = deepcopy(orig_value)
-        end
-        setmetatable(copy, deepcopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
+function Cool3d:drawCircle(centerX, centerY, centerZ, radius, plane, segments, connectLines)
+    local seg = segments or 16
+    if seg < 3 then return "Atleast 3 segments required" end
+    local connect = connectLines or true
+    local angleDT = 2*math.pi/segments
+
+    -- First set circle points in an auxiliary coordinate system
+    local aux = {}
+    for i=0, segments-1, 1 do
+        local a = math.cos(angleDT * i)*radius
+        local b = math.sin(angleDT * i)*radius
+        table.insert(aux, {a, b})
     end
-    return copy
+
+    -- Move auxiliary points to xyz at correct position according to given plane
+    if plane == "xy" or plane == "yx" then
+        for _, p in ipairs(aux) do
+            local point = {p[1], p[2], 0}
+            point = self:translate_xyz(point, {centerX, centerY, centerZ})
+            self:addVertex(self:r2Dec(point[1]), self:r2Dec(point[2]), self:r2Dec(point[3]))
+        end
+    elseif plane == "xz" or plane == "zx" then
+        for _, p in ipairs(aux) do
+            local point = {p[1], 0, p[2]}
+            point = self:translate_xyz(point, {centerX, centerY, centerZ})
+            self:addVertex(self:r2Dec(point[1]), self:r2Dec(point[2]), self:r2Dec(point[3]))
+        end
+    elseif plane == "yz" or plane == "zy" then
+        for _, p in ipairs(aux) do
+            local point = {0, p[1], p[2]}
+            point = self:translate_xyz(point, {centerX, centerY, centerZ})
+            self:addVertex(self:r2Dec(point[1]), self:r2Dec(point[2]), self:r2Dec(point[3]))
+        end
+    else return "Plane parameter is incorrect" end
+
+    if connect then
+        local linTot = #self.lines
+        for i = linTot-seg + 1, linTot-1, 1 do
+            table.insert(self.lines[i], i+1)
+        end
+        -- Close the circle
+        table.insert(self.lines[linTot-seg+1], linTot)
+    end
+
+    return "Circle drawn"
+end
+
+function Cool3d:r2Dec(value)
+    return math.floor(100*value) / 100
 end
 
 return { Cool3d = Cool3d}

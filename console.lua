@@ -40,7 +40,8 @@ function Console.new(x, y, w, h, host)
 		["spinXZ"] = function() self:comSpinXZ() end,
 		["spinYZ"] = function() self:comSpinYZ() end,
 		["setDistance"] = function() self:comSetDistance() end,
-		["clear"] = function() self:comClear() end
+		["clear"] = function() self:comClear() end,
+		["drawCircle"] = function() self:comDrawCircle() end
 	}
 	self.response = ""
 	return self
@@ -48,7 +49,7 @@ end
 
 function Console:comListCommands()
 	self.response = "listCommands, help, load, save, addVertex, connect, vertexNumbering, " .. 
-		"vertexCoords, spinXZ, spinYZ, setDistance, clear"
+		"vertexCoords, spinXZ, spinYZ, setDistance, clear, drawCircle"
 end
 
 function Console:comHelp()
@@ -66,7 +67,8 @@ function Console:comHelp()
 		["spinXZ"] = "Sets XZ spinning speed, use 'spinXZ [speed]'",
 		["spinYZ"] = "Sets YZ spinning speed, use 'spinYZ [speed]'",
 		["setDistance"] = "Sets view distance to model, use 'scale [scale]'",
-		["clear"] = "Clears the model, use 'clear'"
+		["clear"] = "Clears the model, use 'clear'",
+		["drawCircle"] = "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"
 	}
 	local fromDict = helpDictionary[self.args[1]]
 	if fromDict ~= nil then
@@ -172,6 +174,16 @@ function Console:comSetDistance()
 		self.host.modeler.currentModel.dz = arg
 		self.response = "Set viewing distance to " .. tostring(arg)
 	end
+end
+
+function Console:comDrawCircle()
+	local centerX, centerY, centerZ, radius, plane, segments, con = 
+		tonumber(self.args[1]), tonumber(self.args[2]), tonumber(self.args[3]),
+		tonumber(self.args[4]), self.args[5], tonumber(self.args[6]), self:toBoolean(self.args[7])
+	if not (con == nil) then
+		self.response = self.host.modeler.currentModel:drawCircle(centerX, centerY, centerZ,
+			radius, plane, segments, con)
+	else self.response = "connectLines must be a boolean value" end
 end
 
 function Console:comClear()
