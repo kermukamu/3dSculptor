@@ -49,20 +49,22 @@ function Scene:draw()
 end
 
 function Scene:keyPressed(key)
-	self.console:keyPressed(key)
-	self.modeler:keyPressed(key)
+	self.activeSection:keyPressed(key)
 end
 
 function Scene:textInput(t)
-	self.console:textInput(t)
+	self.activeSection:textInput(t)
 end
 
 function Scene:mousePressed(mx, my, button)
 	if self:isWithinSection(mx, my, self.modeler.x, self.modeler.y,
 		self.modeler.w, self.modeler.h) then
 		self.activeSection = self.modeler
+	elseif 
+		self:isWithinSection(mx, my, self.console.x, self.console.y,
+		self.console.w, self.console.h) then
+		self.activeSection = self.console
 	end
-
 	self.activeSection:mousePressed(mx, my, button)
 end
 
