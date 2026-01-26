@@ -61,7 +61,8 @@ function Modeler:saveFile(filename)
 end
 
 function Modeler:keyPressed(key)
-	if key == "delete" then self.currentModel:deleteSelected() end
+	local action = self.keyActions[key]
+	if action then action() end
 end
 
 function Modeler:textInput(t)
