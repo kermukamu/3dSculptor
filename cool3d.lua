@@ -55,7 +55,7 @@ function Cool3d:saveFile(filename)
     for i = 1, #self.points, 1 do
         local p = self.points[i]
         fileText = fileText .. tostring(p[1]) .. " ".. tostring(p[2]) .. " ".. tostring(p[3])
-        for j = 1, #self.lines[i] do
+        for j = 1, #self.lines[i], 1 do
             fileText = fileText .. " " .. tostring(self.lines[i][j])
         end
         fileText = fileText .. "\n"
@@ -259,8 +259,62 @@ function Cool3d:addVertex(x, y, z)
     table.insert(self.lines, {})
 end
 
+function Cool3d:removeVertex(number)
+    -- Remove all connections to the point in line connections before removing the point
+    table.remove(self.lines, number) -- Vertex to others
+    local lTableIndices = {}
+    for i = 1, #self.lines, 1 do
+        local l = self.lines[i]
+        for j = 1, #l, 1 do
+            if l[j] == number then 
+                table.insert(lTableIndices, {i, j})
+            elseif l[j] > number then
+                l[j] = l[j] - 1 -- Shift connections down due to element removal
+            end
+        end
+    end
+    for _, lTI in ipairs(lTableIndices) do
+        table.remove(self.lines[lTI[1]], lTI[2]) -- Others to vertex
+    end
+
+    -- Remove the vertex itself
+    table.remove(self.points, number)
+end
+
 function Cool3d:connect(v1, v2)
     table.insert(self.lines[v1], v2)
+end
+
+function Cool3d:disconnect(v1, v2)
+    local lTableIndices = {}
+    for i = 1, #self.lines[v1], 1 do
+        if self.lines[v1][i] == v2 then
+            table.insert(lTableIndices, {v1, i})
+        end
+    end
+    for i = 1, #self.lines[v2], 1 do
+        if self.lines[v2][i] == v1 then
+            table.insert(lTableIndices, {v2, i})
+        end
+    end
+    for _, lTI in ipairs(lTableIndices) do
+        table.remove(self.lines[lTI[1]], lTI[2])
+    end
+end
+
+function Cool3d:deepcopy(orig) -- Implementation from lua-users.org/wiki/CopyTable
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
 end
 
 return { Cool3d = Cool3d}

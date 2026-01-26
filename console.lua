@@ -32,7 +32,9 @@ function Console.new(x, y, w, h, host)
 		["load"] = function() self:comLoadModel() end,
 		["save"] = function() self:comSaveModel() end,
 		["addVertex"] = function() self:comAddVertex() end,
+		["removeVertex"] = function() self:comRemoveVertex() end,
 		["connect"] = function() self:comConnect() end,
+		["disconnect"] = function() self:comDisconnect() end,
 		["vertexNumbering"] = function() self:comVertexNumbering() end,
 		["vertexCoords"] = function() self:comVertexCoords() end,
 		["spinXZ"] = function() self:comSpinXZ() end,
@@ -56,7 +58,9 @@ function Console:comHelp()
 		["load"] = "Loads a model, use 'load [filename]'",
 		["save"] = "Saves a model, use 'save [filename]'",
 		["addVertex"] = "Adds a vertex, use 'addVertex [x] [y] [z]'",
+		['removeVertex'] = "Removes a vertex, use 'removeVertex [vertex]'",
 		["connect"] = "Connects two vertices, use 'connect [vertex1] [vertex2]",
+		["disconnect"] = "Disconnects two vertices, use 'disconnect [vertex1] [vertex2]",
 		["vertexNumbering"] = "Toggles vertexNumbering, use 'vertexNumbering [true/false]'",
 		["vertexCoords"] = "Toggles vertexCoords, use 'vertexNumbering [true/false]'",
 		["spinXZ"] = "Sets XZ spinning speed, use 'spinXZ [speed]'",
@@ -89,6 +93,17 @@ function Console:comAddVertex()
 	end
 end
 
+function Console:comRemoveVertex()
+	local number = tonumber(self.args[1])
+
+	if type(number) ~= "number" then
+		self.response = "Argument must be a number"
+	else
+		self.host.modeler.currentModel:removeVertex(number)
+		self.response = "Removed vertex at "
+	end
+end
+
 function Console:comConnect()
 	local v1, v2 = tonumber(self.args[1]), tonumber(self.args[2])
 	if type(v1) ~= "number" or (type(v2) ~= "number") then
@@ -96,6 +111,16 @@ function Console:comConnect()
 	else
 		self.host.modeler.currentModel:connect(v1, v2)
 		self.response = "Connected " .. tostring(v1) .. " to " .. tostring(v2)
+	end
+end
+
+function Console:comDisconnect()
+	local v1, v2 = tonumber(self.args[1]), tonumber(self.args[2])
+	if type(v1) ~= "number" or (type(v2) ~= "number") then
+		self.response = "Arguments must be numbers"
+	else
+		self.host.modeler.currentModel:disconnect(v1, v2)
+		self.response = "Disconnected " .. tostring(v1) .. " from " .. tostring(v2)
 	end
 end
 
