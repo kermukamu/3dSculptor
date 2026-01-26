@@ -7,3 +7,5 @@ The framework is mostly used for creating a window, getting keyboard and mouse i
 2: In the project folder, open terminal and run the command love .
 
 3: Done!
+
+The project includes an example model, which can be opened by running 'load 3d/diamond.txt' in the integrated terminal.
