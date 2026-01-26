@@ -7,17 +7,21 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.host = host
 
 	self.points = {} -- AKA vertices
-	self.lines = {}
+	self.lines = {} -- between assigned vertices
 	self.lineWidth = 1 or 1
     self.dx = 0
     self.dy = 0
 	self.dz = modelDistance
 	self.angleXZ = 0
     self.angleYZ = 0
-    self.rotSpeedXZ = 1
+    self.rotSpeedXZ = 0.2
     self.rotSpeedYZ = 0
     self.timer = 0
     self.zSpeed = 0.2
+
+    self.screen = {}
+    self.zvals  = {}
+    self.selectedVertices = {}
 
     self.x2d = x2d or 0
     self.y2d = y2d or 0
@@ -124,8 +128,11 @@ function Cool3d:drawModel()
     local w, h = love.graphics.getDimensions()
     local cx, cy = self.x2d, self.y2d
 
-    local screen = {}
-    local zvals  = {}
+    -- Screen and zvals will be reset every time the model is drawn. 
+    -- The table will have the transformed, rotated and projected vertices (2D)
+    -- The z values of transformed vertices are also stored in self as they are needed elsewhere
+    self.screen = {}
+    self.zvals  = {}
 
     for i = 1, #self.points do
         -- Rotations and translations
@@ -134,21 +141,22 @@ function Cool3d:drawModel()
         p = self:translate_xyz(p, {self.dx, self.dy, self.dz})
 
         local z = p[3]
-        zvals[i] = z
+        self.zvals[i] = z
 
         local proj = {0, 0}
         if z and z > 0.001 then
             local proj = self:project(p)
-            screen[i] = { cx + proj[1] * 250, cy + proj[2] * 250}
+            self.screen[i] = { cx + proj[1] * 250, cy + proj[2] * 250}
         else
-            screen[i] = nil
+            self.screen[i] = nil
         end
 
         -- Text next to vertices
         if self.host.vertexNumbering and z and z > 0.001 then
             local scaling = 1/(p[3] * self.dz)
             love.graphics.setColor(1,1,0,1)
-            love.graphics.print(tostring(i), screen[i][1], screen[i][2], 0, scaling, scaling)
+            if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if vertex is selected
+            love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, scaling, scaling)
             love.graphics.setColor(1,1,1,1)
         end
 
@@ -158,7 +166,8 @@ function Cool3d:drawModel()
                 tostring(self.points[i][2]) .. " " .. tostring(self.points[i][3])
             local yOffset = love.graphics.getFont():getHeight() * (scaling)
             love.graphics.setColor(1,0.5,0,1)
-            love.graphics.print(text, screen[i][1], screen[i][2] + yOffset, 0, scaling, scaling)
+            if self.selectedVertices[i] then love.graphics.setColor(0,0.5,0,1) end -- Darker green if vertex is selected
+            love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, scaling, scaling)
             love.graphics.setColor(1,1,1,1)
         end
     end
@@ -167,12 +176,12 @@ function Cool3d:drawModel()
     local drawn = {}
 
     for i = 1, #self.lines do
-        local a = screen[i]
+        local a = self.screen[i]
         local links = self.lines[i]
 
         if a and links then
             for _, k in ipairs(links) do
-                local b = screen[k]
+                local b = self.screen[k]
                 if b then
                     local key1 = i .. "-" .. k
                     local key2 = k .. "-" .. i
@@ -190,7 +199,7 @@ function Cool3d:drawAxis()
     love.graphics.setLineWidth(self.lineWidth)
 
     local w, h = love.graphics.getDimensions()
-    local screen = {}
+    local screen = {} -- Unlike in drawModel(), locals are used
     local zvals  = {}
 
     local points = {{0, 0, 0}, {0.25, 0, 0}, {0, 0.25, 0}, {0, 0, 0.25}}
@@ -335,6 +344,52 @@ end
 
 function Cool3d:r2Dec(value)
     return math.floor(100*value) / 100
+end
+
+function Cool3d:mousePressed(mx, my, button)
+    if not love.keyboard.isDown("lshift") then self:deSelect() end
+    if button == 1 then -- left click
+        self:selectVerticesWithin(mx, my)
+    end
+end
+
+function Cool3d:deSelect()
+    self.selectedVertices = {}
+end
+
+function Cool3d:selectVerticesWithin(x, y)
+    for i=1, #self.screen, 1 do
+        if self.screen[i] == nil then 
+            -- Silly lua doesn't support continue...
+        elseif self:isWithinCircle(x, y, self.screen[i][1], self.screen[i][2], 15/self.zvals[i]) then
+            self.selectedVertices[i] = true
+        end
+    end
+end
+
+function Cool3d:isWithinCircle(px, py, cx, cy, r)
+    local dx = px - cx
+    local dy = py - cy
+    return (dx * dx + dy * dy) <= (r * r)
+end
+
+function Cool3d:deleteSelected()
+    for i=1, #self.points, 1 do
+        if self.selectedVertices[i] then self:removeVertex(i) end
+    end
+    self:deSelect()
+end
+
+function Cool3d:joinToFirstSelected()
+    local firstVert = nil
+    local otherV = {}
+    for k, v in pairs(self.selectedVertices) do
+        if v == true and (firstVert == nil) then
+            firstVert = k
+        elseif v == true then
+            self:connect(firstVert, k)
+        end
+    end
 end
 
 return { Cool3d = Cool3d}
