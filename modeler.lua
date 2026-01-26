@@ -27,7 +27,13 @@ function Modeler.new(x, y, w, h, host)
 	self.currentModel = Cool3d.new(modelX2D, modelY2D, distance, self)
 	self.currentModel.axisX = 100
 	self.currentModel.axisY = self.h - 100
+
+	-- Other
 	self.timer = 0
+	self.keyActions = {
+		["delete"] = function() self.currentModel:deleteSelected() end,
+		["e"] = function() self.currentModel:joinToFirstSelected() end
+	}
 	return self
 end
 
@@ -55,12 +61,14 @@ function Modeler:saveFile(filename)
 end
 
 function Modeler:keyPressed(key)
+	if key == "delete" then self.currentModel:deleteSelected() end
 end
 
 function Modeler:textInput(t)
 end
 
 function Modeler:mousePressed(mx, my, button)
+	self.currentModel:mousePressed(mx, my, button)
 end
 
 return {Modeler = Modeler}
