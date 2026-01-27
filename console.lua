@@ -43,6 +43,7 @@ function Console.new(x, y, w, h, host)
 		["orientation"] = {function() self:comOrientation() end, "Sets orientation, use 'orientation [phi(deg)] [theta (deg)]'"},
 		["setDistance"] = {function() self:comSetDistance() end, "Sets view distance to model, use 'scale [scale]'"},
 		["clear"] = {function() self:comClear() end, "Clears the model, use 'clear'"},
+		["multiplyModel"] = {function() self:comMultiplyModel() end, "Multiplies actual model size, use 'multiplyModel [multiplier]'"},
 		["drawCircle"] = {function() self:comDrawCircle() end, "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"}
 	}
 	self.response = ""
@@ -68,7 +69,7 @@ end
 
 function Console:comHelp()
 	local arg = self.args[1]
-	
+
 	-- It is assumed both dictionaries do not share same keys
 	if self.commands[arg] ~= nil then
 		self.response = "Is a command. " .. self.commands[arg][2]
@@ -215,6 +216,19 @@ function Console:comDrawCircle()
 		self.response = self.host.modeler.currentModel:drawCircle(centerX, centerY, centerZ,
 			radius, plane, segments, con)
 	else self.response = "connectLines must be a boolean value" end
+end
+
+function Console:comMultiplyModel()
+	local arg = tonumber(self.args[1])
+	if type(arg) ~= "number" then
+		self.response = "Argument must be a number"
+	else
+		local currentModel = self.host:getCurrentModel()
+		if currentModel ~= nil then
+			currentModel:multiplyModelSize(arg)
+			self.response = "Multiplied actual model by " .. tostring(arg)
+		end
+	end
 end
 
 function Console:comClear()
