@@ -243,7 +243,7 @@ function Console:printCommandLine()
 	local limit = self.w / self.textScale - self.lineWidth
 	local align = "left"
 	local orientation = 0
-	if math.mod(math.floor(self.timer*2), 2) == 0 then
+	if self.host.activeSection == self and math.mod(math.floor(self.timer*2), 2) == 0 then
 		love.graphics.printf(self.text .. "_", textFieldX, textFieldY, limit, align,
 			orientation, self.textScale, self.textScale)
 	else
