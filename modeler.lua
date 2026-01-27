@@ -69,8 +69,8 @@ function Modeler:getKeyActions()
 	return self.keyActions
 end
 
-function Modeler:drawAxisIsOn()
-	return self.host:drawAxisIsOn()
+function Modeler:drawAxisMarkerIsOn()
+	return self.host:drawAxisMarkerIsOn()
 end
 
 function Modeler:vertexNumberingIsOn()

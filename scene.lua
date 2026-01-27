@@ -21,7 +21,7 @@ function Scene.new(title, screenWidth, screenHeight)
     -- Flags
 	self.vertexNumbering = true
 	self.vertexCoords = true
-	self.drawAxis = true
+	self.drawAxisMarker = true
 
 	-- Position console to bottom third
 	local consoleW = screenWidth
@@ -88,8 +88,8 @@ function Scene:vertexCoordsIsOn()
 	return self.vertexCoords
 end
 
-function Scene:drawAxisIsOn()
-	return self.drawAxis
+function Scene:drawAxisMarkerIsOn()
+	return self.drawAxisMarker
 end
 
 function Scene:getCurrentModel()

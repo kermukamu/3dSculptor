@@ -124,7 +124,7 @@ end
 
 function Cool3d:draw()
     self:drawModel()
-    if self.host:drawAxisIsOn() then self:drawAxis() end
+    if self.host:drawAxisMarkerIsOn() then self:drawAxisMarker() end
 end
 
 function Cool3d:drawModel()
@@ -199,7 +199,7 @@ function Cool3d:drawModel()
     end
 end
 
-function Cool3d:drawAxis()
+function Cool3d:drawAxisMarker()
     love.graphics.setLineWidth(self.lineWidth)
 
     local w, h = love.graphics.getDimensions()
