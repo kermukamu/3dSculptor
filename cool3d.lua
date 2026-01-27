@@ -13,16 +13,19 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.dy = 0
 	self.dz = modelDistance
     self.rotSpeedPhi = 0
-    self.rotSpeedTheta = 1
+    self.rotSpeedTheta = 0.1
     self.rotAnglePhi = 0
-    self.rotAngleTheta = 15
+    self.rotAngleTheta = 0
     self.timer = 0
     self.zSpeed = 0.2
 
-    self.modelScaling = 250
+    self.zCompression = 1000
+    self.textScale = 1
+    self.axisMarkerScale = 3
     self.screen = {}
     self.zvals  = {}
     self.selectedVertices = {}
+    self.clickRange = 5
 
     self.x2d = x2d or 0
     self.y2d = y2d or 0
@@ -148,28 +151,27 @@ function Cool3d:drawModel()
         local proj = {0, 0}
         if z and z > 0.001 then
             local proj = self:project(p)
-            self.screen[i] = { cx + proj[1]*self.modelScaling, cy + proj[2]*self.modelScaling}
+            self.screen[i] = { cx + proj[1]*self.zCompression, cy + proj[2]*self.zCompression}
         else
             self.screen[i] = nil
         end
 
         -- Text next to vertices
+        local tScaling = self.zCompression*self.textScale/p[3]
         if self.host:vertexNumberingIsOn() and z and z > 0.001 then
-            local scaling = 1/(p[3] * self.dz)
             love.graphics.setColor(1,1,0,1)
             if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if vertex is selected
-            love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, scaling, scaling)
+            love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, tScaling, tScaling)
             love.graphics.setColor(1,1,1,1)
         end
 
         if self.host:vertexCoordsIsOn() and z and z > 0.001 then
-            local scaling = 1/(p[3] * self.dz)
             local text = tostring(self.points[i][1]) .. " " ..
                 tostring(self.points[i][2]) .. " " .. tostring(self.points[i][3])
-            local yOffset = love.graphics.getFont():getHeight() * (scaling)
+            local yOffset = love.graphics.getFont():getHeight() * (tScaling)
             love.graphics.setColor(1,0.5,0,1)
             if self.selectedVertices[i] then love.graphics.setColor(0,0.5,0,1) end -- Darker green if vertex is selected
-            love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, scaling, scaling)
+            love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, tScaling, tScaling)
             love.graphics.setColor(1,1,1,1)
         end
     end
@@ -203,8 +205,8 @@ function Cool3d:drawAxis()
     local w, h = love.graphics.getDimensions()
     local screen = {} -- Unlike in drawModel(), locals are used
     local zvals  = {}
-
-    local points = {{0, 0, 0}, {0.25, 0, 0}, {0, 0.25, 0}, {0, 0, 0.25}}
+    local size = self.axisMarkerScale*self.dz/100
+    local points = {{0, 0, 0}, {size, 0, 0}, {0, size, 0}, {0, 0, size}}
     local lines = {{2, 3, 4}}
 
     for i = 1, #points do
@@ -218,7 +220,7 @@ function Cool3d:drawAxis()
         local proj = {0, 0}
         if z and z > 0.001 then
             local proj = self:project(p)
-            screen[i] = {self.axisX + proj[1]*self.modelScaling, self.axisY + proj[2]*self.modelScaling}
+            screen[i] = {self.axisX + proj[1]*self.zCompression, self.axisY + proj[2]*self.zCompression}
         else
             screen[i] = nil
         end
@@ -362,7 +364,8 @@ function Cool3d:selectVerticesWithin(x, y)
     for i=1, #self.screen, 1 do
         if self.screen[i] == nil then 
             -- Silly lua doesn't support continue...
-        elseif self:isWithinCircle(x, y, self.screen[i][1], self.screen[i][2], 15/self.zvals[i]) then
+        elseif self:isWithinCircle(x, y, self.screen[i][1], self.screen[i][2], 
+            self.zCompression*self.clickRange/(self.zvals[i])) then
             self.selectedVertices[i] = true
         end
     end
@@ -390,6 +393,14 @@ function Cool3d:joinToFirstSelected()
         elseif v == true then
             self:connect(firstVert, k)
         end
+    end
+end
+
+function Cool3d:multiplyModelSize(multiplier)
+    for _, p in ipairs(self.points) do
+        p[1] = p[1] * multiplier
+        p[2] = p[2] * multiplier
+        p[3] = p[3] * multiplier
     end
 end
 
