@@ -18,6 +18,11 @@ function Scene.new(title, screenWidth, screenHeight)
 
     local yOffset = 10
 
+    -- Flags
+	self.vertexNumbering = true
+	self.vertexCoords = true
+	self.drawAxis = true
+
 	-- Position console to bottom third
 	local consoleW = screenWidth
 	local consoleH = screenHeight * (1 / 3)
@@ -71,6 +76,48 @@ end
 function Scene:isWithinSection(x, y, secX, secY, secW, secH)
 	return (secX < x and x < (secX + secW)) and
 			(secY < y and y < (secY + secH))
+end
+
+-- Getters and setters
+
+function Scene:vertexNumberingIsOn()
+	return self.vertexNumbering
+end
+
+function Scene:vertexCoordsIsOn()
+	return self.vertexCoords
+end
+
+function Scene:drawAxisIsOn()
+	return self.drawAxis
+end
+
+function Scene:getCurrentModel()
+	if self.modeler ~= nil then
+		return self.modeler:getCurrentModel()
+	else 
+		return nil 
+	end
+end
+
+function Scene:getModelerKeyActions()
+	if self.modeler ~= nil then
+		return self.modeler:getKeyActions()
+	else 
+		return nil 
+	end
+end
+
+function Scene:setVertexNumbering(value)
+	self.vertexNumbering = value
+end
+
+function Scene:setVertexCoords(value)
+	self.vertexCoords = value
+end
+
+function Scene:setDrawAxis(value)
+	self.drawAxis = value
 end
 
 return {Scene = Scene}

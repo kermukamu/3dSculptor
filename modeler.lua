@@ -15,11 +15,6 @@ function Modeler.new(x, y, w, h, host)
 	self.w = w - 2 * self.lineWidth
 	self.h = h - 2 * self.lineWidth
 
-	-- Flags
-	self.vertexNumbering = true
-	self.vertexCoords = true
-	self.drawAxis = true
-
 	-- Setup 3D model
 	local modelX2D = (self.x + self.w) / 2 -- X of projection, in other words, x if z = 0 
 	local modelY2D = (self.y + self.h) / 2 -- Same for Y
@@ -52,14 +47,6 @@ function Modeler:draw()
 	self.currentModel:draw()
 end
 
-function Modeler:readFile(filename)
-	return self.currentModel:readFile(filename)
-end
-
-function Modeler:saveFile(filename)
-	return self.currentModel:saveFile(filename)
-end
-
 function Modeler:keyPressed(key)
 	local action = self.keyActions[key]
 	if action then action() end
@@ -70,6 +57,28 @@ end
 
 function Modeler:mousePressed(mx, my, button)
 	self.currentModel:mousePressed(mx, my, button)
+end
+
+-- Getters and setters
+
+function Modeler:getCurrentModel()
+	return self.currentModel
+end
+
+function Modeler:getKeyActions()
+	return self.keyActions
+end
+
+function Modeler:drawAxisIsOn()
+	return self.host:drawAxisIsOn()
+end
+
+function Modeler:vertexNumberingIsOn()
+	return self.host:vertexNumberingIsOn()
+end
+
+function Modeler:vertexCoordsIsOn()
+	return self.host:vertexCoordsIsOn()
 end
 
 return {Modeler = Modeler}
