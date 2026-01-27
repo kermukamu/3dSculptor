@@ -12,13 +12,14 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.dx = 0
     self.dy = 0
 	self.dz = modelDistance
-	self.angleXZ = 0
-    self.angleYZ = 0
-    self.rotSpeedXZ = 0.2
-    self.rotSpeedYZ = 0
+    self.rotSpeedPhi = 0
+    self.rotSpeedTheta = 1
+    self.rotAnglePhi = 0
+    self.rotAngleTheta = 15
     self.timer = 0
     self.zSpeed = 0.2
 
+    self.modelScaling = 250
     self.screen = {}
     self.zvals  = {}
     self.selectedVertices = {}
@@ -91,34 +92,36 @@ function Cool3d:translate_xyz(xyz, dxyz)
     return {xyz[1] + dxyz[1], xyz[2] + dxyz[2], xyz[3] + dxyz[3]}
 end
 
-function Cool3d:rotate_xz(xyz, angle)
-	local x = xyz[1]
-	local y = xyz[2]
-	local z = xyz[3]
-    local c = math.cos(angle);
-    local s = math.sin(angle);
-    return {x*c - z*s, y, x*s + z*c}
-end
+function Cool3d:rotate(xyz, deltaPhi, deltaTheta)
+    local cosPhi = math.cos(deltaPhi)
+    local sinPhi = math.sin(deltaPhi)
+    local cosTheta = math.cos(deltaTheta)
+    local sinTheta = math.sin(deltaTheta)
+    local x, y, z = xyz[1], xyz[2], xyz[3]
 
-function Cool3d:rotate_yz(xyz, angle)
-    local x = xyz[1]
-    local y = xyz[2]
-    local z = xyz[3]
-    local c = math.cos(angle);
-    local s = math.sin(angle);
-    return {x, y*c - z*s, y*s + z*c}
+    -- Rotate on phi
+    local x1 = cosPhi * x - sinPhi * y
+    local y1 = sinPhi * x + cosPhi * y
+    local z1 = z
+
+    -- Rotate on theta
+    local x2 =  cosTheta * x1 + sinTheta * z1
+    local y2 =  y1
+    local z2 = -sinTheta * x1 + cosTheta * z1
+
+	return {x2, y2, z2}
 end
 
 function Cool3d:update(dt)
     self.timer = self.timer + 1 * dt
     --self.dz = math.sin(self.zSpeed * self.timer) + 3
-    self.angleXZ = (self.angleXZ + math.pi * self.rotSpeedXZ * dt)
-    self.angleYZ = (self.angleYZ + math.pi * self.rotSpeedYZ * dt)
+    self.rotAnglePhi = (self.rotAnglePhi + math.pi * self.rotSpeedPhi * dt)
+    self.rotAngleTheta = (self.rotAngleTheta + math.pi * self.rotSpeedTheta * dt)
 end
 
 function Cool3d:draw()
     self:drawModel()
-    if self.host.drawAxis then self:drawAxis() end
+    if self.host:drawAxisIsOn() then self:drawAxis() end
 end
 
 function Cool3d:drawModel()
@@ -136,8 +139,7 @@ function Cool3d:drawModel()
 
     for i = 1, #self.points do
         -- Rotations and translations
-        local p = self:rotate_xz(self.points[i], self.angleXZ)
-        p = self:rotate_yz(p, self.angleYZ)
+        local p = self:rotate(self.points[i], self.rotAnglePhi, self.rotAngleTheta)
         p = self:translate_xyz(p, {self.dx, self.dy, self.dz})
 
         local z = p[3]
@@ -146,13 +148,13 @@ function Cool3d:drawModel()
         local proj = {0, 0}
         if z and z > 0.001 then
             local proj = self:project(p)
-            self.screen[i] = { cx + proj[1] * 250, cy + proj[2] * 250}
+            self.screen[i] = { cx + proj[1]*self.modelScaling, cy + proj[2]*self.modelScaling}
         else
             self.screen[i] = nil
         end
 
         -- Text next to vertices
-        if self.host.vertexNumbering and z and z > 0.001 then
+        if self.host:vertexNumberingIsOn() and z and z > 0.001 then
             local scaling = 1/(p[3] * self.dz)
             love.graphics.setColor(1,1,0,1)
             if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if vertex is selected
@@ -160,7 +162,7 @@ function Cool3d:drawModel()
             love.graphics.setColor(1,1,1,1)
         end
 
-        if self.host.vertexCoords and z and z > 0.001 then
+        if self.host:vertexCoordsIsOn() and z and z > 0.001 then
             local scaling = 1/(p[3] * self.dz)
             local text = tostring(self.points[i][1]) .. " " ..
                 tostring(self.points[i][2]) .. " " .. tostring(self.points[i][3])
@@ -207,8 +209,7 @@ function Cool3d:drawAxis()
 
     for i = 1, #points do
         -- Rotations and translations
-        local p = self:rotate_xz(points[i], self.angleXZ)
-        p = self:rotate_yz(p, self.angleYZ)
+        local p = self:rotate(points[i], self.rotAnglePhi, self.rotAngleTheta)
         p = self:translate_xyz(p, {self.dx, self.dy, self.dz})
 
         local z = p[3]
@@ -217,7 +218,7 @@ function Cool3d:drawAxis()
         local proj = {0, 0}
         if z and z > 0.001 then
             local proj = self:project(p)
-            screen[i] = {self.axisX + proj[1] * 250, self.axisY + proj[2] * 250}
+            screen[i] = {self.axisX + proj[1]*self.modelScaling, self.axisY + proj[2]*self.modelScaling}
         else
             screen[i] = nil
         end
@@ -390,6 +391,18 @@ function Cool3d:joinToFirstSelected()
             self:connect(firstVert, k)
         end
     end
+end
+
+function Cool3d:setOrientation(argPhi, argTheta)
+    local deg2rad = math.pi / 180
+    self.rotAnglePhi = argPhi * deg2rad
+    self.rotAngleTheta = argTheta * deg2rad
+end
+
+function Cool3d:setRotation(argPhi, argTheta)
+    local deg2rad = math.pi / 180
+    self.rotSpeedPhi = argPhi * deg2rad
+    self.rotSpeedTheta = argTheta * deg2rad
 end
 
 return { Cool3d = Cool3d}
