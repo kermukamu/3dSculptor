@@ -10,6 +10,6 @@ The framework is mostly used for creating a window, getting keyboard and mouse i
 
 3: Done!
 
-The project includes an example model, which can be opened by running 'load 3d/diamond.txt' in the integrated terminal.
+The project includes an example model, which can be opened by running 'load 3d/gem.txt' in the integrated terminal.
 
 <img width="800" height="1030" alt="image" src="https://github.com/user-attachments/assets/f5ee63d4-6e12-483d-80fb-d9474fb8aa0d" />
