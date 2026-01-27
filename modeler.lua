@@ -39,12 +39,14 @@ function Modeler:update(dt)
 end
 
 function Modeler:draw()
+	self.currentModel:draw()
+
+	-- Frame
 	local originalLW = love.graphics.getLineWidth()
+	love.graphics.setColor(1,1,1,1) -- White
 	love.graphics.setLineWidth(self.lineWidth)
 	love.graphics.rectangle("line", self.x, self.y, self.w, self.h)
 	love.graphics.setLineWidth(originalLW)
-
-	self.currentModel:draw()
 end
 
 function Modeler:keyPressed(key)
