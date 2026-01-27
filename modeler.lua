@@ -26,8 +26,8 @@ function Modeler.new(x, y, w, h, host)
 	-- Other
 	self.timer = 0
 	self.keyActions = {
-		["delete"] = function() self.currentModel:deleteSelected() end,
-		["e"] = function() self.currentModel:joinToFirstSelected() end
+		["delete"] = {function() self.currentModel:deleteSelected() end, "Deletes current selection"},
+		["e"] = {function() self.currentModel:joinToFirstSelected() end, "Joins selected vertices to first selected vertex"}
 	}
 	return self
 end
@@ -49,7 +49,7 @@ end
 
 function Modeler:keyPressed(key)
 	local action = self.keyActions[key]
-	if action then action() end
+	if action then action[1]() end
 end
 
 function Modeler:textInput(t)
