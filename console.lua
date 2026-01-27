@@ -38,8 +38,8 @@ function Console.new(x, y, w, h, host)
 		["disconnect"] = {function() self:comDisconnect() end, "Disconnects two vertices, use 'disconnect [vertex1] [vertex2]"},
 		["vertexNumbering"] = {function() self:comVertexNumbering() end, "Toggles vertexNumbering, use 'vertexNumbering [true/false]'"},
 		["vertexCoords"] = {function() self:comVertexCoords() end, "Toggles vertexCoords, use 'vertexNumbering [true/false]'"},
-		["spinXZ"] = {function() self:comSpinXZ() end, "Sets XZ spinning speed, use 'spinXZ [speed]'"},
-		["spinYZ"] = {function() self:comSpinYZ() end, "Sets YZ spinning speed, use 'spinYZ [speed]'"},
+		["spin"] = {function() self:comSpin() end, "Sets spinning speed, use 'spin [phi(deg/s)] [theta (deg/s)]'"},
+		["orientation"] = {function() self:comOrientation() end, "Sets orientation, use 'orientation [phi(deg)] [theta (deg)]'"},
 		["setDistance"] = {function() self:comSetDistance() end, "Sets view distance to model, use 'scale [scale]'"},
 		["clear"] = {function() self:comClear() end, "Clears the model, use 'clear'"},
 		["drawCircle"] = {function() self:comDrawCircle() end, "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"}
@@ -55,10 +55,13 @@ function Console:comListCommands()
 	end
 end
 
-function Console:comListModelerControls() 
+function Console:comListModelerControls()
 	self.response = ""
-	for k, _ in pairs(self.host.modeler.keyActions) do
-		self.response = self.response .. k .. ", "
+	local keyActions = self.host:getModelerKeyActions()
+	if keyActions ~= nil then
+		for k, _ in pairs(self.host:getModelerKeyActions()) do
+			self.response = self.response .. k .. ", "
+		end
 	end
 end
 
@@ -72,11 +75,17 @@ function Console:comHelp()
 end
 
 function Console:comLoadModel()
-	self.response = self.host.modeler:readFile(self.args[1])
+	local currentModel = self.host:getCurrentModel()
+	if currentModel ~= nil then
+		self.response = currentModel:readFile(self.args[1])
+	end
 end
 
 function Console:comSaveModel()
-	self.response = self.host.modeler:saveFile(self.args[1])
+	local currentModel = self.host:getCurrentModel()
+	if currentModel ~= nil then
+		self.response = currentModel:saveFile(self.args[1])
+	end
 end
 
 function Console:comAddVertex()
@@ -85,8 +94,11 @@ function Console:comAddVertex()
 	if type(x) ~= "number" or (type(y) ~= "number") or (type(z) ~= "number") then
 		self.response = "Arguments must be numbers"
 	else
-		self.host.modeler.currentModel:addVertex(x,y,z)
-		self.response = "Added vertex to " .. tostring(x) .. ", " .. tostring(y) .. ", " .. tostring(z)
+		local currentModel = self.host:getCurrentModel()
+		if currentModel ~= nil then
+			currentModel:addVertex(x,y,z)
+			self.response = "Added vertex to " .. tostring(x) .. ", " .. tostring(y) .. ", " .. tostring(z)
+		end
 	end
 end
 
@@ -96,8 +108,11 @@ function Console:comRemoveVertex()
 	if type(number) ~= "number" then
 		self.response = "Argument must be a number"
 	else
-		self.host.modeler.currentModel:removeVertex(number)
-		self.response = "Removed vertex at "
+		local currentModel = self.host:getCurrentModel()
+		if currentModel ~= nil then
+			currentModel:removeVertex(number)
+			self.response = "Removed vertex at "
+		end
 	end
 end
 
@@ -106,8 +121,11 @@ function Console:comConnect()
 	if type(v1) ~= "number" or (type(v2) ~= "number") then
 		self.response = "Arguments must be numbers"
 	else
-		self.host.modeler.currentModel:connect(v1, v2)
-		self.response = "Connected " .. tostring(v1) .. " to " .. tostring(v2)
+		local currentModel = self.host:getCurrentModel()
+		if currentModel ~= nil then
+			currentModel:connect(v1, v2)
+			self.response = "Connected " .. tostring(v1) .. " to " .. tostring(v2)
+		end
 	end
 end
 
@@ -116,15 +134,18 @@ function Console:comDisconnect()
 	if type(v1) ~= "number" or (type(v2) ~= "number") then
 		self.response = "Arguments must be numbers"
 	else
-		self.host.modeler.currentModel:disconnect(v1, v2)
-		self.response = "Disconnected " .. tostring(v1) .. " from " .. tostring(v2)
+		local currentModel = self.host:getCurrentModel()
+		if currentModel ~= nil then
+			currentModel:disconnect(v1, v2)
+			self.response = "Disconnected " .. tostring(v1) .. " from " .. tostring(v2)
+		end
 	end
 end
 
 function Console:comVertexNumbering()
 	local arg = self:toBoolean(self.args[1])
 	if not (arg==nil) then
-		self.host.modeler.vertexNumbering = arg
+		self.host:setVertexNumbering(arg)
 		self.response = "Set vertex numbering to " .. tostring(arg)
 	else 
 		self.response = "Argument must be 'false' or 'true'"
@@ -134,30 +155,40 @@ end
 function Console:comVertexCoords()
 	local arg = self:toBoolean(self.args[1])
 	if not (arg==nil) then
-		self.host.modeler.vertexCoords = arg
+		self.host:setVertexCoords(arg)
 		self.response = "Set vertex coordinates to " .. tostring(arg)
 	else 
 		self.response = "Argument must be 'false' or 'true'"
 	end
 end
 
-function Console:comSpinXZ()
-	local arg = tonumber(self.args[1])
-	if type(arg) ~= "number" then 
-		self.response = "Argument must be a number"
+function Console:comSpin()
+	local argPhi = tonumber(self.args[1])
+	local argTheta = tonumber(self.args[2])
+	if type(argPhi) ~= "number" or type(argTheta) ~= "number" then
+		self.response = "Arguments must be numbers"
 	else
-		self.host.modeler.currentModel.rotSpeedXZ = arg
-		self.response = "Set XZ spinning speed to " .. tostring(arg)
+		local currentModel = self.host:getCurrentModel()
+		if currentModel ~= nil then
+			currentModel:setRotation(argPhi, argTheta)
+			self.response = "Set spinning speed at phi to " .. tostring(argPhi) .. 
+			" and at theta to " .. tostring(argTheta)
+		end
 	end
 end
 
-function Console:comSpinYZ()
-	local arg = tonumber(self.args[1])
-	if type(arg) ~= "number" then 
-		self.response = "Argument must be a number"
+function Console:comOrientation()
+	local argPhi = tonumber(self.args[1])
+	local argTheta = tonumber(self.args[2])
+	if type(argPhi) ~= "number" or type(argTheta) ~= "number" then
+		self.response = "Arguments must be numbers"
 	else
-		self.host.modeler.currentModel.rotSpeedYZ = arg
-		self.response = "Set YZ spinning speed to " .. tostring(arg)
+		local currentModel = self.host:getCurrentModel()
+		if currentModel ~= nil then
+			currentModel:setOrientation(argPhi, argTheta)
+			self.response = "Setting orientation at phi to " .. tostring(argPhi) .. 
+			" and at theta to " .. tostring(argTheta)
+		end
 	end
 end
 
