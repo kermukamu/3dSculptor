@@ -17,7 +17,8 @@ function Console.new(x, y, w, h, host)
 	self.permLog = ""
 	self.tempLog = {"Welcome to 3DSculptor.\n" ..
 		"Run 'listCommands' to see all commmands\n" ..
-		"Run 'help [command]' to get help with a command"}
+		"Run 'listKeys' to see all keys\n" ..
+		"Run 'help [command/key]' to get help with a command or key action"}
 	self.logIndex = 1
 	self.text = ""
 	self.textScale = 2
@@ -28,7 +29,7 @@ function Console.new(x, y, w, h, host)
 	self.args = {}
 	self.commands = {
 		["listCommands"] = {function() self:comListCommands() end, "Lists all commands, use 'listCommands'"},
-		["listModelerControls"] = {function() self:comListModelerControls() end, "Lists all modeler controls, use 'listModelerControls'"},
+		["listKeys"] = {function() self:comListModelerControls() end, "Lists all keys, use 'listKeys'"},
 		["help"] = {function() self:comHelp() end, "Gets information about a command, use 'help [command/control]'"},
 		["load"] = {function() self:comLoadModel() end, "Loads a model, use 'load [filename]'"},
 		["save"] = {function() self:comSaveModel() end, "Saves a model, use 'save [filename]'"},
@@ -67,8 +68,12 @@ end
 
 function Console:comHelp()
 	local arg = self.args[1]
+	
+	-- It is assumed both dictionaries do not share same keys
 	if self.commands[arg] ~= nil then
-		self.response = self.commands[arg][2]
+		self.response = "Is a command. " .. self.commands[arg][2]
+	elseif self.host:getModelerKeyActions()[arg] ~= nil then
+		self.response = "Is a keyboard action. " .. self.host:getModelerKeyActions()[arg][2]
 	else
 		self.response = "No command given, use 'help [command]'"
 	end
