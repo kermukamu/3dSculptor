@@ -338,7 +338,7 @@ function Console:runLine(line)
 	if command then
 		command[1]()
 	else
-		self.response = "Unknown command" 
+		self.response = "Unknown command. Use 'listCommands' to see all commands." 
 	end
 	self.permLog = inputPrefix .. line .. "\n" .. responsePrefix .. self.response .. "\n" .. self.permLog
 
