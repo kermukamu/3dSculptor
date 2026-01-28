@@ -121,6 +121,8 @@ function Cool3d:update(dt)
     --self.dz = math.sin(self.zSpeed * self.timer) + 3
     self.rotAnglePhi = (self.rotAnglePhi + math.pi * self.rotSpeedPhi * dt)
     self.rotAngleTheta = (self.rotAngleTheta + math.pi * self.rotSpeedTheta * dt)
+
+    self.dz = math.max(self.dz, 0)
 end
 
 function Cool3d:draw()
@@ -177,6 +179,13 @@ function Cool3d:drawModel()
             if self.selectedVertices[i] then love.graphics.setColor(0,0.5,0,1) end -- Darker green if vertex is selected
             love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, tScaling, tScaling)
             love.graphics.setColor(1,1,1,1)
+        end
+
+        -- Draw green rectangles centered to selected vertices
+        if self.selectedVertices[i] and self.screen[i] ~= nil then
+            local size = self.zCompression*self.host.w/(64*self.screen[i][3])
+            love.graphics.setColor(0,1,0,1) -- Green
+            love.graphics.rectangle("fill", self.screen[i][1]-size/2, self.screen[i][2]-size/2, size, size)
         end
     end
  
