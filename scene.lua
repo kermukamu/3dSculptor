@@ -72,6 +72,9 @@ end
 function Scene:update(dt)
 	self.console:update(dt)
 	self.modeler:update(dt)
+	self.xzPanel:update(dt)
+	self.xyPanel:update(dt)
+	self.yzPanel:update(dt)
 end
 
 function Scene:draw()
