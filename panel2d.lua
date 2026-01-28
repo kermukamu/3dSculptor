@@ -33,10 +33,10 @@ function Panel2d:draw()
     love.graphics.setColor(0,0,0,1) -- Black
     love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
 
-    if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
-
     self:drawModel()
     self:drawAxisMarker()
+
+    if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
 
     -- White Frame
     local originalLW = love.graphics.getLineWidth()
