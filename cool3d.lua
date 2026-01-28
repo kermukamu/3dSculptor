@@ -26,6 +26,7 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.textScale = 1
     self.screen = {}
     self.selectedVertices = {}
+    self.firstSelectedVert = nil
     self.clickRange = 5
 
     self.allModelWithinView = true
@@ -374,6 +375,7 @@ end
 
 function Cool3d:deSelect()
     self.selectedVertices = {}
+    self.firstSelectedVert = nil
 end
 
 function Cool3d:selectVertexWithin(x, y)
@@ -399,13 +401,9 @@ function Cool3d:deleteSelected()
 end
 
 function Cool3d:joinToFirstSelected()
-    local firstVert = nil
-    local otherV = {}
     for k, v in pairs(self.selectedVertices) do
-        if v == true and (firstVert == nil) then
-            firstVert = k
-        elseif v == true then
-            self:connect(firstVert, k)
+        if v == true and (v ~= self.firstSelectedVert) and (self.firstSelectedVert ~= nil) then
+            self:connect(self.firstSelectedVert, k)
         end
     end
 end
@@ -419,8 +417,8 @@ function Cool3d:multiplyModelSize(multiplier)
 end
 
 function Cool3d:isWithinView(x, y)
-    return ((x > self.host.x) and ((self.host.x + self.host.w) > x) and 
-        (y > self.host.y) and ((self.host.y + self.host.h) > y))
+    return ((x > self.host:getX()) and ((self.host:getX() + self.host:getW()) > x) and 
+        (y > self.host:getY()) and ((self.host:getY() + self.host:getH()) > y))
 end
 
 function Cool3d:isWithinCircle(px, py, cx, cy, r)
@@ -431,36 +429,20 @@ end
 
 -- Getters and setters
 
-function Cool3d:getPoints()
-    return self.points
-end
-
-function Cool3d:getLines()
-    return self.lines
-end
-
-function Cool3d:getTextScale()
-    return self.textScale
-end
-
-function Cool3d:getSelectedVertices()
-    return self.selectedVertices
-end
-
-function Cool3d:getAxisMarkerX()
-    return self.host.x + self.host.w/8
-end
-
-function Cool3d:getAxisMarkerY()
-    return self.host.y + self.host.h - self.host.h/8
-end
-
-function Cool3d:getDZ(value)
-    return self.dz
-end
-
-function Cool3d:setDZ(value)
-    self.dz = value
+function Cool3d:getPoints() return self.points end
+function Cool3d:getLines() return self.lines end
+function Cool3d:getTextScale() return self.textScale end
+function Cool3d:getSelectedVertices() return self.selectedVertices end
+function Cool3d:getAxisMarkerX() return self.host:getX() + self.host:getW()/8 end
+function Cool3d:getAxisMarkerY() return self.host:getY() + self.host:getH() - self.host:getH()/8 end
+function Cool3d:getDZ(value) return self.dz end
+function Cool3d:setDZ(value) self.dz = value end
+function Cool3d:setVertexSelected(number) 
+    -- Save first selected vertice
+    if (self.firstSelectedVert == nil) then
+        self.firstSelectedVert = number
+    end
+    self.selectedVertices[number] = true
 end
 
 function Cool3d:setOrientation(argPhi, argTheta)
@@ -473,10 +455,6 @@ function Cool3d:setRotation(argPhi, argTheta)
     local deg2rad = math.pi / 180
     self.rotSpeedPhi = argPhi * deg2rad
     self.rotSpeedTheta = argTheta * deg2rad
-end
-
-function Cool3d:setVertexSelected(number)
-    self.selectedVertices[number] = true
 end
 
 return { Cool3d = Cool3d}
