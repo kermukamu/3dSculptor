@@ -18,17 +18,11 @@ function Modeler.new(x, y, w, h, host)
 	-- Setup 3D model
 	local modelX2D = (self.x + self.w) / 2 -- X of projection, in other words, x if z = 0 
 	local modelY2D = (self.y + self.h) / 2 -- Same for Y
-	local distance = 500
+	local distance = 1200
 	self.currentModel = Cool3d.new(modelX2D, modelY2D, distance, self)
-	self.currentModel.axisX = 100
-	self.currentModel.axisY = self.h - 100
 
 	-- Other
 	self.timer = 0
-	self.keyActions = {
-		["delete"] = {function() self.currentModel:deleteSelected() end, "Deletes current selection"},
-		["e"] = {function() self.currentModel:joinToFirstSelected() end, "Joins selected vertices to first selected vertex"}
-	}
 	return self
 end
 
@@ -50,7 +44,7 @@ function Modeler:draw()
 end
 
 function Modeler:keyPressed(key)
-	local action = self.keyActions[key]
+	local action = self.host:getModelerKeyActions()[key]
 	if action then action[1]() end
 end
 
@@ -65,10 +59,6 @@ end
 
 function Modeler:getCurrentModel()
 	return self.currentModel
-end
-
-function Modeler:getKeyActions()
-	return self.keyActions
 end
 
 function Modeler:drawAxisMarkerIsOn()
