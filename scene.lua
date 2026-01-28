@@ -114,6 +114,10 @@ function Scene:mousePressed(mx, my, button)
 	self.activeSection:mousePressed(mx, my, button)
 end
 
+function Scene:wheelMoved(x, y)
+	self.activeSection:wheelMoved(x, y)
+end
+
 function Scene:isWithinSection(x, y, secX, secY, secW, secH)
 	return (secX < x and x < (secX + secW)) and
 			(secY < y and y < (secY + secH))
