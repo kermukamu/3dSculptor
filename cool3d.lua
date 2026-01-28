@@ -22,7 +22,6 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.zCompression = 1000
     self.textScale = 1
     self.screen = {}
-    self.zvals  = {}
     self.selectedVertices = {}
     self.clickRange = 5
 
@@ -129,13 +128,11 @@ function Cool3d:drawModel()
     love.graphics.setLineWidth(self.lineWidth)
 
     local w, h = love.graphics.getDimensions()
-    local cx, cy = self.x2d, self.y2d
 
-    -- Screen and zvals will be reset every time the model is drawn. 
+    -- Screen will be reset every time the model is drawn.
     -- The table will have the transformed, rotated and projected vertices (2D)
     -- The z values of transformed vertices are also stored in self as they are needed elsewhere
     self.screen = {}
-    self.zvals  = {}
 
     for i = 1, #self.points do
         -- Rotations and translations
@@ -143,19 +140,18 @@ function Cool3d:drawModel()
         p = self:translate_xyz(p, {self.dx, self.dy, self.dz})
 
         local z = p[3]
-        self.zvals[i] = z
 
         local proj = {0, 0}
         if z and z > 0.001 then
             local proj = self:project(p)
-            self.screen[i] = { cx + proj[1]*self.zCompression, cy + proj[2]*self.zCompression}
+            self.screen[i] = {self.x2d + proj[1]*self.zCompression, self.y2d - proj[2]*self.zCompression, z}
         else
             self.screen[i] = nil
         end
 
         -- Text next to vertices
         local tScaling = self.zCompression*self.textScale/p[3]
-        if self.host:vertexNumberingIsOn() and z and z > 0.001 then
+        if self.host:vertexNumberingIsOn() and self.screen[i] ~= nil then
             love.graphics.setColor(1,1,0,1)
             if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if vertex is selected
             love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, tScaling, tScaling)
@@ -201,7 +197,6 @@ function Cool3d:drawAxisMarker()
 
     local w, h = love.graphics.getDimensions()
     local screen = {} -- Unlike in drawModel(), locals are used
-    local zvals  = {}
     local size = self.host.w/32
     local points = {{0, 0, 0}, {size, 0, 0}, {0, size, 0}, {0, 0, size}}
     local lines = {{2, 3, 4}}
@@ -212,13 +207,12 @@ function Cool3d:drawAxisMarker()
         p = self:translate_xyz(p, {self.dx, self.dy, self.dz})
 
         local z = p[3]
-        zvals[i] = z
 
         local proj = {0, 0}
         if z and z > 0.001 then
             local proj = self:project(p)
             screen[i] = {self:getAxisMarkerX() + proj[1]*self.zCompression, 
-                self:getAxisMarkerY() + proj[2]*self.zCompression}
+                self:getAxisMarkerY() - proj[2]*self.zCompression}
         else
             screen[i] = nil
         end
@@ -350,7 +344,7 @@ end
 function Cool3d:mousePressed(mx, my, button)
     if not love.keyboard.isDown("lshift") then self:deSelect() end
     if button == 1 then -- left click
-        self:selectVerticesWithin(mx, my)
+        self:selectVertexWithin(mx, my)
     end
 end
 
@@ -358,15 +352,19 @@ function Cool3d:deSelect()
     self.selectedVertices = {}
 end
 
-function Cool3d:selectVerticesWithin(x, y)
+function Cool3d:selectVertexWithin(x, y)
+    local iSelected = nil
     for i=1, #self.screen, 1 do
         if self.screen[i] == nil then 
             -- Silly lua doesn't support continue...
         elseif self:isWithinCircle(x, y, self.screen[i][1], self.screen[i][2], 
-            self.zCompression*self.clickRange/(self.zvals[i])) then
-            self.selectedVertices[i] = true
+            self.zCompression*self.clickRange/(self.screen[i][3])) then
+            if (iSelected == nil) or (self.screen[i][3] < self.screen[iSelected][3]) then
+                iSelected = i
+            end
         end
     end
+    if iSelected ~= nil then self:setVertexSelected(iSelected) end
 end
 
 function Cool3d:isWithinCircle(px, py, cx, cy, r)
@@ -401,6 +399,8 @@ function Cool3d:multiplyModelSize(multiplier)
         p[3] = p[3] * multiplier
     end
 end
+
+-- Getters and setters
 
 function Cool3d:getPoints()
     return self.points

@@ -28,10 +28,14 @@ function Panel2d:update(dt)
 end
 
 function Panel2d:draw()
+    --Black background
+    love.graphics.setColor(0,0,0,1) -- Black
+    love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
+
     self:drawModel()
     self:drawAxisMarker()
 
-    -- Frame
+    -- White Frame
     local originalLW = love.graphics.getLineWidth()
     love.graphics.setColor(1,1,1,1) -- White
     love.graphics.setLineWidth(self.frameLineWidth)
@@ -60,15 +64,15 @@ function Panel2d:drawModel()
 
             local x, y = 0, 0
             if self.axes == "xz" or self.axes == "zx" then
-                x, y = px, pz
+                x, y, z = px, -pz, py
             elseif self.axes == "xy" or self.axes == "yx" then
-                x, y = px, py
+                x, y, z = px, -py, pz
             elseif self.axes == "yz" or self.axes == "zy" then
-                x, y = py, pz
+                x, y, z = py, -pz, px
             else return end -- Axes are not defined
             xS = x + xShift
             yS = y + yShift
-            table.insert(self.screen, {xS, yS})
+            table.insert(self.screen, {xS, yS, z})
 
             if selectedPoints[i] then
                 local size = self.w/64
@@ -115,17 +119,17 @@ function Panel2d:drawAxisMarker()
         love.graphics.setColor(1,0,0,1) -- Red
         love.graphics.line(0+x,0+y,size+x,0+y)
         love.graphics.setColor(0,0,1,1) -- Blue
-        love.graphics.line(0+x,0+y,0+x,size+y)
+        love.graphics.line(0+x,0+y,0+x,-size+y)
     elseif self.axes == "xy" or self.axes == "yx" then
         love.graphics.setColor(1,0,0,1) -- Red
         love.graphics.line(0+x,0+y,size+x,0+y)
         love.graphics.setColor(0,1,0,1) -- Green
-        love.graphics.line(0+x,0+y,0+x,size+y)
+        love.graphics.line(0+x,0+y,0+x,-size+y)
     elseif self.axes == "yz" or self.axes == "zy" then
         love.graphics.setColor(0,1,0,1) -- Green
         love.graphics.line(0+x,0+y,size+x,0+y)
         love.graphics.setColor(0,0,1,1) -- Blue
-        love.graphics.line(0+x,0+y,0+x,size+y)
+        love.graphics.line(0+x,0+y,0+x,-size+y)
     else return end -- Axes are not defined
 end
 
@@ -140,7 +144,7 @@ end
 function Panel2d:mousePressed(mx, my, button)
     if not love.keyboard.isDown("lshift") then self:deSelect() end
     if button == 1 then -- left click
-        self:selectVerticesWithin(mx, my)
+        self:selectVertexWithin(mx, my)
     end
 end
 
@@ -151,17 +155,22 @@ function Panel2d:deSelect()
     end
 end
 
-function Panel2d:selectVerticesWithin(mx, my)
+function Panel2d:selectVertexWithin(mx, my)
     local currentModel = self.host:getCurrentModel()
-    if currentModel then 
+    if currentModel then
+        local iSelected = nil
         for i=1, #self.screen, 1 do
             if self.screen[i] == nil then 
                 -- Silly lua doesn't support continue...
             elseif self:isWithinCircle(mx, my, self.screen[i][1], self.screen[i][2], 
                 self.clickRange) then
-                currentModel:setVertexSelected(i)
+                -- If nearest to viewer, select
+                if (iSelected == nil) or (self.screen[i][3] < self.screen[iSelected][3]) then
+                    iSelected = i
+                end
             end
         end
+        if iSelected ~= nil then currentModel:setVertexSelected(iSelected) end
     end
 end
 
