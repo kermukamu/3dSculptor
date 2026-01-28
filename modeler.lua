@@ -52,11 +52,22 @@ function Modeler:keyPressed(key)
 	if action then action[1]() end
 end
 
+function Modeler:wheelMoved(x, y)
+	if y > 0 then -- Wheel moved up
+		self.currentModel:setDZ((self.currentModel:getDZ() - 50))
+	elseif y < 0 then -- Wheel moved down
+		self.currentModel:setDZ((self.currentModel:getDZ() + 50))
+	end
+end
+
 function Modeler:textInput(t)
 end
 
 function Modeler:mousePressed(mx, my, button)
-	self.currentModel:mousePressed(mx, my, button)
+	if not love.keyboard.isDown("lshift") then self.currentModel:deSelect() end
+    if button == 1 then -- left click
+        self.currentModel:selectVertexWithin(mx, my)
+    end
 end
 
 -- Getters and setters

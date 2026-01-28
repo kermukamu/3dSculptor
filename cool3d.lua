@@ -19,11 +19,16 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.timer = 0
     self.zSpeed = 0.2
 
+    self.dxMarker = 0
+    self.dyMarker = 0
+    self.dzMarker = 1000
     self.zCompression = 1000
     self.textScale = 1
     self.screen = {}
     self.selectedVertices = {}
     self.clickRange = 5
+
+    self.allModelWithinView = true
 
     self.x2d = x2d or 0
     self.y2d = y2d or 0
@@ -120,6 +125,7 @@ end
 
 function Cool3d:draw()
     self:drawModel()
+    if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
     if self.host:drawAxisMarkerIsOn() then self:drawAxisMarker() end
 end
 
@@ -133,36 +139,41 @@ function Cool3d:drawModel()
     -- The table will have the transformed, rotated and projected vertices (2D)
     -- The z values of transformed vertices are also stored in self as they are needed elsewhere
     self.screen = {}
-
+    self.allModelWithinView = true
     for i = 1, #self.points do
         -- Rotations and translations
         local p = self:rotate(self.points[i], self.rotAnglePhi, self.rotAngleTheta)
         p = self:translate_xyz(p, {self.dx, self.dy, self.dz})
 
-        local z = p[3]
-
         local proj = {0, 0}
-        if z and z > 0.001 then
+        if p[3] and p[3] > 0.001 then -- Translated z is not outside the view (monitor)
             local proj = self:project(p)
-            self.screen[i] = {self.x2d + proj[1]*self.zCompression, self.y2d - proj[2]*self.zCompression, z}
+            local vx, vy = self.x2d + proj[1]*self.zCompression, self.y2d - proj[2]*self.zCompression, z
+            if self:isWithinView(vx, vy) then
+                self.screen[i] = {vx, vy, p[3]}
+            else
+                self.screen[i] = nil
+                self.allModelWithinView = false
+            end
         else
             self.screen[i] = nil
+            self.allModelWithinView = false
         end
 
         -- Text next to vertices
         local tScaling = self.zCompression*self.textScale/p[3]
         if self.host:vertexNumberingIsOn() and self.screen[i] ~= nil then
-            love.graphics.setColor(1,1,0,1)
+            love.graphics.setColor(1,1,0,1) -- Yellow
             if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if vertex is selected
             love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, tScaling, tScaling)
             love.graphics.setColor(1,1,1,1)
         end
 
-        if self.host:vertexCoordsIsOn() and z and z > 0.001 then
+        if self.host:vertexCoordsIsOn() and self.screen[i] ~= nil then
             local text = tostring(self.points[i][1]) .. " " ..
                 tostring(self.points[i][2]) .. " " .. tostring(self.points[i][3])
             local yOffset = love.graphics.getFont():getHeight() * (tScaling)
-            love.graphics.setColor(1,0.5,0,1)
+            love.graphics.setColor(1,0.5,0,1) -- Orange
             if self.selectedVertices[i] then love.graphics.setColor(0,0.5,0,1) end -- Darker green if vertex is selected
             love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, tScaling, tScaling)
             love.graphics.setColor(1,1,1,1)
@@ -204,15 +215,18 @@ function Cool3d:drawAxisMarker()
     for i = 1, #points do
         -- Rotations and translations
         local p = self:rotate(points[i], self.rotAnglePhi, self.rotAngleTheta)
-        p = self:translate_xyz(p, {self.dx, self.dy, self.dz})
-
-        local z = p[3]
+        p = self:translate_xyz(p, {self.dxMarker, self.dyMarker, self.dzMarker})
 
         local proj = {0, 0}
-        if z and z > 0.001 then
+        if p[3] and p[3] > 0.001 then -- Translated z is not outside the view (monitor)
             local proj = self:project(p)
-            screen[i] = {self:getAxisMarkerX() + proj[1]*self.zCompression, 
-                self:getAxisMarkerY() - proj[2]*self.zCompression}
+            local vx, vy = self:getAxisMarkerX() + proj[1]*self.zCompression, 
+                self:getAxisMarkerY() - proj[2]*self.zCompression
+            if self:isWithinView(vx, vy) then
+                screen[i] = {vx, vy, p[3]}
+            else
+                screen[i] = nil
+            end
         else
             screen[i] = nil
         end
@@ -240,6 +254,12 @@ function Cool3d:drawAxisMarker()
             end
         end
     end
+end
+
+function Cool3d:drawHiddenVerticesComplaint()
+    love.graphics.setColor(1,0.2,0,1) -- Brown
+    local complaint = "The complete model is not visible, try increasing view distance"
+    love.graphics.print(complaint, self.host.x + self.host.w/32, self.host.y + self.host.h/32, 0, tScaling, tScaling)
 end
 
 function Cool3d:addVertex(x, y, z)
@@ -341,12 +361,6 @@ function Cool3d:r2Dec(value)
     return math.floor(100*value) / 100
 end
 
-function Cool3d:mousePressed(mx, my, button)
-    if not love.keyboard.isDown("lshift") then self:deSelect() end
-    if button == 1 then -- left click
-        self:selectVertexWithin(mx, my)
-    end
-end
 
 function Cool3d:deSelect()
     self.selectedVertices = {}
@@ -365,12 +379,6 @@ function Cool3d:selectVertexWithin(x, y)
         end
     end
     if iSelected ~= nil then self:setVertexSelected(iSelected) end
-end
-
-function Cool3d:isWithinCircle(px, py, cx, cy, r)
-    local dx = px - cx
-    local dy = py - cy
-    return (dx * dx + dy * dy) <= (r * r)
 end
 
 function Cool3d:deleteSelected()
@@ -400,6 +408,17 @@ function Cool3d:multiplyModelSize(multiplier)
     end
 end
 
+function Cool3d:isWithinView(x, y)
+    return ((x > self.host.x) and ((self.host.x + self.host.w) > x) and 
+        (y > self.host.y) and ((self.host.y + self.host.h) > y))
+end
+
+function Cool3d:isWithinCircle(px, py, cx, cy, r)
+    local dx = px - cx
+    local dy = py - cy
+    return (dx * dx + dy * dy) <= (r * r)
+end
+
 -- Getters and setters
 
 function Cool3d:getPoints()
@@ -424,6 +443,14 @@ end
 
 function Cool3d:getAxisMarkerY()
     return self.host.y + self.host.h - self.host.h/8
+end
+
+function Cool3d:getDZ(value)
+    return self.dz
+end
+
+function Cool3d:setDZ(value)
+    self.dz = value
 end
 
 function Cool3d:setOrientation(argPhi, argTheta)

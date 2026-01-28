@@ -13,9 +13,10 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.w = w - 2 * self.frameLineWidth
     self.h = h - 2 * self.frameLineWidth
     self.axes = axes
+    self.allModelWithinView = true
 
+    self.viewScale = 1
     self.clickRange = 5
-
     self.screen = {}
 
     -- Other
@@ -31,6 +32,8 @@ function Panel2d:draw()
     --Black background
     love.graphics.setColor(0,0,0,1) -- Black
     love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
+
+    if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
 
     self:drawModel()
     self:drawAxisMarker()
@@ -57,7 +60,7 @@ function Panel2d:drawModel()
         local yShift = self:getYShift()
 
         self.screen = {}
-
+        self.allModelWithinView = true
         -- Project, draw as rectangle if selected
         for i = 1, #points do
             local px, py, pz = points[i][1], points[i][2], points[i][3]
@@ -70,9 +73,14 @@ function Panel2d:drawModel()
             elseif self.axes == "yz" or self.axes == "zy" then
                 x, y, z = py, -pz, px
             else return end -- Axes are not defined
-            xS = x + xShift
-            yS = y + yShift
-            table.insert(self.screen, {xS, yS, z})
+            xS = x*self.viewScale + xShift
+            yS = y*self.viewScale + yShift
+            if self:isWithinView(xS, yS) then
+                self.screen[i] = {xS, yS, z}
+            else
+                self.screen[i] = nil
+                self.allModelWithinView = false
+            end
 
             if selectedPoints[i] then
                 local size = self.w/64
@@ -87,12 +95,12 @@ function Panel2d:drawModel()
         love.graphics.setColor(1,1,1,1) -- White
         love.graphics.setLineWidth(self.lineWidth)
         for i = 1, #lines do
-            local a = {self.screen[i][1], self.screen[i][2]}
+            local a = self.screen[i]
             local links = lines[i]
     
             if a and links then
                 for _, k in ipairs(links) do
-                    local b = {self.screen[k][1], self.screen[k][2]}
+                    local b = self.screen[k]
                     if b then
                         local key1 = i .. "-" .. k
                         local key2 = k .. "-" .. i
@@ -148,6 +156,14 @@ function Panel2d:mousePressed(mx, my, button)
     end
 end
 
+function Panel2d:wheelMoved(x, y)
+    if y > 0 then -- Wheel moved up
+        self.viewScale = self.viewScale - 0.05
+    elseif y < 0 then -- Wheel moved down
+        self.viewScale = self.viewScale + 0.05
+    end
+end
+
 function Panel2d:deSelect()
     local currentModel = self.host:getCurrentModel()
     if currentModel then 
@@ -178,6 +194,17 @@ function Panel2d:isWithinCircle(px, py, cx, cy, r)
     local dx = px - cx
     local dy = py - cy
     return (dx * dx + dy * dy) <= (r * r)
+end
+
+function Panel2d:drawHiddenVerticesComplaint()
+    love.graphics.setColor(1,0.2,0,1) -- Brown
+    local complaint = "The complete model is not visible, try increasing view distance"
+    love.graphics.print(complaint, self.x + self.w/32, self.y + self.h/32, 0, tScaling, tScaling)
+end
+
+function Panel2d:isWithinView(x, y)
+    return ((x > self.x) and ((self.x + self.w) > x) and 
+        (y > self.y) and ((self.y + self.h) > y))
 end
 
 -- Getters and setters
