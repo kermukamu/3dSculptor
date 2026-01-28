@@ -33,6 +33,10 @@ function Modeler:update(dt)
 end
 
 function Modeler:draw()
+    --Black background
+    love.graphics.setColor(0,0,0,1) -- Black
+    love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
+
 	self.currentModel:draw()
 
 	-- Frame
