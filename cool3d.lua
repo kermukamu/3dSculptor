@@ -21,7 +21,6 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
 
     self.zCompression = 1000
     self.textScale = 1
-    self.axisMarkerScale = 3
     self.screen = {}
     self.zvals  = {}
     self.selectedVertices = {}
@@ -29,8 +28,6 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
 
     self.x2d = x2d or 0
     self.y2d = y2d or 0
-    self.axisX = 250
-    self.axisY = 250
 	return self
 end
 
@@ -205,7 +202,7 @@ function Cool3d:drawAxisMarker()
     local w, h = love.graphics.getDimensions()
     local screen = {} -- Unlike in drawModel(), locals are used
     local zvals  = {}
-    local size = self.axisMarkerScale*self.dz/100
+    local size = self.host.w/32
     local points = {{0, 0, 0}, {size, 0, 0}, {0, size, 0}, {0, 0, size}}
     local lines = {{2, 3, 4}}
 
@@ -220,7 +217,8 @@ function Cool3d:drawAxisMarker()
         local proj = {0, 0}
         if z and z > 0.001 then
             local proj = self:project(p)
-            screen[i] = {self.axisX + proj[1]*self.zCompression, self.axisY + proj[2]*self.zCompression}
+            screen[i] = {self:getAxisMarkerX() + proj[1]*self.zCompression, 
+                self:getAxisMarkerY() + proj[2]*self.zCompression}
         else
             screen[i] = nil
         end
@@ -404,6 +402,30 @@ function Cool3d:multiplyModelSize(multiplier)
     end
 end
 
+function Cool3d:getPoints()
+    return self.points
+end
+
+function Cool3d:getLines()
+    return self.lines
+end
+
+function Cool3d:getTextScale()
+    return self.textScale
+end
+
+function Cool3d:getSelectedVertices()
+    return self.selectedVertices
+end
+
+function Cool3d:getAxisMarkerX()
+    return self.host.x + self.host.w/8
+end
+
+function Cool3d:getAxisMarkerY()
+    return self.host.y + self.host.h - self.host.h/8
+end
+
 function Cool3d:setOrientation(argPhi, argTheta)
     local deg2rad = math.pi / 180
     self.rotAnglePhi = argPhi * deg2rad
@@ -414,6 +436,10 @@ function Cool3d:setRotation(argPhi, argTheta)
     local deg2rad = math.pi / 180
     self.rotSpeedPhi = argPhi * deg2rad
     self.rotSpeedTheta = argTheta * deg2rad
+end
+
+function Cool3d:setVertexSelected(number)
+    self.selectedVertices[number] = true
 end
 
 return { Cool3d = Cool3d}
