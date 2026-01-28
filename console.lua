@@ -39,6 +39,7 @@ function Console.new(x, y, w, h, host)
 		["disconnect"] = {function() self:comDisconnect() end, "Disconnects two vertices, use 'disconnect [vertex1] [vertex2]"},
 		["vertexNumbering"] = {function() self:comVertexNumbering() end, "Toggles vertexNumbering, use 'vertexNumbering [true/false]'"},
 		["vertexCoords"] = {function() self:comVertexCoords() end, "Toggles vertexCoords, use 'vertexNumbering [true/false]'"},
+		["drawVertices"] = {function() self:comDrawVertices() end, "Toggles vertex drawing, use 'drawVertices [true/false]'"},
 		["spin"] = {function() self:comSpin() end, "Sets spinning speed, use 'spin [phi(deg/s)] [theta (deg/s)]'"},
 		["orientation"] = {function() self:comOrientation() end, "Sets orientation, use 'orientation [phi(deg)] [theta (deg)]'"},
 		["setDistance"] = {function() self:comSetDistance() end, "Sets view distance to model, use 'scale [scale]'"},
@@ -162,7 +163,17 @@ function Console:comVertexCoords()
 	local arg = self:toBoolean(self.args[1])
 	if not (arg==nil) then
 		self.host:setVertexCoords(arg)
-		self.response = "Set vertex coordinates to " .. tostring(arg)
+		self.response = "Set vertex coordinate visibility to " .. tostring(arg)
+	else 
+		self.response = "Argument must be 'false' or 'true'"
+	end
+end
+
+function Console:comDrawVertices() 
+	local arg = self:toBoolean(self.args[1])
+	if not (arg==nil) then
+		self.host:setDrawVertices(arg)
+		self.response = "Set vertice drawing to " .. tostring(arg)
 	else 
 		self.response = "Argument must be 'false' or 'true'"
 	end

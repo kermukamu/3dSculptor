@@ -64,14 +64,17 @@ function Modeler:textInput(t)
 end
 
 function Modeler:mousePressed(mx, my, button)
-	if not love.keyboard.isDown("lshift") then self.currentModel:deSelect() end
-    if button == 1 then -- left click
-        self.currentModel:selectVertexWithin(mx, my)
-    end
+	local toolMode = self.host:getToolMode()
+	if not (love.keyboard.isDown("lshift") and toolMode == "selection")
+		then self.currentModel:deSelect() end
+	if toolMode == "selection" then
+		if button == 1 then -- left click
+        	self.currentModel:selectVertexWithin(mx, my)
+    	end
+	end
 end
 
 -- Getters and setters
-
 function Modeler:getX() return self.x end
 function Modeler:getY() return self.y end
 function Modeler:getW() return self.w end
@@ -80,5 +83,6 @@ function Modeler:getCurrentModel() return self.currentModel end
 function Modeler:drawAxisMarkerIsOn() return self.host:drawAxisMarkerIsOn() end
 function Modeler:vertexNumberingIsOn() return self.host:vertexNumberingIsOn() end
 function Modeler:vertexCoordsIsOn() return self.host:vertexCoordsIsOn() end
+function Modeler:drawVerticesIsOn() return self.host:drawVerticesIsOn() end
 
 return {Modeler = Modeler}

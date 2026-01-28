@@ -24,6 +24,8 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.vertexNumbering = true
 	self.vertexCoords = true
 	self.drawAxisMarker = true
+	self.drawVertices = true
+	self.toolMode = "selection"
 
 	-- Position console to bottom third
 	local consoleW = screenWidth
@@ -62,7 +64,9 @@ function Scene.new(title, screenWidth, screenHeight)
 
 	self.keyActions = {
 		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
-		["e"] = {function() self:getCurrentModel():joinToFirstSelected() end, "Joins selected vertices to first selected vertex"}
+		["e"] = {function() self:getCurrentModel():joinToFirstSelected() end, "Joins selected vertices to first selected vertex"},
+		["s"] = {function() self:turnSelectionModeOn() end, "Turns selection mode on"},
+		["v"] = {function() self:turnVertexModeOn() end, "Turns vertex mode on"}
     }
 
 	self.activeSection = self.modeler
@@ -128,17 +132,12 @@ end
 
 -- Getters and setters
 
-function Scene:vertexNumberingIsOn()
-	return self.vertexNumbering
-end
+function Scene:vertexNumberingIsOn() return self.vertexNumbering end
+function Scene:vertexCoordsIsOn() return self.vertexCoords end
+function Scene:drawVerticesIsOn() return self.drawVertices end
+function Scene:drawAxisMarkerIsOn() return self.drawAxisMarker end
 
-function Scene:vertexCoordsIsOn()
-	return self.vertexCoords
-end
-
-function Scene:drawAxisMarkerIsOn()
-	return self.drawAxisMarker
-end
+function Scene:getToolMode() return self.toolMode end
 
 function Scene:getCurrentModel()
 	if self.modeler ~= nil then
@@ -156,16 +155,12 @@ function Scene:getModelerKeyActions()
 	end
 end
 
-function Scene:setVertexNumbering(value)
-	self.vertexNumbering = value
-end
+function Scene:setVertexNumbering(value) self.vertexNumbering = value end
+function Scene:setVertexCoords(value) self.vertexCoords = value end
+function Scene:setDrawVertices(value) self.drawVertices = value end
+function Scene:setDrawAxis(value) self.drawAxis = value end
+function Scene:turnSelectionModeOn() self.toolMode = "selection" end
+function Scene:turnVertexModeOn() self.toolMode = "vertex" end
 
-function Scene:setVertexCoords(value)
-	self.vertexCoords = value
-end
-
-function Scene:setDrawAxis(value)
-	self.drawAxis = value
-end
 
 return {Scene = Scene}

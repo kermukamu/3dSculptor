@@ -83,9 +83,10 @@ function Panel2d:drawModel()
                 self.allModelWithinView = false
             end
 
-            if selectedPoints[i] and self.screen[i] ~= nil then
+            if self.screen[i] ~= nil and self.host:drawVerticesIsOn() then
                 local size = self.w/64
-                love.graphics.setColor(0,1,0,1) -- Green
+                love.graphics.setColor(0,1,1,1) -- Cyan
+                if selectedPoints[i] then love.graphics.setColor(0,1,0,1) end -- Green
                 love.graphics.rectangle("fill", xS-size/2, yS-size/2, size, size)
             end
         end
@@ -151,9 +152,17 @@ function Panel2d:textInput(t)
 end
 
 function Panel2d:mousePressed(mx, my, button)
-    if not love.keyboard.isDown("lshift") then self:deSelect() end
-    if button == 1 then -- left click
-        self:selectVertexWithin(mx, my)
+    local currentModel = self:getCurrentModel()
+    local toolMode = self.host:getToolMode()
+    if not (love.keyboard.isDown("lshift") and toolMode == "selection")
+        then currentModel:deSelect() end
+    if toolMode == "selection" then
+        if button == 1 then -- left click
+            currentModel:selectVertexWithin(mx, my)
+        end
+    elseif toolMode == "vertex" then
+        local tx, ty = self:screenPosToModelPos(mx, my)
+        currentModel:addVertexOnPlane(tx, ty, self.axes)
     end
 end
 
@@ -163,6 +172,12 @@ function Panel2d:wheelMoved(x, y)
     elseif y < 0 then -- Wheel moved down
         self.viewScale = self.viewScale + 0.05
     end
+end
+
+function Panel2d:screenPosToModelPos(x, y)
+    local tx = (x - self.x - self.w/2) / self.viewScale
+    local ty = -(y - self.y - self.h/2) / self.viewScale
+    return tx, ty
 end
 
 function Panel2d:deSelect()

@@ -163,30 +163,33 @@ function Cool3d:drawModel()
             self.allModelWithinView = false
         end
 
-        -- Text next to vertices
-        local tScaling = self.zCompression*self.textScale/p[3]
-        if self.host:vertexNumberingIsOn() and self.screen[i] ~= nil then
-            love.graphics.setColor(1,1,0,1) -- Yellow
-            if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if vertex is selected
-            love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, tScaling, tScaling)
-            love.graphics.setColor(1,1,1,1)
-        end
+        if self.screen[i] ~= nil then
+            -- Text next to vertices
+            local tScaling = self.zCompression*self.textScale/p[3]
+            if self.host:vertexNumberingIsOn()  then
+                love.graphics.setColor(1,1,0,1) -- Yellow
+                if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if vertex is selected
+                love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, tScaling, tScaling)
+                love.graphics.setColor(1,1,1,1)
+            end
 
-        if self.host:vertexCoordsIsOn() and self.screen[i] ~= nil then
-            local text = tostring(self.points[i][1]) .. " " ..
-                tostring(self.points[i][2]) .. " " .. tostring(self.points[i][3])
-            local yOffset = love.graphics.getFont():getHeight() * (tScaling)
-            love.graphics.setColor(1,0.5,0,1) -- Orange
-            if self.selectedVertices[i] then love.graphics.setColor(0,0.5,0,1) end -- Darker green if vertex is selected
-            love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, tScaling, tScaling)
-            love.graphics.setColor(1,1,1,1)
-        end
+            if self.host:vertexCoordsIsOn() then
+                local text = tostring(self.points[i][1]) .. " " ..
+                    tostring(self.points[i][2]) .. " " .. tostring(self.points[i][3])
+                local yOffset = love.graphics.getFont():getHeight() * (tScaling)
+                love.graphics.setColor(1,0.5,0,1) -- Orange
+                if self.selectedVertices[i] then love.graphics.setColor(0,0.5,0,1) end -- Darker green if vertex is selected
+                love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, tScaling, tScaling)
+                love.graphics.setColor(1,1,1,1)
+            end
 
-        -- Draw green rectangles centered to selected vertices
-        if self.selectedVertices[i] and self.screen[i] ~= nil then
-            local size = self.zCompression*self.host.w/(64*self.screen[i][3])
-            love.graphics.setColor(0,1,0,1) -- Green
-            love.graphics.rectangle("fill", self.screen[i][1]-size/2, self.screen[i][2]-size/2, size, size)
+            -- The rectangles drawn at vertices
+            if self.host:drawVerticesIsOn() then
+                local size = self.zCompression*self.host:getW()/(64*self.screen[i][3])
+                love.graphics.setColor(0,1,1,1) -- Cyan
+                if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green
+                love.graphics.rectangle("fill", self.screen[i][1]-size/2, self.screen[i][2]-size/2, size, size)
+            end
         end
     end
  
@@ -219,7 +222,7 @@ function Cool3d:drawAxisMarker()
 
     local w, h = love.graphics.getDimensions()
     local screen = {} -- Unlike in drawModel(), locals are used
-    local size = self.host.w/32
+    local size = self.host:getW()/32
     local points = {{0, 0, 0}, {size, 0, 0}, {0, size, 0}, {0, 0, size}}
     local lines = {{2, 3, 4}}
 
@@ -270,12 +273,22 @@ end
 function Cool3d:drawHiddenVerticesComplaint()
     love.graphics.setColor(1,0.2,0,1) -- Brown
     local complaint = "The complete model is not visible, try increasing view distance"
-    love.graphics.print(complaint, self.host.x + self.host.w/32, self.host.y + self.host.h/32, 0, tScaling, tScaling)
+    love.graphics.print(complaint, self.host:getX() + self.host:getW()/32, self.host:getY() + self.host:getH()/32, 0, tScaling, tScaling)
 end
 
 function Cool3d:addVertex(x, y, z)
     table.insert(self.points, {x, y, z})
     table.insert(self.lines, {})
+end
+
+function Cool3d:addVertexOnPlane(x, y, plane)
+    if plane == "xz" or plane == "zx" then
+        self:addVertex(x, 0, y)
+    elseif plane == "xy" or plane == "yx" then
+        self:addVertex(x, y, 0)
+    elseif plane == "yz" or plane == "zy" then
+        self:addVertex(0, x, y)
+    end
 end
 
 function Cool3d:removeVertex(number)
