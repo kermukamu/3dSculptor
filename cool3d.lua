@@ -323,7 +323,7 @@ end
 function Cool3d:drawCircle(centerX, centerY, centerZ, radius, plane, segments, connectLines)
     local seg = segments or 16
     if seg < 3 then return "Atleast 3 segments required" end
-    local connect = connectLines or true
+    local connect = connectLines
     local angleDT = 2*math.pi/segments
 
     -- First set circle points in an auxiliary coordinate system
