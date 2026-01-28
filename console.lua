@@ -309,6 +309,9 @@ end
 function Console:mousePressed(mx, my, button)
 end
 
+function Console:wheelMoved(x, y)
+end
+
 function Console:keyPressed(key)
 	if key == "return" then
 		self:runLine(self.text)
