@@ -24,6 +24,10 @@ function love.mousepressed(mx, my, button)
 	scene:mousePressed(mx, my, button)
 end
 
+function love.wheelmoved(x, y)
+    scene:wheelMoved(x, y)
+end
+
 function love.draw()
 	scene:draw()
 end
