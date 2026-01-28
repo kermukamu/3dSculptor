@@ -3,7 +3,7 @@ local Scene = cscene.Scene
 
 function love.load()
 	local title = "3DSCulptor"
-	local screenWidth = 800
+	local screenWidth = 1000
 	local screenHeight = 1000
 	scene = Scene.new(title, screenWidth, screenHeight)
 end
