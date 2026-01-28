@@ -2,6 +2,8 @@ local cconsole = require("console")
 local Console = cconsole.Console
 local cmodeler = require("modeler")
 local Modeler = cmodeler.Modeler
+local cpanel2d = require("panel2d")
+local Panel2d = cpanel2d.Panel2d
 
 -- Scene "class"
 local Scene = {}
@@ -28,16 +30,40 @@ function Scene.new(title, screenWidth, screenHeight)
 	local consoleH = screenHeight * (1 / 3)
 	local consoleX = 0
 	local consoleY = love.graphics.getHeight() - consoleH + yOffset
-
 	self.console = Console.new(consoleX, consoleY, consoleW, consoleH, self)
 
-	-- Position modeler to top two thirds minus y offset
-	local modelerW = screenWidth
-	local modelerH = screenHeight * (2 / 3)
+	-- Position 3d modeler to top left third
+	local modelerW = screenWidth * (1 / 2)
+	local modelerH = screenHeight * (1 / 3)
 	local modelerX = 0
 	local modelerY = yOffset
-
 	self.modeler = Modeler.new(modelerX, modelerY, modelerW, modelerH, self)
+
+	-- Position XZ 2D panel to top right third
+	local xzPanelW = screenWidth * (1 / 2)
+	local xzPanelH = screenHeight * (1 / 3)
+	local xzPanelX = love.graphics.getWidth() - xzPanelW
+	local xzPanelY = yOffset
+	self.xzPanel = Panel2d.new(xzPanelX, xzPanelY, xzPanelW, xzPanelH, "xz", self)
+
+	-- Position XY 2D panel to middle left third
+	local xyPanelW = screenWidth * (1 / 2)
+	local xyPanelH = screenHeight * (1 / 3)
+	local xyPanelX = 0
+	local xyPanelY = love.graphics.getHeight()/2 - xyPanelH/2 + yOffset
+	self.xyPanel = Panel2d.new(xyPanelX, xyPanelY, xyPanelW, xyPanelH, "xy", self)
+
+	-- Position YZ 2D panel to middle right third
+	local yzPanelW = screenWidth * (1 / 2)
+	local yzPanelH = screenHeight * (1 / 3)
+	local yzPanelX = love.graphics.getWidth() - yzPanelW
+	local yzPanelY = love.graphics.getHeight()/2 - yzPanelH/2 + yOffset
+	self.yzPanel = Panel2d.new(yzPanelX, yzPanelY, yzPanelW, yzPanelH, "yz", self)
+
+	self.keyActions = {
+		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
+		["e"] = {function() self:getCurrentModel():joinToFirstSelected() end, "Joins selected vertices to first selected vertex"}
+    }
 
 	self.activeSection = self.modeler
 	return self
@@ -50,6 +76,9 @@ end
 
 function Scene:draw()
 	self.modeler:draw()
+	self.xzPanel:draw()
+	self.xyPanel:draw()
+	self.yzPanel:draw()
 	self.console:draw()
 end
 
@@ -66,6 +95,18 @@ function Scene:mousePressed(mx, my, button)
 		self.modeler.w, self.modeler.h) then
 		self.activeSection = self.modeler
 	elseif 
+		self:isWithinSection(mx, my, self.xzPanel.x, self.xzPanel.y,
+		self.xzPanel.w, self.xzPanel.h) then
+		self.activeSection = self.xzPanel
+	elseif
+		self:isWithinSection(mx, my, self.xyPanel.x, self.xyPanel.y,
+		self.xyPanel.w, self.xyPanel.h) then
+		self.activeSection = self.xyPanel
+	elseif
+		self:isWithinSection(mx, my, self.yzPanel.x, self.yzPanel.y,
+		self.yzPanel.w, self.yzPanel.h) then
+		self.activeSection = self.yzPanel
+	elseif
 		self:isWithinSection(mx, my, self.console.x, self.console.y,
 		self.console.w, self.console.h) then
 		self.activeSection = self.console
@@ -102,7 +143,7 @@ end
 
 function Scene:getModelerKeyActions()
 	if self.modeler ~= nil then
-		return self.modeler:getKeyActions()
+		return self.keyActions
 	else 
 		return nil 
 	end
