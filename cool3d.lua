@@ -96,11 +96,11 @@ function Cool3d:translate_xyz(xyz, dxyz)
     return {xyz[1] + dxyz[1], xyz[2] + dxyz[2], xyz[3] + dxyz[3]}
 end
 
-function Cool3d:rotate(xyz, deltaPhi, deltaTheta)
-    local cosPhi = math.cos(deltaPhi)
-    local sinPhi = math.sin(deltaPhi)
-    local cosTheta = math.cos(deltaTheta)
-    local sinTheta = math.sin(deltaTheta)
+function Cool3d:rotate(xyz, Phi, Theta)
+    local cosPhi = math.cos(Phi)
+    local sinPhi = math.sin(Phi)
+    local cosTheta = math.cos(Theta)
+    local sinTheta = math.sin(Theta)
     local x, y, z = xyz[1], xyz[2], xyz[3]
 
     -- Rotate on phi
@@ -192,6 +192,7 @@ function Cool3d:drawModel()
     -- Draw lines by connection indices
     local drawn = {}
 
+    love.graphics.setColor(1,1,1,1) -- white
     for i = 1, #self.lines do
         local a = self.screen[i]
         local links = self.lines[i]
@@ -381,7 +382,7 @@ function Cool3d:selectVertexWithin(x, y)
         if self.screen[i] == nil then 
             -- Silly lua doesn't support continue...
         elseif self:isWithinCircle(x, y, self.screen[i][1], self.screen[i][2], 
-            self.zCompression*self.clickRange/(self.screen[i][3])) then
+            self.clickRange) then
             if (iSelected == nil) or (self.screen[i][3] < self.screen[iSelected][3]) then
                 iSelected = i
             end
