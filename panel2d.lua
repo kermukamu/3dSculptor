@@ -26,6 +26,7 @@ end
 
 function Panel2d:update(dt)
     self.timer = math.max(self.timer + dt, 0)
+    self.viewScale = math.max(self.viewScale, 0)
 end
 
 function Panel2d:draw()
@@ -82,7 +83,7 @@ function Panel2d:drawModel()
                 self.allModelWithinView = false
             end
 
-            if selectedPoints[i] then
+            if selectedPoints[i] and self.screen[i] ~= nil then
                 local size = self.w/64
                 love.graphics.setColor(0,1,0,1) -- Green
                 love.graphics.rectangle("fill", xS-size/2, yS-size/2, size, size)
