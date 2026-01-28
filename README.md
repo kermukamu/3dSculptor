@@ -12,4 +12,4 @@ The framework is mostly used for creating a window, getting keyboard and mouse i
 
 The project includes an example model, which can be opened by running 'load 3d/gem.txt' in the integrated terminal.
 
-<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/3a7ea806-e55b-4bc3-97ac-f5229b2a2431" />
+<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/3b5acaa6-488c-4eec-921b-5f0d7d5a0fc8" />
