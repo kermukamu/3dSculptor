@@ -18,6 +18,7 @@ function Console.new(x, y, w, h, host)
 	self.tempLog = {"Welcome to 3DSculptor.\n" ..
 		"Run 'listCommands' to see all commmands\n" ..
 		"Run 'listKeys' to see all keys\n" ..
+		"Run 'listCombos' to see all combination actions\n" ..
 		"Run 'help [command/key]' to get help with a command or key action"}
 	self.logIndex = 1
 	self.text = ""
@@ -30,6 +31,7 @@ function Console.new(x, y, w, h, host)
 	self.commands = {
 		["listCommands"] = {function() self:comListCommands() end, "Lists all commands, use 'listCommands'"},
 		["listKeys"] = {function() self:comListModelerControls() end, "Lists all keys, use 'listKeys'"},
+		["listCombos"] = {function() self:comListCombos() end, "Lists mouse and key combos, use 'listMouse'"},
 		["help"] = {function() self:comHelp() end, "Gets information about a command, use 'help [command/control]'"},
 		["load"] = {function() self:comLoadModel() end, "Loads a model, use 'load [filename]'"},
 		["save"] = {function() self:comSaveModel() end, "Saves a model, use 'save [filename]'"},
@@ -46,6 +48,11 @@ function Console.new(x, y, w, h, host)
 		["clear"] = {function() self:comClear() end, "Clears the model, use 'clear'"},
 		["multiplyModel"] = {function() self:comMultiplyModel() end, "Multiplies actual model size, use 'multiplyModel [multiplier]'"},
 		["drawCircle"] = {function() self:comDrawCircle() end, "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"}
+	}
+
+	self.comboList = {
+		["Space+LeftMouse"] = "Rotates 3D view",
+		["Shift+LeftMouse"] = "Holds selection if in selection mode"
 	}
 	self.response = ""
 	return self
@@ -68,6 +75,13 @@ function Console:comListModelerControls()
 	end
 end
 
+function Console:comListCombos()
+	self.response = ""
+	for k, _ in pairs(self.comboList) do
+		self.response = self.response .. k .. ", "
+	end
+end
+
 function Console:comHelp()
 	local arg = self.args[1]
 
@@ -76,6 +90,8 @@ function Console:comHelp()
 		self.response = "Is a command. " .. self.commands[arg][2]
 	elseif self.host:getModelerKeyActions()[arg] ~= nil then
 		self.response = "Is a keyboard action. " .. self.host:getModelerKeyActions()[arg][2]
+	elseif self.comboList[arg] ~= nil then
+		self.response = "Is a combo action. " .. self.comboList[arg]
 	else
 		self.response = "No command given, use 'help [command]'"
 	end
