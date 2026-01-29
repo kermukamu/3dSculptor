@@ -64,9 +64,10 @@ function Scene.new(title, screenWidth, screenHeight)
 
 	self.keyActions = {
 		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
-		["e"] = {function() self:getCurrentModel():joinToFirstSelected() end, "Joins selected vertices to first selected vertex"},
+		["c"] = {function() self:getCurrentModel():joinToFirstSelected() end, "Connects selected vertices to first selected vertex"},
 		["s"] = {function() self:turnSelectionModeOn() end, "Turns selection mode on"},
-		["v"] = {function() self:turnVertexModeOn() end, "Turns vertex mode on"}
+		["v"] = {function() self:turnVertexModeOn() end, "Turns vertex mode on"},
+		["e"] = {function() self:turnMoveModeOn() end, "Turns move mode on"}
     }
 
 	self.activeSection = self.modeler
@@ -168,6 +169,7 @@ function Scene:setDrawVertices(value) self.drawVertices = value end
 function Scene:setDrawAxis(value) self.drawAxis = value end
 function Scene:turnSelectionModeOn() self.toolMode = "selection" end
 function Scene:turnVertexModeOn() self.toolMode = "vertex" end
+function Scene:turnMoveModeOn() self.toolMode = "move" end
 
 
 return {Scene = Scene}
