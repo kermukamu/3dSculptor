@@ -98,23 +98,24 @@ function Cool3d:translate_xyz(xyz, dxyz)
 end
 
 function Cool3d:rotate(xyz, Phi, Theta)
-    local cosPhi = math.cos(Phi)
-    local sinPhi = math.sin(Phi)
-    local cosTheta = math.cos(Theta)
-    local sinTheta = math.sin(Theta)
+    local cosP = math.cos(Phi)
+    local sinP = math.sin(Phi)
+    local cosT = math.cos(Theta)
+    local sinT = math.sin(Theta)
+
     local x, y, z = xyz[1], xyz[2], xyz[3]
 
-    -- Rotate on phi
-    local x1 = cosPhi * x - sinPhi * y
-    local y1 = sinPhi * x + cosPhi * y
-    local z1 = z
+    -- Theta
+    local x1 =  cosT * x + sinT * z
+    local y1 =  y
+    local z1 = -sinT * x + cosT * z
 
-    -- Rotate on theta
-    local x2 =  cosTheta * x1 + sinTheta * z1
-    local y2 =  y1
-    local z2 = -sinTheta * x1 + cosTheta * z1
+    -- Phi
+    local x2 = x1
+    local y2 =  cosP * y1 - sinP * z1
+    local z2 =  sinP * y1 + cosP * z1
 
-	return {x2, y2, z2}
+    return {x2, y2, z2}
 end
 
 function Cool3d:update(dt)
@@ -421,6 +422,10 @@ function Cool3d:joinToFirstSelected()
     end
 end
 
+function Cool3d:pan(argPhi, argTheta)
+    self:incrementOrientation(argPhi, argTheta)
+end 
+
 function Cool3d:multiplyModelSize(multiplier)
     for _, p in ipairs(self.points) do
         p[1] = p[1] * multiplier
@@ -470,4 +475,9 @@ function Cool3d:setRotation(argPhi, argTheta)
     self.rotSpeedTheta = argTheta * deg2rad
 end
 
+function Cool3d:incrementOrientation(argPhi, argTheta)
+    local deg2rad = math.pi / 180
+    self.rotAnglePhi = self.rotAnglePhi + argPhi * deg2rad
+    self.rotAngleTheta = self.rotAngleTheta +argTheta * deg2rad
+end
 return { Cool3d = Cool3d}

@@ -28,7 +28,6 @@ end
 
 function Modeler:update(dt)
 	self.timer = math.max(self.timer + dt, 0)
-
 	self.currentModel:update(dt)
 end
 
@@ -71,6 +70,16 @@ function Modeler:mousePressed(mx, my, button)
 		if button == 1 then -- left click
         	self.currentModel:selectVertexWithin(mx, my)
     	end
+	end
+end
+
+function Modeler:mouseMoved(x, y, dx, dy)
+	if self.host:getActiveSection() == self and 
+		love.keyboard.isDown("space") and love.mouse.isDown(1) then
+
+		love.mouse.setRelativeMode(true)
+		self.currentModel:pan(dy, dx)
+		love.mouse.setRelativeMode(false)
 	end
 end
 
