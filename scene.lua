@@ -121,6 +121,12 @@ function Scene:mousePressed(mx, my, button)
 	self.activeSection:mousePressed(mx, my, button)
 end
 
+function Scene:mouseMoved(x, y, dx, dy)
+	if self.activeSection and self.activeSection.mouseMoved then
+		self.activeSection:mouseMoved(x, y, dx, dy)
+	end
+end
+
 function Scene:wheelMoved(x, y)
 	self.activeSection:wheelMoved(x, y)
 end
@@ -138,6 +144,7 @@ function Scene:drawVerticesIsOn() return self.drawVertices end
 function Scene:drawAxisMarkerIsOn() return self.drawAxisMarker end
 
 function Scene:getToolMode() return self.toolMode end
+function Scene:getActiveSection() return self.activeSection end
 
 function Scene:getCurrentModel()
 	if self.modeler ~= nil then
