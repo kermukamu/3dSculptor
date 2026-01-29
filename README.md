@@ -12,4 +12,10 @@ The framework is mostly used for creating a window, getting keyboard and mouse i
 
 The project includes an example model, which can be opened by running 'load 3d/gem.txt' in the integrated terminal.
 
-<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/3b5acaa6-488c-4eec-921b-5f0d7d5a0fc8" />
+Example photos:
+
+1) A section of a wireframe gem model and circle getting rectangularly selected
+<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/75b7ef37-babe-4d5c-b2e1-31c43e39d97e" />
+
+2) The same model with a selected region being translated in x and y coordinates
+<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/7dd9d683-b06b-47d6-a19c-df07b070b32b" />
