@@ -122,6 +122,12 @@ function Scene:mousePressed(mx, my, button)
 	self.activeSection:mousePressed(mx, my, button)
 end
 
+function Scene:mouseReleased(mx, my, button)
+	if self.activeSection and self.activeSection.mouseReleased then
+		self.activeSection:mouseReleased(mx, my, button)
+	end
+end
+
 function Scene:mouseMoved(x, y, dx, dy)
 	if self.activeSection and self.activeSection.mouseMoved then
 		self.activeSection:mouseMoved(x, y, dx, dy)
