@@ -15,6 +15,8 @@ function Modeler.new(x, y, w, h, host)
 	self.w = w - 2 * self.lineWidth
 	self.h = h - 2 * self.lineWidth
 
+	self.toolMode = self.host:getToolMode()
+
 	-- Setup 3D model
 	local modelX2D = (self.x + self.w) / 2 -- X of projection, in other words, x if z = 0 
 	local modelY2D = (self.y + self.h) / 2 -- Same for Y
@@ -22,6 +24,8 @@ function Modeler.new(x, y, w, h, host)
 	self.currentModel = Cool3d.new(modelX2D, modelY2D, distance, self)
 
 	-- Other
+	self.prevClickX = 0
+	self.prevClickY = 0
 	self.timer = 0
 	return self
 end
@@ -29,6 +33,7 @@ end
 function Modeler:update(dt)
 	self.timer = math.max(self.timer + dt, 0)
 	self.currentModel:update(dt)
+	self.toolMode = self.host:getToolMode()
 end
 
 function Modeler:draw()
@@ -37,6 +42,16 @@ function Modeler:draw()
     love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
 
 	self.currentModel:draw()
+
+	-- Selection rectangle
+	if self.host:getActiveSection() == self and self.toolMode == "selection" and love.mouse.isDown(1) then
+		local mx, my = love.mouse.getPosition()
+		local w, h = mx-self.prevClickX, my-self.prevClickY
+		love.graphics.setColor(0,0,1,0.3) -- Translucent blue
+		love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
+	end
+
+	if not self.currentModel:getAllModelWithinView() then self.currentModel:drawHiddenVerticesComplaint() end
 
 	-- Frame
 	local originalLW = love.graphics.getLineWidth()
@@ -64,20 +79,29 @@ function Modeler:textInput(t)
 end
 
 function Modeler:mousePressed(mx, my, button)
-	local toolMode = self.host:getToolMode()
-	if not ((love.keyboard.isDown("lshift") and toolMode == "selection") or toolMode == "move")
+	if not ((love.keyboard.isDown("lshift") and self.toolMode == "selection") or self.toolMode == "move")
 		then self.currentModel:deSelect() end
-	if toolMode == "selection" then
-		if button == 1 then -- left click
-        	self.currentModel:selectVertexWithin(mx, my)
+	self.prevClickX = mx
+	self.prevClickY = my
+end
+
+function Modeler:mouseReleased(mx, my, button)
+	if self.toolMode == "selection" then
+    	if button == 1 then -- left click
+    		if (math.abs(mx - self.prevClickX) < 5) 
+    			and (math.abs(my - self.prevClickY) < 5) then -- Very small area between press and release
+    			self.currentModel:selectVertexWithinClick(mx, my)
+    		else
+        		self.currentModel:selectVertexWithinRectangle(self.prevClickX, self.prevClickY, mx, my)
+        	end
     	end
 	end
 end
 
 function Modeler:mouseMoved(x, y, dx, dy)
-	if love.keyboard.isDown("space") and love.mouse.isDown(1) then
+	if love.keyboard.isDown("space") and love.mouse.isDown(1) then -- Rotate
 		love.mouse.setRelativeMode(true)
-		self.currentModel:pan(dy, dx)
+		self.currentModel:incrementOrientation(dy, dx)
 		love.mouse.setRelativeMode(false)
 	end
 end

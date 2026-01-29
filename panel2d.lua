@@ -14,6 +14,10 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.h = h - 2 * self.frameLineWidth
     self.axes = axes
     self.allModelWithinView = true
+    self.toolMode = self.host:getToolMode()
+    self.currentModel = self:getCurrentModel()
+    self.prevClickX = 0
+    self.prevClickY = 0
 
     self.viewScale = 1
     self.clickRange = 5
@@ -27,6 +31,8 @@ end
 function Panel2d:update(dt)
     self.timer = math.max(self.timer + dt, 0)
     self.viewScale = math.max(self.viewScale, 0)
+    self.toolMode = self.host:getToolMode()
+    self.currentModel = self:getCurrentModel()
 end
 
 function Panel2d:draw()
@@ -36,6 +42,14 @@ function Panel2d:draw()
 
     self:drawModel()
     self:drawAxisMarker()
+
+    -- Selection rectangle
+    if self.host:getActiveSection() == self and self.toolMode == "selection" and love.mouse.isDown(1) then
+        local mx, my = love.mouse.getPosition()
+        local w, h = mx-self.prevClickX, my-self.prevClickY
+        love.graphics.setColor(0,0,1,0.3) -- Translucent blue
+        love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
+    end
 
     if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
 
@@ -48,11 +62,10 @@ function Panel2d:draw()
 end
 
 function Panel2d:drawModel()
-    local currentModel = self:getCurrentModel()
-    if currentModel then
-        local points = currentModel:getPoints()
-        local selectedPoints = currentModel:getSelectedVertices()
-        local lines = currentModel:getLines()
+    if self.currentModel then
+        local points = self.currentModel:getPoints()
+        local selectedPoints = self.currentModel:getSelectedVertices()
+        local lines = self.currentModel:getLines()
     
         love.graphics.setColor(1, 1, 1)
         love.graphics.setLineWidth(self.lineWidth)
@@ -152,17 +165,27 @@ function Panel2d:textInput(t)
 end
 
 function Panel2d:mousePressed(mx, my, button)
-    local currentModel = self:getCurrentModel()
     local toolMode = self.host:getToolMode()
     if not ((love.keyboard.isDown("lshift") and toolMode == "selection") or toolMode == "move")
-        then currentModel:deSelect() end
-    if toolMode == "selection" then
-        if button == 1 then -- left click
-            self:selectVertexWithin(mx, my)
-        end
-    elseif toolMode == "vertex" then
+        then self.currentModel:deSelect() end
+    if toolMode == "vertex" then
         local tx, ty = self:screenPosToModelPos(mx, my)
-        currentModel:addVertexOnPlane(tx, ty, self.axes)
+        self.currentModel:addVertexOnPlane(tx, ty, self.axes)
+    end
+    self.prevClickX = mx
+    self.prevClickY = my
+end
+
+function Panel2d:mouseReleased(mx, my, button)
+    if self.toolMode == "selection" then
+        if button == 1 then -- left click
+            if (math.abs(mx - self.prevClickX) < 5) 
+                and (math.abs(my - self.prevClickY) < 5) then -- Very small area between press and release
+                self:selectVertexWithinClick(mx, my)
+            else
+                self:selectVertexWithinRectangle(self.prevClickX, self.prevClickY, mx, my)
+            end
+        end
     end
 end
 
@@ -170,11 +193,11 @@ function Panel2d:mouseMoved(x, y, dx, dy)
     local sdx, sdy = dx / self.viewScale, dy / self.viewScale
     if self.host:getToolMode() == "move" and love.mouse.isDown(1) then
         if self.axes == "xz" or self.axes == "zx" then 
-            self:getCurrentModel():transformSelected(sdx, 0, -sdy) 
+            self.currentModel:transformSelected(sdx, 0, -sdy) 
         elseif self.axes == "xy" or self.axes == "yx" then 
-            self:getCurrentModel():transformSelected(sdx, -sdy, 0) 
+            self.currentModel:transformSelected(sdx, -sdy, 0) 
         elseif self.axes == "yz" or self.axes == "zy" then 
-            self:getCurrentModel():transformSelected(0, sdx, -sdy) 
+            self.currentModel:transformSelected(0, sdx, -sdy) 
         end
     end
 end
@@ -194,20 +217,18 @@ function Panel2d:screenPosToModelPos(x, y)
 end
 
 function Panel2d:deSelect()
-    local currentModel = self.host:getCurrentModel()
-    if currentModel then 
-        currentModel:deSelect()
+    if self.currentModel then 
+        self.currentModel:deSelect()
     end
 end
 
-function Panel2d:selectVertexWithin(mx, my)
-    local currentModel = self.host:getCurrentModel()
-    if currentModel then
+function Panel2d:selectVertexWithinClick(mx, my)
+    if self.currentModel then
         local iSelected = nil
         for i=1, #self.screen, 1 do
             if self.screen[i] == nil then 
                 -- Silly lua doesn't support continue...
-            elseif self:isWithinCircle(mx, my, self.screen[i][1], self.screen[i][2], 
+            elseif self.currentModel:isWithinCircle(mx, my, self.screen[i][1], self.screen[i][2], 
                 self.clickRange) then
                 -- If nearest to viewer, select
                 if (iSelected == nil) or (self.screen[i][3] < self.screen[iSelected][3]) then
@@ -215,14 +236,20 @@ function Panel2d:selectVertexWithin(mx, my)
                 end
             end
         end
-        if iSelected ~= nil then currentModel:setVertexSelected(iSelected) end
+        if iSelected ~= nil then self.currentModel:setVertexSelected(iSelected) end
     end
 end
 
-function Panel2d:isWithinCircle(px, py, cx, cy, r)
-    local dx = px - cx
-    local dy = py - cy
-    return (dx * dx + dy * dy) <= (r * r)
+function Panel2d:selectVertexWithinRectangle(x1, y1, x2, y2)
+    if self.currentModel then
+        for i=1, #self.screen, 1 do
+            if self.screen[i] == nil then 
+                -- Silly lua doesn't support continue...
+            elseif self.currentModel:isWithinRectangle(x1, y1, x2, y2, self.screen[i][1], self.screen[i][2]) then
+                if i ~= nil then self.currentModel:setVertexSelected(i) end
+            end
+        end
+    end
 end
 
 function Panel2d:drawHiddenVerticesComplaint()

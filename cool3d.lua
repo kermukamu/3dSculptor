@@ -139,7 +139,6 @@ end
 
 function Cool3d:draw()
     self:drawModel()
-    if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
     if self.host:drawAxisMarkerIsOn() then self:drawAxisMarker() end
 end
 
@@ -403,7 +402,7 @@ function Cool3d:deSelect()
     self.firstSelectedVert = nil
 end
 
-function Cool3d:selectVertexWithin(x, y)
+function Cool3d:selectVertexWithinClick(x, y)
     local iSelected = nil
     for i=1, #self.screen, 1 do
         if self.screen[i] == nil then 
@@ -416,6 +415,16 @@ function Cool3d:selectVertexWithin(x, y)
         end
     end
     if iSelected ~= nil then self:setVertexSelected(iSelected) end
+end
+
+function Cool3d:selectVertexWithinRectangle(x1, y1, x2, y2)
+    for i=1, #self.screen, 1 do
+        if self.screen[i] == nil then 
+            -- Silly lua doesn't support continue...
+        elseif self:isWithinRectangle(x1, y1, x2, y2, self.screen[i][1], self.screen[i][2]) then
+            if i ~= nil then self:setVertexSelected(i) end
+        end
+    end
 end
 
 function Cool3d:transformSelected(dx, dy, dz)
@@ -442,10 +451,6 @@ function Cool3d:joinToFirstSelected()
     end
 end
 
-function Cool3d:pan(argPhi, argTheta)
-    self:incrementOrientation(argPhi, argTheta)
-end 
-
 function Cool3d:multiplyModelSize(multiplier)
     for _, p in ipairs(self.points) do
         p[1] = p[1] * multiplier
@@ -465,6 +470,15 @@ function Cool3d:isWithinCircle(px, py, cx, cy, r)
     return (dx * dx + dy * dy) <= (r * r)
 end
 
+function Cool3d:isWithinRectangle(x1, y1, x2, y2, px, py)
+    local minX = math.min(x1, x2)
+    local maxX = math.max(x1, x2)
+    local minY = math.min(y1, y2)
+    local maxY = math.max(y1, y2)
+
+    return px >= minX and px <= maxX and py >= minY and py <= maxY
+end
+
 -- Getters and setters
 
 function Cool3d:getPoints() return self.points end
@@ -473,6 +487,7 @@ function Cool3d:getTextScale() return self.textScale end
 function Cool3d:getSelectedVertices() return self.selectedVertices end
 function Cool3d:getAxisMarkerX() return self.host:getX() + self.host:getW()/8 end
 function Cool3d:getAxisMarkerY() return self.host:getY() + self.host:getH() - self.host:getH()/8 end
+function Cool3d:getAllModelWithinView() return self.allModelWithinView end
 function Cool3d:getDZ(value) return self.dz end
 function Cool3d:setDZ(value) self.dz = value end
 function Cool3d:setVertexSelected(number) 
