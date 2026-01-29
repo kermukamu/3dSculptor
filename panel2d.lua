@@ -158,7 +158,7 @@ function Panel2d:mousePressed(mx, my, button)
         then currentModel:deSelect() end
     if toolMode == "selection" then
         if button == 1 then -- left click
-            currentModel:selectVertexWithin(mx, my)
+            self:selectVertexWithin(mx, my)
         end
     elseif toolMode == "vertex" then
         local tx, ty = self:screenPosToModelPos(mx, my)
