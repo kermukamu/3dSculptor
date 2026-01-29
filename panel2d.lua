@@ -154,7 +154,7 @@ end
 function Panel2d:mousePressed(mx, my, button)
     local currentModel = self:getCurrentModel()
     local toolMode = self.host:getToolMode()
-    if not (love.keyboard.isDown("lshift") and toolMode == "selection")
+    if not ((love.keyboard.isDown("lshift") and toolMode == "selection") or toolMode == "move")
         then currentModel:deSelect() end
     if toolMode == "selection" then
         if button == 1 then -- left click
@@ -166,11 +166,24 @@ function Panel2d:mousePressed(mx, my, button)
     end
 end
 
+function Panel2d:mouseMoved(x, y, dx, dy)
+    local sdx, sdy = dx / self.viewScale, dy / self.viewScale
+    if self.host:getToolMode() == "move" and love.mouse.isDown(1) then
+        if self.axes == "xz" or self.axes == "zx" then 
+            self:getCurrentModel():transformSelected(sdx, 0, -sdy) 
+        elseif self.axes == "xy" or self.axes == "yx" then 
+            self:getCurrentModel():transformSelected(sdx, -sdy, 0) 
+        elseif self.axes == "yz" or self.axes == "zy" then 
+            self:getCurrentModel():transformSelected(0, sdx, -sdy) 
+        end
+    end
+end
+
 function Panel2d:wheelMoved(x, y)
     if y > 0 then -- Wheel moved up
-        self.viewScale = self.viewScale - 0.05
+        self.viewScale = self.viewScale + self.viewScale/10
     elseif y < 0 then -- Wheel moved down
-        self.viewScale = self.viewScale + 0.05
+        self.viewScale = self.viewScale - self.viewScale/10
     end
 end
 
@@ -215,7 +228,7 @@ end
 function Panel2d:drawHiddenVerticesComplaint()
     love.graphics.setColor(1,0.2,0,1) -- Brown
     local complaint = "The complete model is not visible, try increasing view distance"
-    love.graphics.print(complaint, self.x + self.w/32, self.y + self.h/32, 0, tScaling, tScaling)
+    love.graphics.print(complaint, self.x + self.w/32, self.y + self.h/32, 0)
 end
 
 function Panel2d:isWithinView(x, y)

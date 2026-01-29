@@ -52,10 +52,11 @@ function Modeler:keyPressed(key)
 end
 
 function Modeler:wheelMoved(x, y)
+	local dz = self.currentModel:getDZ()
 	if y > 0 then -- Wheel moved up
-		self.currentModel:setDZ((self.currentModel:getDZ() - 50))
+		self.currentModel:setDZ((dz - dz/10))
 	elseif y < 0 then -- Wheel moved down
-		self.currentModel:setDZ((self.currentModel:getDZ() + 50))
+		self.currentModel:setDZ((dz + dz/10))
 	end
 end
 
@@ -64,7 +65,7 @@ end
 
 function Modeler:mousePressed(mx, my, button)
 	local toolMode = self.host:getToolMode()
-	if not (love.keyboard.isDown("lshift") and toolMode == "selection")
+	if not ((love.keyboard.isDown("lshift") and toolMode == "selection") or toolMode == "move")
 		then self.currentModel:deSelect() end
 	if toolMode == "selection" then
 		if button == 1 then -- left click
@@ -74,9 +75,7 @@ function Modeler:mousePressed(mx, my, button)
 end
 
 function Modeler:mouseMoved(x, y, dx, dy)
-	if self.host:getActiveSection() == self and 
-		love.keyboard.isDown("space") and love.mouse.isDown(1) then
-
+	if love.keyboard.isDown("space") and love.mouse.isDown(1) then
 		love.mouse.setRelativeMode(true)
 		self.currentModel:pan(dy, dx)
 		love.mouse.setRelativeMode(false)

@@ -8,7 +8,7 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
 
 	self.points = {} -- AKA vertices
 	self.lines = {} -- between assigned vertices
-	self.lineWidth = 1 or 1
+	self.lineWidth = 1
     self.dx = 0
     self.dy = 0
 	self.dz = modelDistance
@@ -16,6 +16,7 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.rotSpeedTheta = 0.1
     self.rotAnglePhi = 0
     self.rotAngleTheta = 0
+    self.viewingRotTable = {0, 0, 0, 0}
     self.timer = 0
     self.zSpeed = 0.2
 
@@ -93,15 +94,23 @@ function Cool3d:project(xyz)
     return {x / z, y / z}
 end
 
-function Cool3d:translate_xyz(xyz, dxyz)
+function Cool3d:translateXYZ(xyz, dxyz)
     return {xyz[1] + dxyz[1], xyz[2] + dxyz[2], xyz[3] + dxyz[3]}
 end
 
-function Cool3d:rotate(xyz, Phi, Theta)
+function Cool3d:calcRotationTable(Phi, Theta)
     local cosP = math.cos(Phi)
     local sinP = math.sin(Phi)
     local cosT = math.cos(Theta)
     local sinT = math.sin(Theta)
+    return {cosP, sinP, cosT, sinT}
+end
+
+function Cool3d:rotate(xyz, rotTable)
+    local cosP = rotTable[1]
+    local sinP = rotTable[2]
+    local cosT = rotTable[3]
+    local sinT = rotTable[4]
 
     local x, y, z = xyz[1], xyz[2], xyz[3]
 
@@ -123,6 +132,7 @@ function Cool3d:update(dt)
     --self.dz = math.sin(self.zSpeed * self.timer) + 3
     self.rotAnglePhi = (self.rotAnglePhi + math.pi * self.rotSpeedPhi * dt)
     self.rotAngleTheta = (self.rotAngleTheta + math.pi * self.rotSpeedTheta * dt)
+    self.viewingRotTable = self:calcRotationTable(self.rotAnglePhi, self.rotAngleTheta)
 
     self.dz = math.max(self.dz, 0)
 end
@@ -146,13 +156,14 @@ function Cool3d:drawModel()
     self.allModelWithinView = true
     for i = 1, #self.points do
         -- Rotations and translations
-        local p = self:rotate(self.points[i], self.rotAnglePhi, self.rotAngleTheta)
-        p = self:translate_xyz(p, {self.dx, self.dy, self.dz})
+        local p = self:rotate(self.points[i], self.viewingRotTable)
+        p = self:translateXYZ(p, {self.dx, self.dy, self.dz})
 
         local proj = {0, 0}
         if p[3] and p[3] > 0.001 then -- Translated z is not outside the view (monitor)
             local proj = self:project(p)
-            local vx, vy = self.x2d + proj[1]*self.zCompression, self.y2d - proj[2]*self.zCompression, z
+            local vx = self.x2d + proj[1]*self.zCompression
+            local vy = self.y2d - proj[2]*self.zCompression
             if self:isWithinView(vx, vy) then
                 self.screen[i] = {vx, vy, p[3]}
             else
@@ -229,8 +240,8 @@ function Cool3d:drawAxisMarker()
 
     for i = 1, #points do
         -- Rotations and translations
-        local p = self:rotate(points[i], self.rotAnglePhi, self.rotAngleTheta)
-        p = self:translate_xyz(p, {self.dxMarker, self.dyMarker, self.dzMarker})
+        local p = self:rotate(points[i], self.viewingRotTable)
+        p = self:translateXYZ(p, {self.dxMarker, self.dyMarker, self.dzMarker})
 
         local proj = {0, 0}
         if p[3] and p[3] > 0.001 then -- Translated z is not outside the view (monitor)
@@ -274,7 +285,7 @@ end
 function Cool3d:drawHiddenVerticesComplaint()
     love.graphics.setColor(1,0.2,0,1) -- Brown
     local complaint = "The complete model is not visible, try increasing view distance"
-    love.graphics.print(complaint, self.host:getX() + self.host:getW()/32, self.host:getY() + self.host:getH()/32, 0, tScaling, tScaling)
+    love.graphics.print(complaint, self.host:getX() + self.host:getW()/32, self.host:getY() + self.host:getH()/32, 0)
 end
 
 function Cool3d:addVertex(x, y, z)
@@ -353,19 +364,19 @@ function Cool3d:drawCircle(centerX, centerY, centerZ, radius, plane, segments, c
     if plane == "xy" or plane == "yx" then
         for _, p in ipairs(aux) do
             local point = {p[1], p[2], 0}
-            point = self:translate_xyz(point, {centerX, centerY, centerZ})
+            point = self:translateXYZ(point, {centerX, centerY, centerZ})
             self:addVertex(self:r2Dec(point[1]), self:r2Dec(point[2]), self:r2Dec(point[3]))
         end
     elseif plane == "xz" or plane == "zx" then
         for _, p in ipairs(aux) do
             local point = {p[1], 0, p[2]}
-            point = self:translate_xyz(point, {centerX, centerY, centerZ})
+            point = self:translateXYZ(point, {centerX, centerY, centerZ})
             self:addVertex(self:r2Dec(point[1]), self:r2Dec(point[2]), self:r2Dec(point[3]))
         end
     elseif plane == "yz" or plane == "zy" then
         for _, p in ipairs(aux) do
             local point = {0, p[1], p[2]}
-            point = self:translate_xyz(point, {centerX, centerY, centerZ})
+            point = self:translateXYZ(point, {centerX, centerY, centerZ})
             self:addVertex(self:r2Dec(point[1]), self:r2Dec(point[2]), self:r2Dec(point[3]))
         end
     else return "Plane parameter is incorrect" end
@@ -407,8 +418,17 @@ function Cool3d:selectVertexWithin(x, y)
     if iSelected ~= nil then self:setVertexSelected(iSelected) end
 end
 
+function Cool3d:transformSelected(dx, dy, dz)
+    for i, selected in pairs(self.selectedVertices) do
+        if selected then
+            local v = self.points[i]
+            self.points[i] = {v[1]+dx, v[2]+dy, v[3]+dz}
+        end
+    end
+end
+
 function Cool3d:deleteSelected()
-    for i=1, #self.points, 1 do
+    for i=#self.points, 1, -1 do
         if self.selectedVertices[i] then self:removeVertex(i) end
     end
     self:deSelect()
@@ -416,7 +436,7 @@ end
 
 function Cool3d:joinToFirstSelected()
     for k, v in pairs(self.selectedVertices) do
-        if v == true and (v ~= self.firstSelectedVert) and (self.firstSelectedVert ~= nil) then
+        if v == true and (k ~= self.firstSelectedVert) and (self.firstSelectedVert ~= nil) then
             self:connect(self.firstSelectedVert, k)
         end
     end
