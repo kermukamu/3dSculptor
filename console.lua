@@ -47,7 +47,8 @@ function Console.new(x, y, w, h, host)
 		["setDistance"] = {function() self:comSetDistance() end, "Sets view distance to model, use 'scale [scale]'"},
 		["clear"] = {function() self:comClear() end, "Clears the model, use 'clear'"},
 		["multiplyModel"] = {function() self:comMultiplyModel() end, "Multiplies actual model size, use 'multiplyModel [multiplier]'"},
-		["drawCircle"] = {function() self:comDrawCircle() end, "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"}
+		["drawCircle"] = {function() self:comDrawCircle() end, "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"},
+		["currentMode"] = {function() self:comCurrentMode() end, "Gets current mode, use 'currentMode'"}
 	}
 
 	self.comboList = {
@@ -110,6 +111,8 @@ function Console:comSaveModel()
 		self.response = currentModel:saveFile(self.args[1])
 	end
 end
+
+function Console:comCurrentMode() self.response = self.host:getToolMode() end
 
 function Console:comAddVertex()
 	local x, y, z = tonumber(self.args[1]), tonumber(self.args[2]), tonumber(self.args[3])
