@@ -41,8 +41,7 @@ function Modeler:draw()
     love.graphics.setColor(0,0,0,1) -- Black
     love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
 
-    -- Limit drawing area
-    love.graphics.setScissor(self.x, self.y, self.w, self.h)
+    love.graphics.setScissor(self.x, self.y, self.w, self.h) -- Limit drawing area
 
 	self.currentModel:draw()
 
@@ -57,7 +56,7 @@ function Modeler:draw()
 
 	if not self.currentModel:getAllModelWithinView() then self.currentModel:drawHiddenVerticesComplaint() end
 
-	love.graphics.setScissor()
+	love.graphics.setScissor() -- Remove drawing area limit
 
 	-- Frame
 	local originalLW = love.graphics.getLineWidth()
@@ -89,21 +88,30 @@ function Modeler:textInput(t)
 end
 
 function Modeler:mousePressed(mx, my, button)
-	if not ((love.keyboard.isDown("lshift") and self.toolMode == "selection") or self.toolMode == "move")
-		then self.currentModel:deSelect() end
+	if not (((love.keyboard.isDown("lshift") or love.keyboard.isDown("lalt")) 
+		and self.toolMode == "selection") or self.toolMode == "move") then 
+		self.currentModel:deSelect() 
+	end
 	self.prevClickX = mx
 	self.prevClickY = my
 end 
 
 function Modeler:mouseReleased(mx, my, button)
+    local lAltDown = love.keyboard.isDown("lalt")
+    local lShiftDown = love.keyboard.isDown("lshift")
+    local lCtrlDown = love.keyboard.isDown("lctrl")
+    local spaceDown = love.keyboard.isDown("space")
+
 	if self.toolMode == "selection" then
-    	if button == 1 and not love.keyboard.isDown("space") then -- left click
+    	if button == 1 and not spaceDown then -- left click
     		if (math.abs(mx - self.prevClickX) < 5) 
     			and (math.abs(my - self.prevClickY) < 5) then -- Very small area between press and release
-    			self.currentModel:selectVertexWithinClick(mx, my)
-    		else
-        		self.currentModel:selectVertexWithinRectangle(self.prevClickX, self.prevClickY, mx, my)
-        	end
+                if lAltDown then self.currentModel:toggleVertexSelectionWithinClick(mx, my, false)
+                else self.currentModel:toggleVertexSelectionWithinClick(mx, my, true) end
+            else
+                if lAltDown then self.currentModel:toggleVertexSelectionWithinRectangle(self.prevClickX, self.prevClickY, mx, my, false)
+                else self.currentModel:toggleVertexSelectionWithinRectangle(self.prevClickX, self.prevClickY, mx, my, true) end
+            end
     	end
 	end
 end

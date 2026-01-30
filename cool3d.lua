@@ -407,12 +407,12 @@ function Cool3d:selectAll()
         if self.screen[i] == nil then 
             -- Silly lua doesn't support continue...
         elseif i ~= nil then 
-            self:setVertexSelected(i)
+            self:toggleVertexSelection(i, true)
         end
     end
 end
 
-function Cool3d:selectVertexWithinClick(x, y)
+function Cool3d:toggleVertexSelectionWithinClick(x, y, val)
     local iSelected = nil
     for i=1, #self.screen, 1 do
         if self.screen[i] == nil then 
@@ -424,15 +424,15 @@ function Cool3d:selectVertexWithinClick(x, y)
             end
         end
     end
-    if iSelected ~= nil then self:setVertexSelected(iSelected) end
+    if iSelected ~= nil then self:toggleVertexSelection(iSelected, val) end
 end
 
-function Cool3d:selectVertexWithinRectangle(x1, y1, x2, y2)
+function Cool3d:toggleVertexSelectionWithinRectangle(x1, y1, x2, y2, val)
     for i=1, #self.screen, 1 do
         if self.screen[i] == nil then 
             -- Silly lua doesn't support continue...
         elseif self:isWithinRectangle(x1, y1, x2, y2, self.screen[i][1], self.screen[i][2]) then
-            if i ~= nil then self:setVertexSelected(i) end
+            if i ~= nil then self:toggleVertexSelection(i, val) end
         end
     end
 end
@@ -503,7 +503,14 @@ function Cool3d:getAxisMarkerY() return self.host:getY() + self.host:getH() - se
 function Cool3d:getAllModelWithinView() return self.allModelWithinView end
 function Cool3d:getDZ(value) return self.dz end
 function Cool3d:setDZ(value) self.dz = value end
-function Cool3d:setVertexSelected(number) 
+function Cool3d:toggleVertexSelection(number, val)
+    if not val then
+        -- Deselection is done this way as normally deselected vertices
+        -- are not stored at all in self.selectedVertices
+        self.selectedVertices[number] = nil
+        return nil
+    end
+
     -- Save first selected vertice
     if (self.firstSelectedVert == nil) then
         self.firstSelectedVert = number

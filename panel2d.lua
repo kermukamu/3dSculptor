@@ -39,7 +39,8 @@ function Panel2d:draw()
     --Black background
     love.graphics.setColor(0,0,0,1) -- Black
     love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
-    love.graphics.setScissor(self.x, self.y, self.w, self.h)
+
+    love.graphics.setScissor(self.x, self.y, self.w, self.h) -- Limit drawing area
 
     self:drawModel()
     self:drawAxisMarker()
@@ -65,7 +66,7 @@ function Panel2d:draw()
 
     if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
 
-    love.graphics.setScissor()
+    love.graphics.setScissor() -- Remove drawing area limit
 
     -- White Frame
     local originalLW = love.graphics.getLineWidth()
@@ -181,9 +182,13 @@ end
 function Panel2d:mousePressed(mx, my, button)
     local lShiftDown = love.keyboard.isDown("lshift")
     local lCtrlDown = love.keyboard.isDown("lctrl")
+    local lAltDown = love.keyboard.isDown("lalt")
+    local spaceDown = love.keyboard.isDown("space")
 
-    if not ((lShiftDown and self.toolMode == "selection") or self.toolMode == "move")
-        then self.currentModel:deSelect() end
+    if not (((lShiftDown or lAltDown) and self.toolMode == "selection") 
+        or self.toolMode == "move") then 
+        self.currentModel:deSelect() 
+    end
 
     if self.toolMode == "vertex" then
         if not (lShiftDown or lCtrlDown) then
@@ -199,14 +204,17 @@ end
 function Panel2d:mouseReleased(mx, my, button)
     local lShiftDown = love.keyboard.isDown("lshift")
     local lCtrlDown = love.keyboard.isDown("lctrl")
+    local lAltDown = love.keyboard.isDown("lalt")
 
     if self.toolMode == "selection" then
         if button == 1 then -- left click
             if (math.abs(mx - self.prevClickX) < 5) 
                 and (math.abs(my - self.prevClickY) < 5) then -- Very small area between press and release
-                self:selectVertexWithinClick(mx, my)
+                if lAltDown then self:toggleVertexSelectionWithinClick(mx, my, false)
+                else self:toggleVertexSelectionWithinClick(mx, my, true) end
             else
-                self:selectVertexWithinRectangle(self.prevClickX, self.prevClickY, mx, my)
+                if lAltDown then self:toggleVertexSelectionWithinRectangle(self.prevClickX, self.prevClickY, mx, my, false)
+                else self:toggleVertexSelectionWithinRectangle(self.prevClickX, self.prevClickY, mx, my, true) end
             end
         end
     elseif self.toolMode == "vertex" then -- Draw circle centered at previous mouseLeft press
@@ -268,7 +276,7 @@ function Panel2d:selectAll()
     self:getCurrentModel():selectAll()
 end
 
-function Panel2d:selectVertexWithinClick(mx, my)
+function Panel2d:toggleVertexSelectionWithinClick(mx, my, val)
     if self.currentModel then
         local iSelected = nil
         for i=1, #self.screen, 1 do
@@ -282,17 +290,17 @@ function Panel2d:selectVertexWithinClick(mx, my)
                 end
             end
         end
-        if iSelected ~= nil then self.currentModel:setVertexSelected(iSelected) end
+        if iSelected ~= nil then self.currentModel:toggleVertexSelection(iSelected, val) end
     end
 end
 
-function Panel2d:selectVertexWithinRectangle(x1, y1, x2, y2)
+function Panel2d:toggleVertexSelectionWithinRectangle(x1, y1, x2, y2, val)
     if self.currentModel then
         for i=1, #self.screen, 1 do
             if self.screen[i] == nil then 
                 -- Silly lua doesn't support continue...
             elseif self.currentModel:isWithinRectangle(x1, y1, x2, y2, self.screen[i][1], self.screen[i][2]) then
-                if i ~= nil then self.currentModel:setVertexSelected(i) end
+                if i ~= nil then self.currentModel:toggleVertexSelection(i, val) end
             end
         end
     end
