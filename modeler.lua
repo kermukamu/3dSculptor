@@ -16,6 +16,7 @@ function Modeler.new(x, y, w, h, host)
 	self.h = h - 2 * self.lineWidth
 
 	self.toolMode = self.host:getToolMode()
+	self.panSpeed = 100
 
 	-- Setup 3D model
 	local modelX2D = (self.x + self.w) / 2 -- X of projection, in other words, x if z = 0 
@@ -34,6 +35,8 @@ function Modeler:update(dt)
 	self.timer = math.max(self.timer + dt, 0)
 	self.currentModel:update(dt)
 	self.toolMode = self.host:getToolMode()
+
+	self:handleArrowInput(dt)
 end
 
 function Modeler:draw()
@@ -85,6 +88,14 @@ function Modeler:drawCurrentToolNotice()
     local tx = self:getX() + self:getW()/32
     local ty = self:getY() + self:getH() - self:getH()/32 - fontH
     love.graphics.print(notice, tx, ty, 0)
+end
+
+function Modeler:handleArrowInput(dt)
+	local cm = self.currentModel
+	if love.keyboard.isDown("left") then cm:panCamera(self.panSpeed * dt, 0) end
+	if love.keyboard.isDown("right") then cm:panCamera(-self.panSpeed * dt, 0) end
+	if love.keyboard.isDown("up") then cm:panCamera(0, -self.panSpeed * dt) end
+	if love.keyboard.isDown("down") then cm:panCamera(0, self.panSpeed * dt) end
 end
 
 function Modeler:keyPressed(key)
