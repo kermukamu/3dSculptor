@@ -19,6 +19,9 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.prevClickX = 0
     self.prevClickY = 0
 
+    self.panSpeed = 100
+    self.dx = 0
+    self.dy = 0
     self.viewScale = 1
     self.clickRange = 5
     self.screen = {}
@@ -33,6 +36,8 @@ function Panel2d:update(dt)
     self.viewScale = math.max(self.viewScale, 0)
     self.toolMode = self.host:getToolMode()
     self.currentModel = self:getCurrentModel()
+
+    if self.host:getActiveSection() == self then self:handleArrowInput(dt) end
 end
 
 function Panel2d:draw()
@@ -172,6 +177,18 @@ function Panel2d:drawAxisMarker()
         love.graphics.setColor(0,0,1,1) -- Blue
         love.graphics.line(0+x,0+y,0+x,-size+y)
     else return end -- Axes are not defined
+end
+
+function Panel2d:panCamera(dx, dy)
+    self.dx = self.dx + dx
+    self.dy = self.dy + dy
+end
+
+function Panel2d:handleArrowInput(dt)
+    if love.keyboard.isDown("left") then self:panCamera(self.panSpeed * dt, 0) end
+    if love.keyboard.isDown("right") then self:panCamera(-self.panSpeed * dt, 0) end
+    if love.keyboard.isDown("up") then self:panCamera(0, self.panSpeed * dt) end
+    if love.keyboard.isDown("down") then self:panCamera(0, -self.panSpeed * dt) end
 end
 
 function Panel2d:keyPressed(key)
@@ -351,11 +368,11 @@ function Panel2d:vertexCoordsIsOn()
 end
 
 function Panel2d:getXShift()
-    return self.x+self.w/2
+    return self.x+self.w/2 + self.dx
 end
 
 function Panel2d:getYShift()
-    return self.y+self.h/2
+    return self.y+self.h/2 + self.dy
 end
 
 function Panel2d:getAxisMarkerX()
