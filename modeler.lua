@@ -36,7 +36,7 @@ function Modeler:update(dt)
 	self.currentModel:update(dt)
 	self.toolMode = self.host:getToolMode()
 
-	self:handleArrowInput(dt)
+	if self.host:getActiveSection() == self then self:handleArrowInput(dt) end
 end
 
 function Modeler:draw()
