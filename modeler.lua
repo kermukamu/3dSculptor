@@ -48,7 +48,7 @@ function Modeler:draw()
 		and love.mouse.isDown(1) and not love.keyboard.isDown("space") then
 		local mx, my = love.mouse.getPosition()
 		local w, h = mx-self.prevClickX, my-self.prevClickY
-		love.graphics.setColor(0,0,1,0.3) -- Translucent blue
+		love.graphics.setColor(0,1,0,0.3) -- Translucent green
 		love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
 	end
 
