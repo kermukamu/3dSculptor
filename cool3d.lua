@@ -281,12 +281,6 @@ function Cool3d:drawAxisMarker()
     end
 end
 
-function Cool3d:drawHiddenVerticesComplaint()
-    love.graphics.setColor(1,0.2,0,1) -- Brown
-    local complaint = "The complete model is not visible, try increasing view distance"
-    love.graphics.print(complaint, self.host:getX() + self.host:getW()/32, self.host:getY() + self.host:getH()/32, 0)
-end
-
 function Cool3d:addVertex(x, y, z)
     table.insert(self.points, {x, y, z})
     table.insert(self.lines, {})
