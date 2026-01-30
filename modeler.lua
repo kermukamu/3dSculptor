@@ -62,6 +62,10 @@ function Modeler:draw()
 	love.graphics.setLineWidth(originalLW)
 end
 
+function Modeler:selectAll()
+	self:getCurrentModel():selectAll()
+end
+
 function Modeler:keyPressed(key)
 	local action = self.host:getModelerKeyActions()[key]
 	if action then action[1]() end 

@@ -222,6 +222,10 @@ function Panel2d:deSelect()
     end
 end
 
+function Panel2d:selectAll()
+    self:getCurrentModel():selectAll()
+end
+
 function Panel2d:selectVertexWithinClick(mx, my)
     if self.currentModel then
         local iSelected = nil
