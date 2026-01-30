@@ -41,6 +41,9 @@ function Modeler:draw()
     love.graphics.setColor(0,0,0,1) -- Black
     love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
 
+    -- Limit drawing area
+    love.graphics.setScissor(self.x, self.y, self.w, self.h)
+
 	self.currentModel:draw()
 
 	-- Selection rectangle
@@ -53,6 +56,8 @@ function Modeler:draw()
 	end
 
 	if not self.currentModel:getAllModelWithinView() then self.currentModel:drawHiddenVerticesComplaint() end
+
+	love.graphics.setScissor()
 
 	-- Frame
 	local originalLW = love.graphics.getLineWidth()

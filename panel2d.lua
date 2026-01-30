@@ -39,6 +39,7 @@ function Panel2d:draw()
     --Black background
     love.graphics.setColor(0,0,0,1) -- Black
     love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
+    love.graphics.setScissor(self.x, self.y, self.w, self.h)
 
     self:drawModel()
     self:drawAxisMarker()
@@ -63,6 +64,8 @@ function Panel2d:draw()
     end
 
     if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
+
+    love.graphics.setScissor()
 
     -- White Frame
     local originalLW = love.graphics.getLineWidth()
