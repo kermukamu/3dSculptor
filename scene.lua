@@ -91,7 +91,11 @@ function Scene:draw()
 end
 
 function Scene:keyPressed(key)
-	self.activeSection:keyPressed(key)
+	if key == "a" and love.keyboard.isDown("lctrl") and self.activeSection.selectAll then
+		self.activeSection:selectAll()
+	elseif self.activeSection.keyPressed then
+		self.activeSection:keyPressed(key)
+	end
 end
 
 function Scene:textInput(t)
