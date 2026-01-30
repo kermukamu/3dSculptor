@@ -177,28 +177,30 @@ function Cool3d:drawModel()
         if self.screen[i] ~= nil then
             -- Text next to vertices
             local tScaling = self.zCompression*self.textScale/p[3]
-            if self.host:vertexNumberingIsOn()  then
-                love.graphics.setColor(1,1,0,1) -- Yellow
-                if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if vertex is selected
-                love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, tScaling, tScaling)
-                love.graphics.setColor(1,1,1,1)
+            if self.selectedVertices[i] then
+                if self.host:vertexNumberingIsOn() then
+                    -- love.graphics.setColor(1,1,0,1) -- Yellow
+                    love.graphics.setColor(0,1,0,1) -- Green
+                    love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, tScaling, tScaling)
+                    love.graphics.setColor(1,1,1,1)
+                end
+    
+                if self.host:vertexCoordsIsOn() then
+                    local text = tostring(self.points[i][1]) .. " " ..
+                        tostring(self.points[i][2]) .. " " .. tostring(self.points[i][3])
+                    local yOffset = love.graphics.getFont():getHeight() * (tScaling)
+                    --love.graphics.setColor(1,0.5,0,1) -- Orange
+                    love.graphics.setColor(0,0.5,0,1) -- Darker green
+                    love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, tScaling, tScaling)
+                    love.graphics.setColor(1,1,1,1)
+                end
             end
-
-            if self.host:vertexCoordsIsOn() then
-                local text = tostring(self.points[i][1]) .. " " ..
-                    tostring(self.points[i][2]) .. " " .. tostring(self.points[i][3])
-                local yOffset = love.graphics.getFont():getHeight() * (tScaling)
-                love.graphics.setColor(1,0.5,0,1) -- Orange
-                if self.selectedVertices[i] then love.graphics.setColor(0,0.5,0,1) end -- Darker green if vertex is selected
-                love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, tScaling, tScaling)
-                love.graphics.setColor(1,1,1,1)
-            end
-
+    
             -- The rectangles drawn at vertices
             if self.host:drawVerticesIsOn() then
                 local size = self.zCompression*self.host:getW()/(64*self.screen[i][3])
                 love.graphics.setColor(0,1,1,1) -- Cyan
-                if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green
+                if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if selected
                 love.graphics.rectangle("fill", self.screen[i][1]-size/2, self.screen[i][2]-size/2, size, size)
             end
         end
