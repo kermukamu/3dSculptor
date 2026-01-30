@@ -19,7 +19,8 @@ function Console.new(x, y, w, h, host)
 		"Run 'listCommands' to see all commmands\n" ..
 		"Run 'listKeys' to see all keys\n" ..
 		"Run 'listCombos' to see all combination actions\n" ..
-		"Run 'help [command/key]' to get help with a command or key action"}
+		"Run 'help [command/key]' to get help with a command or key action\n" ..
+		"Run 'spin 0 0' to stop spinning"}
 	self.logIndex = 1
 	self.text = ""
 	self.textScale = 2
@@ -44,7 +45,7 @@ function Console.new(x, y, w, h, host)
 		["drawVertices"] = {function() self:comDrawVertices() end, "Toggles vertex drawing, use 'drawVertices [true/false]'"},
 		["spin"] = {function() self:comSpin() end, "Sets view spinning speed around origin, use 'spin [phi(deg/s)] [theta (deg/s)]'"},
 		["orientation"] = {function() self:comOrientation() end, "Sets view orientation around origin, use 'orientation [phi(deg)] [theta (deg)]'"},
-		["setDistance"] = {function() self:comSetDistance() end, "Sets view distance to model, use 'scale [scale]'"},
+		["setCamera"] = {function() self:comSetCamera() end, "Sets viewing position to model, use 'setCamera [x] [y] [z]'"},
 		["clear"] = {function() self:comClear() end, "Clears the model, use 'clear'"},
 		["multiply"] = {function() self:comMultiplyModel() end, "Multiplies selection size, use 'multiply [multiplier]'"},
 		["circle"] = {function() self:comDrawCircle() end, "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"},
@@ -232,13 +233,16 @@ function Console:comOrientation()
 	end
 end
 
-function Console:comSetDistance()
-	local arg = tonumber(self.args[1])
-	if type(arg) ~= "number" then 
-		self.response = "Argument must be a number"
+function Console:comSetCamera()
+	local argX = tonumber(self.args[1])
+	local argY = tonumber(self.args[2])
+	local argZ = tonumber(self.args[3])
+	if type(argX) ~= "number" or type(argY) ~= "number" or type(argZ) ~= "number" then 
+		self.response = "Arguments must be numbers"
 	else
-		self.host.modeler.currentModel.dz = arg
-		self.response = "Set viewing distance to " .. tostring(arg)
+		self.host:getCurrentModel():setCamera(argX, argY, argZ)
+		self.response = "Set camera position to " .. tostring(argX) ..
+			", " .. tostring(argY) .. ", " .. tostring(argZ)
 	end
 end
 
