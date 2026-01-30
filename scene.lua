@@ -27,7 +27,7 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.drawVertices = true
 	self.toolMode = "selection"
 	self.circleSegments = 64
-	self.sphereSegments = 24
+	self.sphereSegments = 12
 
 	-- Position console to bottom third
 	local consoleW = screenWidth
