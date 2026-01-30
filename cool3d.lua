@@ -402,6 +402,16 @@ function Cool3d:deSelect()
     self.firstSelectedVert = nil
 end
 
+function Cool3d:selectAll()
+     for i=1, #self.screen, 1 do
+        if self.screen[i] == nil then 
+            -- Silly lua doesn't support continue...
+        elseif i ~= nil then 
+            self:setVertexSelected(i)
+        end
+    end
+end
+
 function Cool3d:selectVertexWithinClick(x, y)
     local iSelected = nil
     for i=1, #self.screen, 1 do
@@ -452,11 +462,13 @@ function Cool3d:joinToFirstSelected()
     end
 end
 
-function Cool3d:multiplyModelSize(multiplier)
-    for _, p in ipairs(self.points) do
-        p[1] = p[1] * multiplier
-        p[2] = p[2] * multiplier
-        p[3] = p[3] * multiplier
+function Cool3d:multiplyModelSize(m)
+    for i, selected in pairs(self.selectedVertices) do
+        if selected then
+            local v = self.points[i]
+            local vx, vy, vz = v[1]*m, v[2]*m, v[3]*m
+            self.points[i] = {self:r2Dec(vx), self:r2Dec(vy), self:r2Dec(vz)}
+        end
     end
 end
 
