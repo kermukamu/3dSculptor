@@ -416,11 +416,11 @@ function Cool3d:drawSphere(cx, cy, cz, radius, segments, connectLines)
 
     -- Top pole and bottom pole
     self:addVertex(self:r2Dec(cx), self:r2Dec(cy + radius), self:r2Dec(cz))
+    local top = #self.points
     self:addVertex(self:r2Dec(cx), self:r2Dec(cy - radius), self:r2Dec(cz))
+    local bottom = #self.points
 
     if connect then
-        local top, bottom = #self.points, #self.points
-
         -- Triangles between latitude bands
         for lat = 1, seg - 2 do
             for lon = 0, seg - 1 do
