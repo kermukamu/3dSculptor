@@ -44,7 +44,8 @@ function Modeler:draw()
 	self.currentModel:draw()
 
 	-- Selection rectangle
-	if self.host:getActiveSection() == self and self.toolMode == "selection" and love.mouse.isDown(1) then
+	if self.host:getActiveSection() == self and self.toolMode == "selection"
+		and love.mouse.isDown(1) and not love.keyboard.isDown("space") then
 		local mx, my = love.mouse.getPosition()
 		local w, h = mx-self.prevClickX, my-self.prevClickY
 		love.graphics.setColor(0,0,1,0.3) -- Translucent blue
@@ -63,7 +64,7 @@ end
 
 function Modeler:keyPressed(key)
 	local action = self.host:getModelerKeyActions()[key]
-	if action then action[1]() end
+	if action then action[1]() end 
 end
 
 function Modeler:wheelMoved(x, y)
@@ -83,11 +84,11 @@ function Modeler:mousePressed(mx, my, button)
 		then self.currentModel:deSelect() end
 	self.prevClickX = mx
 	self.prevClickY = my
-end
+end 
 
 function Modeler:mouseReleased(mx, my, button)
 	if self.toolMode == "selection" then
-    	if button == 1 then -- left click
+    	if button == 1 and not love.keyboard.isDown("space") then -- left click
     		if (math.abs(mx - self.prevClickX) < 5) 
     			and (math.abs(my - self.prevClickY) < 5) then -- Very small area between press and release
     			self.currentModel:selectVertexWithinClick(mx, my)
@@ -101,7 +102,7 @@ end
 function Modeler:mouseMoved(x, y, dx, dy)
 	if love.keyboard.isDown("space") and love.mouse.isDown(1) then -- Rotate
 		love.mouse.setRelativeMode(true)
-		self.currentModel:incrementOrientation(dy, dx)
+		self.currentModel:incrementOrientation(-dy, -dx)
 		love.mouse.setRelativeMode(false)
 	end
 end
