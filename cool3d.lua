@@ -431,7 +431,8 @@ function Cool3d:transformSelected(dx, dy, dz)
     for i, selected in pairs(self.selectedVertices) do
         if selected then
             local v = self.points[i]
-            self.points[i] = {v[1]+dx, v[2]+dy, v[3]+dz}
+            local vx, vy, vz = v[1]+dx, v[2]+dy, v[3]+dz
+            self.points[i] = {self:r2Dec(vx), self:r2Dec(vy), self:r2Dec(vz)}
         end
     end
 end
