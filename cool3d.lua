@@ -286,7 +286,8 @@ function Cool3d:addVertex(x, y, z)
     table.insert(self.lines, {})
 end
 
-function Cool3d:addVertexOnPlane(x, y, plane)
+function Cool3d:addVertexOnPlane(vx, vy, plane)
+    local x, y = self:r2Dec(vx), self:r2Dec(vy)
     if plane == "xz" or plane == "zx" then
         self:addVertex(x, 0, y)
     elseif plane == "xy" or plane == "yx" then
@@ -386,10 +387,87 @@ function Cool3d:drawCircle(centerX, centerY, centerZ, radius, plane, segments, c
     return "Circle drawn"
 end
 
+function Cool3d:drawSphere(cx, cy, cz, radius, segments, connectLines)
+    local connect = connectLines
+    local seg = segments or 6
+    if seg < 6 then return "At least 6 segments required" end
+
+    local startIndex = #self.points + 1
+
+    local verts = {}
+    local index = {}
+
+    -- Create vertices for latitude and longitude, excluding poles
+    for lat = 1, seg - 1 do
+        local phi = math.pi * lat / seg
+        local sinP = math.sin(phi)
+        local cosP = math.cos(phi)
+
+        index[lat] = {}
+        for lon = 0, seg - 1 do
+            local theta = 2 * math.pi * lon / seg
+            local x = cx + radius * sinP * math.cos(theta)
+            local y = cy + radius * cosP
+            local z = cz + radius * sinP * math.sin(theta)
+            self:addVertex(self:r2Dec(x), self:r2Dec(y), self:r2Dec(z))
+            index[lat][lon] = #self.points
+        end
+    end
+
+    -- Top pole and bottom pole
+    self:addVertex(self:r2Dec(cx), self:r2Dec(cy + radius), self:r2Dec(cz))
+    self:addVertex(self:r2Dec(cx), self:r2Dec(cy - radius), self:r2Dec(cz))
+
+    if connect then
+        local top, bottom = #self.points, #self.points
+
+        -- Triangles between latitude bands
+        for lat = 1, seg - 2 do
+            for lon = 0, seg - 1 do
+                local a = index[lat][lon]
+                local b = index[lat][(lon + 1) % seg]
+                local c = index[lat + 1][lon]
+                local d = index[lat + 1][(lon + 1) % seg]
+
+                -- First
+                self:connect(a, b)
+                self:connect(b, c)
+                self:connect(c, a)
+
+                -- Second
+                self:connect(b, d)
+                self:connect(d, c)
+                self:connect(c, b)
+            end
+        end
+
+        -- Top cap
+        for lon = 0, seg - 1 do
+            local a = index[1][lon]
+            local b = index[1][(lon + 1) % seg]
+
+            self:connect(top, a)
+            self:connect(a, b)
+            self:connect(b, top)
+        end
+
+        -- Bottom cap
+        for lon = 0, seg - 1 do
+            local a = index[seg - 1][lon]
+            local b = index[seg - 1][(lon + 1) % seg]
+
+            self:connect(a, bottom)
+            self:connect(bottom, b)
+            self:connect(b, a)
+        end
+    end
+
+    return "Sphere added"
+end
+
 function Cool3d:r2Dec(value)
     return math.floor(100*value) / 100
 end
-
 
 function Cool3d:deSelect()
     self.selectedVertices = {}
@@ -397,8 +475,8 @@ function Cool3d:deSelect()
 end
 
 function Cool3d:selectAll()
-     for i=1, #self.screen, 1 do
-        if self.screen[i] == nil then 
+     for i=1, #self.points, 1 do
+        if self.points[i] == nil then 
             -- Silly lua doesn't support continue...
         elseif i ~= nil then 
             self:toggleVertexSelection(i, true)
@@ -448,10 +526,40 @@ function Cool3d:deleteSelected()
     self:deSelect()
 end
 
-function Cool3d:joinToFirstSelected()
-    for k, v in pairs(self.selectedVertices) do
-        if v == true and (k ~= self.firstSelectedVert) and (self.firstSelectedVert ~= nil) then
-            self:connect(self.firstSelectedVert, k)
+function Cool3d:joinSelectedToNearestSelected()
+    --Vibe coded function, it better work damn it
+    local selected = {}
+    for i, v in pairs(self.selectedVertices) do
+        if v then table.insert(selected, i) end
+    end
+
+    -- Need at least two vertices
+    if #selected < 2 then return end
+
+    -- For each selected vertex, find nearest other selected vertex
+    for _, i in ipairs(selected) do
+        local pi = self.points[i]
+        local nearest = nil
+        local minDistSq = math.huge
+
+        for _, j in ipairs(selected) do
+            if i ~= j then
+                local pj = self.points[j]
+                local dx = pi[1] - pj[1]
+                local dy = pi[2] - pj[2]
+                local dz = pi[3] - pj[3]
+                local distSq = dx*dx + dy*dy + dz*dz
+
+                if distSq < minDistSq then
+                    minDistSq = distSq
+                    nearest = j
+                end
+            end
+        end
+
+        -- Connect to nearest selected vertex
+        if nearest then
+            self:connect(i, nearest)
         end
     end
 end
@@ -529,4 +637,5 @@ function Cool3d:incrementOrientation(argPhi, argTheta)
     self.rotAnglePhi = self.rotAnglePhi + argPhi * deg2rad
     self.rotAngleTheta = self.rotAngleTheta +argTheta * deg2rad
 end
+
 return { Cool3d = Cool3d}
