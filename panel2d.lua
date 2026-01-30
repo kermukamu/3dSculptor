@@ -44,11 +44,22 @@ function Panel2d:draw()
     self:drawAxisMarker()
 
     -- Selection rectangle
-    if self.host:getActiveSection() == self and self.toolMode == "selection" and love.mouse.isDown(1) then
+    if self.host:getActiveSection() == self and self.toolMode == "selection" 
+        and love.mouse.isDown(1) then
         local mx, my = love.mouse.getPosition()
         local w, h = mx-self.prevClickX, my-self.prevClickY
-        love.graphics.setColor(0,0,1,0.3) -- Translucent blue
+        love.graphics.setColor(0,1,0,0.3) -- Translucent green
         love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
+    end
+
+    -- Circle drawing rectangle
+    if self.host:getActiveSection() == self and self.toolMode == "vertex" 
+        and love.keyboard.isDown("lshift") and love.mouse.isDown(1) then
+        local mx, my = love.mouse.getPosition()
+        local dx, dy = mx-self.prevClickX, my-self.prevClickY
+        local r = math.sqrt(dx*dx + dy*dy)
+        love.graphics.setColor(0,1,1,0.3) --Translucent cyan
+        love.graphics.circle("fill", self.prevClickX, self.prevClickY, r)
     end
 
     if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
@@ -97,7 +108,7 @@ function Panel2d:drawModel()
             end
 
             if self.screen[i] ~= nil and self.host:drawVerticesIsOn() then
-                local size = self.w/64
+                local size = self.w*self.viewScale/(64)
                 love.graphics.setColor(0,1,1,1) -- Cyan
                 if selectedPoints[i] then love.graphics.setColor(0,1,0,1) end -- Green
                 love.graphics.rectangle("fill", xS-size/2, yS-size/2, size, size)
@@ -165,18 +176,27 @@ function Panel2d:textInput(t)
 end
 
 function Panel2d:mousePressed(mx, my, button)
-    local toolMode = self.host:getToolMode()
-    if not ((love.keyboard.isDown("lshift") and toolMode == "selection") or toolMode == "move")
+    local lShiftDown = love.keyboard.isDown("lshift")
+    local lCtrlDown = love.keyboard.isDown("lctrl")
+
+    if not ((lShiftDown and self.toolMode == "selection") or self.toolMode == "move")
         then self.currentModel:deSelect() end
-    if toolMode == "vertex" then
-        local tx, ty = self:screenPosToModelPos(mx, my)
-        self.currentModel:addVertexOnPlane(tx, ty, self.axes)
+
+    if self.toolMode == "vertex" then
+        if not (lShiftDown or lCtrlDown) then
+            local tx, ty = self:screenPosToModelPos(mx, my)
+            self.currentModel:addVertexOnPlane(tx, ty, self.axes)
+        end
     end
+
     self.prevClickX = mx
     self.prevClickY = my
 end
 
 function Panel2d:mouseReleased(mx, my, button)
+    local lShiftDown = love.keyboard.isDown("lshift")
+    local lCtrlDown = love.keyboard.isDown("lctrl")
+
     if self.toolMode == "selection" then
         if button == 1 then -- left click
             if (math.abs(mx - self.prevClickX) < 5) 
@@ -184,6 +204,25 @@ function Panel2d:mouseReleased(mx, my, button)
                 self:selectVertexWithinClick(mx, my)
             else
                 self:selectVertexWithinRectangle(self.prevClickX, self.prevClickY, mx, my)
+            end
+        end
+    elseif self.toolMode == "vertex" then -- Draw circle centered at previous mouseLeft press
+        if lShiftDown then
+            local cx, cy = self:screenPosToModelPos(self.prevClickX, self.prevClickY)
+            local mPosMX, mPosMY = self:screenPosToModelPos(mx, my)
+            local dx, dy = cx - mPosMX, cy - mPosMY
+            local radius = math.sqrt((dx*dx) + (dy*dy))
+            local plane = self.axes
+            local segments = 32
+            local connectLines = true
+            if self.axes == "xz" or self.axes == "zx" then
+                local response = self.currentModel:drawCircle(cx, 0, cy, radius, plane, segments, connectLines)
+                print(response)
+                io.stdout:flush()
+            elseif self.axes == "xy" or self.axes == "yx" then
+                self.currentModel:drawCircle(cx, cy, 0, radius, plane, segments, connectLines)
+            elseif self.axes == "yz" or self.axes == "zy" then
+                self.currentModel:drawCircle(0, cx, cy, radius, plane, segments, connectLines)
             end
         end
     end
