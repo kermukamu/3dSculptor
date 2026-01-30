@@ -26,6 +26,8 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.drawAxisMarker = true
 	self.drawVertices = true
 	self.toolMode = "selection"
+	self.circleSegments = 64
+	self.sphereSegments = 24
 
 	-- Position console to bottom third
 	local consoleW = screenWidth
@@ -64,7 +66,7 @@ function Scene.new(title, screenWidth, screenHeight)
 
 	self.keyActions = {
 		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
-		["c"] = {function() self:getCurrentModel():joinToFirstSelected() end, "Connects selected vertices to first selected vertex"},
+		["c"] = {function() self:getCurrentModel():joinSelectedToNearestSelected() end, "Connects each selected vertex to nearest selected vertex"},
 		["s"] = {function() self:turnSelectionModeOn() end, "Turns selection mode on"},
 		["v"] = {function() self:turnVertexModeOn() end, "Turns vertex mode on"},
 		["e"] = {function() self:turnMoveModeOn() end, "Turns move mode on"}
@@ -156,6 +158,8 @@ function Scene:drawAxisMarkerIsOn() return self.drawAxisMarker end
 
 function Scene:getToolMode() return self.toolMode end
 function Scene:getActiveSection() return self.activeSection end
+function Scene:getCircleSegments() return self.circleSegments end
+function Scene:getSphereSegments() return self.sphereSegments end
 
 function Scene:getCurrentModel()
 	if self.modeler ~= nil then
