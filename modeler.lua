@@ -54,7 +54,9 @@ function Modeler:draw()
 		love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
 	end
 
-	if not self.currentModel:getAllModelWithinView() then self.currentModel:drawHiddenVerticesComplaint() end
+	if not self.currentModel:getAllModelWithinView() then self:drawHiddenVerticesComplaint() end
+
+	self:drawCurrentToolNotice()
 
 	love.graphics.setScissor() -- Remove drawing area limit
 
@@ -68,6 +70,21 @@ end
 
 function Modeler:selectAll()
 	self:getCurrentModel():selectAll()
+end
+
+function Modeler:drawHiddenVerticesComplaint()
+    love.graphics.setColor(1,0.2,0,1) -- opaque brown
+    local complaint = "The complete model is not visible, try increasing view distance"
+    love.graphics.print(complaint, self:getX() + self:getW()/32, self:getY() + self:getH()/32, 0)
+end
+
+function Modeler:drawCurrentToolNotice()
+	love.graphics.setColor(0.8,0.8,0.8,1) -- opaque gray
+    local notice = "Tool: " .. self.toolMode
+    local fontH = love.graphics.getFont():getHeight()
+    local tx = self:getX() + self:getW()/32
+    local ty = self:getY() + self:getH() - self:getH()/32 - fontH
+    love.graphics.print(notice, tx, ty, 0)
 end
 
 function Modeler:keyPressed(key)
