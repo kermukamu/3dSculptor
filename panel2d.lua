@@ -54,14 +54,17 @@ function Panel2d:draw()
         love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
     end
 
-    -- Circle drawing rectangle
+    -- Circle drawing indicator
+    local lShiftIsDown = love.keyboard.isDown("lshift")
+    local lCtrlIsDown = love.keyboard.isDown("lctrl")
     if self.host:getActiveSection() == self and self.toolMode == "vertex" 
-        and love.keyboard.isDown("lshift") and love.mouse.isDown(1) then
+        and (lShiftIsDown or lCtrlIsDown) and love.mouse.isDown(1) then
         local mx, my = love.mouse.getPosition()
         local dx, dy = mx-self.prevClickX, my-self.prevClickY
         local r = math.sqrt(dx*dx + dy*dy)
         love.graphics.setColor(0,1,1,0.3) --Translucent cyan
-        love.graphics.circle("fill", self.prevClickX, self.prevClickY, r)
+        if lShiftIsDown then love.graphics.circle("line", self.prevClickX, self.prevClickY, r)
+        else love.graphics.circle("fill", self.prevClickX, self.prevClickY, r) end
     end
 
     if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
@@ -218,22 +221,34 @@ function Panel2d:mouseReleased(mx, my, button)
             end
         end
     elseif self.toolMode == "vertex" then -- Draw circle centered at previous mouseLeft press
-        if lShiftDown then
+        if lShiftDown then -- Draw circle
             local cx, cy = self:screenPosToModelPos(self.prevClickX, self.prevClickY)
             local mPosMX, mPosMY = self:screenPosToModelPos(mx, my)
             local dx, dy = cx - mPosMX, cy - mPosMY
             local radius = math.sqrt((dx*dx) + (dy*dy))
             local plane = self.axes
-            local segments = 32
+            local segments = self.host:getCircleSegments()
             local connectLines = true
             if self.axes == "xz" or self.axes == "zx" then
-                local response = self.currentModel:drawCircle(cx, 0, cy, radius, plane, segments, connectLines)
-                print(response)
-                io.stdout:flush()
+                self.currentModel:drawCircle(cx, 0, cy, radius, plane, segments, connectLines)
             elseif self.axes == "xy" or self.axes == "yx" then
                 self.currentModel:drawCircle(cx, cy, 0, radius, plane, segments, connectLines)
             elseif self.axes == "yz" or self.axes == "zy" then
                 self.currentModel:drawCircle(0, cx, cy, radius, plane, segments, connectLines)
+            end
+        elseif lCtrlDown then -- Draw sphere
+            local cx, cy = self:screenPosToModelPos(self.prevClickX, self.prevClickY)
+            local mPosMX, mPosMY = self:screenPosToModelPos(mx, my)
+            local dx, dy = cx - mPosMX, cy - mPosMY
+            local radius = math.sqrt((dx*dx) + (dy*dy))
+            local segments = self.host:getSphereSegments()
+            local connectLines = true
+            if self.axes == "xz" or self.axes == "zx" then
+                self:getCurrentModel():drawSphere(cx, 0, cy, radius, segments, connectLines)
+            elseif self.axes == "xy" or self.axes == "yx" then
+                self:getCurrentModel():drawSphere(cx, cy, 0, radius, segments, connectLines)
+            elseif self.axes == "yz" or self.axes == "zy" then
+                self:getCurrentModel():drawSphere(0, cx, cy, radius, segments, connectLines)
             end
         end
     end
