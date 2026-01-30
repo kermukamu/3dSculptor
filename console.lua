@@ -42,19 +42,20 @@ function Console.new(x, y, w, h, host)
 		["vertexNumbering"] = {function() self:comVertexNumbering() end, "Toggles vertexNumbering, use 'vertexNumbering [true/false]'"},
 		["vertexCoords"] = {function() self:comVertexCoords() end, "Toggles vertexCoords, use 'vertexNumbering [true/false]'"},
 		["drawVertices"] = {function() self:comDrawVertices() end, "Toggles vertex drawing, use 'drawVertices [true/false]'"},
-		["spin"] = {function() self:comSpin() end, "Sets spinning speed, use 'spin [phi(deg/s)] [theta (deg/s)]'"},
-		["orientation"] = {function() self:comOrientation() end, "Sets orientation, use 'orientation [phi(deg)] [theta (deg)]'"},
+		["spin"] = {function() self:comSpin() end, "Sets view spinning speed around origin, use 'spin [phi(deg/s)] [theta (deg/s)]'"},
+		["orientation"] = {function() self:comOrientation() end, "Sets view orientation around origin, use 'orientation [phi(deg)] [theta (deg)]'"},
 		["setDistance"] = {function() self:comSetDistance() end, "Sets view distance to model, use 'scale [scale]'"},
 		["clear"] = {function() self:comClear() end, "Clears the model, use 'clear'"},
-		["multiplyModel"] = {function() self:comMultiplyModel() end, "Multiplies actual model size, use 'multiplyModel [multiplier]'"},
-		["drawCircle"] = {function() self:comDrawCircle() end, "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"},
+		["multiply"] = {function() self:comMultiplyModel() end, "Multiplies selection size, use 'multiply [multiplier]'"},
+		["circle"] = {function() self:comDrawCircle() end, "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"},
 		["currentMode"] = {function() self:comCurrentMode() end, "Gets current mode, use 'currentMode'"}
 	}
 
 	self.comboList = {
 		["Space+LeftMouse"] = "Rotates 3D view",
 		["Shift+LeftMouse"] = "Holds selection if in selection mode",
-		["Shift+R+LeftMouse"] = "Selects within a rectangular area"
+		["Shift+R+LeftMouse"] = "Selects within a rectangular area",
+		["LCtrl+A"] = "Selects all"
 	}
 	self.response = ""
 	return self
@@ -257,7 +258,7 @@ function Console:comMultiplyModel()
 		local currentModel = self.host:getCurrentModel()
 		if currentModel ~= nil then
 			currentModel:multiplyModelSize(arg)
-			self.response = "Multiplied actual model by " .. tostring(arg)
+			self.response = "Multiplied the selection by " .. tostring(arg)
 		end
 	end
 end
