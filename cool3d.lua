@@ -230,6 +230,17 @@ function Cool3d:drawModel()
     end
 end
 
+function Cool3d:panCamera(dx, dy)
+    self.dx = self.dx + dx
+    self.dy = self.dy + dy
+end
+
+function Cool3d:setCamera(x, y, z)
+    self.dx = x or self.dx
+    self.dy = y or self.dy
+    self.dz = z or self.dz
+end
+
 function Cool3d:drawAxisMarker()
     love.graphics.setLineWidth(self.lineWidth)
 
