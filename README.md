@@ -23,5 +23,5 @@ Example photos:
 3) The same model with random circles added by drawing with the circle function
 <img width="998" height="1028" alt="image" src="https://github.com/user-attachments/assets/820a87fa-277b-4d92-96d0-f4982986ea42" />
 
-4) An example model amde within the editor. Note the spherical enclosed mesh shapes generated with automatic triangulation.
+4) An example model made within 3DSculptor. Note the spherical enclosed mesh shapes generated with automatic triangulation.
 <img width="998" height="1028" alt="image" src="https://github.com/user-attachments/assets/0d6becff-f1b2-46f5-be02-ff77b3c924b3" />
