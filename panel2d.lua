@@ -96,11 +96,18 @@ function Panel2d:drawGrid()
     local yInc = self.h/self.gridYRes
     for yLine=self.y, self.y+self.h, yInc do
         love.graphics.line(x, yLine, xMax, yLine)
+        local _, modelSpaceY = self:screenPosToModelPos(x, yLine)
+        local yText = string.format("%.2f", modelSpaceY)
+        love.graphics.print(yText, x+5, yLine+5, 0)
     end
 
     local xInc = self.w/self.gridXRes
-    for xLine=self.x, self.x+self.w, xInc do
+    for xLine=self.x+xInc, self.x+self.w, xInc do
         love.graphics.line(xLine, y, xLine, yMax)
+        local modelSpaceX, _ = self:screenPosToModelPos(xLine, y)
+        local xText = string.format("%.2g", modelSpaceX)
+        local textY = self.y+self.h-5-love.graphics.getFont():getHeight()
+        love.graphics.print(xText, xLine+5, textY, 0)
     end
 end
 
@@ -312,10 +319,14 @@ function Panel2d:wheelMoved(x, y)
     end
 end
 
-function Panel2d:screenPosToModelPos(x, y)
-    local tx = (x - self.x - self.w/2) / self.viewScale
-    local ty = -(y - self.y - self.h/2) / self.viewScale
-    return tx, ty
+function Panel2d:screenPosToModelPos(mx, my)
+    local xShift = self:getXShift()
+    local yShift = self:getYShift()
+    local planeX = (mx - xShift) / self.viewScale
+    local planeY = (my - yShift) / self.viewScale
+    local modelX = planeX
+    local modelY = -planeY
+    return modelX, modelY
 end
 
 function Panel2d:deSelect()
