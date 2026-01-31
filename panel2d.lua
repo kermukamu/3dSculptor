@@ -105,7 +105,7 @@ function Panel2d:drawGrid()
     for xLine=self.x+xInc, self.x+self.w, xInc do
         love.graphics.line(xLine, y, xLine, yMax)
         local modelSpaceX, _ = self:screenPosToModelPos(xLine, y)
-        local xText = string.format("%.2g", modelSpaceX)
+        local xText = string.format("%.2f", modelSpaceX)
         local textY = self.y+self.h-5-love.graphics.getFont():getHeight()
         love.graphics.print(xText, xLine+5, textY, 0)
     end
@@ -147,7 +147,7 @@ function Panel2d:drawModel()
             end
 
             if self.screen[i] ~= nil and self.host:drawVerticesIsOn() then
-                local size = self.w*self.viewScale/(64)
+                local size = math.min(self.w*self.viewScale/(64), 25)
                 love.graphics.setColor(0,1,1,1) -- Cyan
                 if selectedPoints[i] then love.graphics.setColor(0,1,0,1) end -- Green
                 love.graphics.rectangle("fill", xS-size/2, yS-size/2, size, size)
