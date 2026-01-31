@@ -106,9 +106,9 @@ end
 function Modeler:wheelMoved(x, y)
 	local dz = self.currentModel:getDZ()
 	if y > 0 then -- Wheel moved up
-		self.currentModel:setDZ((dz - dz/10))
+		self.currentModel:setDZ(dz - math.max(dz/10, 1))
 	elseif y < 0 then -- Wheel moved down
-		self.currentModel:setDZ((dz + dz/10))
+		self.currentModel:setDZ(dz + math.max(dz/10, 1))
 	end
 end
 
