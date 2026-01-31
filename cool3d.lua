@@ -231,8 +231,8 @@ function Cool3d:drawModel()
 end
 
 function Cool3d:panCamera(dx, dy)
-    self.dx = self.dx + dx
-    self.dy = self.dy + dy
+    self.dx = self.dx + dx*self.dz/self.zCompression
+    self.dy = self.dy + dy*self.dz/self.zCompression
 end
 
 function Cool3d:setCamera(x, y, z)
