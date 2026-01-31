@@ -25,6 +25,8 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.viewScale = 1
     self.clickRange = 5
     self.screen = {}
+    self.gridXRes = 8
+    self.gridYRes = 8
 
     -- Other
     self.timer = 0
@@ -46,7 +48,7 @@ function Panel2d:draw()
     love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
 
     love.graphics.setScissor(self.x, self.y, self.w, self.h) -- Limit drawing area
-
+    self:drawGrid()
     self:drawModel()
     self:drawAxisMarker()
 
@@ -82,6 +84,24 @@ function Panel2d:draw()
     love.graphics.setLineWidth(self.frameLineWidth)
     love.graphics.rectangle("line", self.x, self.y, self.w, self.h)
     love.graphics.setLineWidth(originalLW)
+end
+
+function Panel2d:drawGrid()
+    love.graphics.setColor(0.2, 0.2, 0.2, 1) -- Gray
+    local y = self.y
+    local yMax = self.y+self.h
+    local x = self.x
+    local xMax = self.x + self.w
+
+    local yInc = self.h/self.gridYRes
+    for yLine=self.y, self.y+self.h, yInc do
+        love.graphics.line(x, yLine, xMax, yLine)
+    end
+
+    local xInc = self.w/self.gridXRes
+    for xLine=self.x, self.x+self.w, xInc do
+        love.graphics.line(xLine, y, xLine, yMax)
+    end
 end
 
 function Panel2d:drawModel()
