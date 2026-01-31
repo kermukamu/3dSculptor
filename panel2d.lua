@@ -25,8 +25,8 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.viewScale = 1
     self.clickRange = 5
     self.screen = {}
-    self.gridXRes = 8
-    self.gridYRes = 8
+    self.gridXRes = 6
+    self.gridYRes = self.gridXRes*1.5
 
     -- Other
     self.timer = 0
@@ -313,9 +313,9 @@ end
 
 function Panel2d:wheelMoved(x, y)
     if y > 0 then -- Wheel moved up
-        self.viewScale = self.viewScale + self.viewScale/10
+        self.viewScale = self.viewScale + math.max(self.viewScale/10, 0.01)
     elseif y < 0 then -- Wheel moved down
-        self.viewScale = self.viewScale - self.viewScale/10
+        self.viewScale = self.viewScale - math.max(self.viewScale/10, 0.01)
     end
 end
 
