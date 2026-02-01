@@ -75,6 +75,10 @@ function Modeler:selectAll()
 	self:getCurrentModel():selectAll()
 end
 
+function Modeler:deSelectAll()
+	self:getCurrentModel():deSelect()
+end
+
 function Modeler:drawHiddenVerticesComplaint()
     love.graphics.setColor(1,0.2,0,1) -- opaque brown
     local complaint = "The complete model is not visible, try increasing view distance"
@@ -113,7 +117,7 @@ end
 function Modeler:mousePressed(mx, my, button)
 	if not (((love.keyboard.isDown("lshift") or love.keyboard.isDown("lalt")) 
 		and self.toolMode == "selection") or self.toolMode == "move") then 
-		self.currentModel:deSelect() 
+		self:deSelectAll() 
 	end
 	self.prevClickX = mx
 	self.prevClickY = my

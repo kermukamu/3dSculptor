@@ -78,7 +78,8 @@ function Scene.new(title, screenWidth, screenHeight)
 		["s"] = {function() self:setToolMode("selection") end, "Turns selection mode on"},
 		["v"] = {function() self:setToolMode("vertex") end, "Turns vertex mode on"},
 		["e"] = {function() self:setToolMode("move") end, "Turns move mode on"},
-		["a"] = {function() self:selectAllModel() end, "Selects all"}
+		["a"] = {function() self:selectAllModel() end, "Selects all"},
+		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
     }
 
 	self.activeSection = self.modeler
@@ -178,6 +179,10 @@ end
 
 function Scene:selectAllModel()
 	return self.modeler:selectAll()
+end
+
+function Scene:deSelectAll()
+	return self.modeler:deSelectAll()
 end
 
 -- Getters and setters
