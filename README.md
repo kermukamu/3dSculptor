@@ -14,14 +14,11 @@ The project includes an example model (made with the tool itself), which can be 
 
 Example photos:
 
-1) A section of a wireframe gem model getting rectangularly selected
-<img width="998" height="1028" alt="image" src="https://github.com/user-attachments/assets/81bec1e1-b1a9-40c3-8202-d331690c06f0" />
+1) A loaded gem model file and a drawn sphere in the editor
+<img width="5760" height="1200" alt="image" src="https://github.com/user-attachments/assets/64bcdbb8-2c3d-48d4-b978-c4efdf1a6726" />
 
-2) The same model with a selected region being multiplied and translated in x and y coordinates
-<img width="998" height="1028" alt="image" src="https://github.com/user-attachments/assets/1fc073da-ccd9-4b1a-a553-f2090e413c2b" />
+2) A section of the wireframe gem model getting rectangularly selected
+<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/67944334-4a58-4f82-b840-f8e336aa285e" />
 
-3) The same model with random circles added by drawing with the circle function
-<img width="998" height="1028" alt="image" src="https://github.com/user-attachments/assets/820a87fa-277b-4d92-96d0-f4982986ea42" />
-
-4) An example model made within 3DSculptor. Note the spherical enclosed mesh shapes generated with automatic triangulation.
-<img width="998" height="1028" alt="image" src="https://github.com/user-attachments/assets/0d6becff-f1b2-46f5-be02-ff77b3c924b3" />
+3) The same model with a selected region being translated in x and y coordinates
+<img width="998" height="1031" alt="image" src="https://github.com/user-attachments/assets/86122311-cc7c-4784-a019-51dd464911fe" />
