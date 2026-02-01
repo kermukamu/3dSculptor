@@ -15,6 +15,7 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.axes = axes
     self.allModelWithinView = true
     self.toolMode = self.host:getToolMode()
+    self.subMode = self.host:getSubToolMode()
     self.currentModel = self:getCurrentModel()
     self.prevClickX = 0
     self.prevClickY = 0
@@ -37,6 +38,7 @@ function Panel2d:update(dt)
     self.timer = math.max(self.timer + dt, 0)
     self.viewScale = math.max(self.viewScale, 0)
     self.toolMode = self.host:getToolMode()
+    self.subMode = self.host:getSubToolMode()
     self.currentModel = self:getCurrentModel()
 
     if self.host:getActiveSection() == self then self:handleArrowInput(dt) end
@@ -58,19 +60,18 @@ function Panel2d:draw()
         local mx, my = love.mouse.getPosition()
         local w, h = mx-self.prevClickX, my-self.prevClickY
         love.graphics.setColor(1,1,1,0.5) -- Translucent white
+        if love.keyboard.isDown("lalt") then love.graphics.setColor(1,0.5,0,0.5) end -- Translucent orange
         love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
     end
 
     -- Circle drawing indicator
-    local lShiftIsDown = love.keyboard.isDown("lshift")
-    local lCtrlIsDown = love.keyboard.isDown("lctrl")
     if self.host:getActiveSection() == self and self.toolMode == "vertex" 
-        and (lShiftIsDown or lCtrlIsDown) and love.mouse.isDown(1) then
+        and (self.subMode == "circle" or self.subMode == "sphere") and love.mouse.isDown(1) then
         local mx, my = love.mouse.getPosition()
         local dx, dy = mx-self.prevClickX, my-self.prevClickY
         local r = math.sqrt(dx*dx + dy*dy)
         love.graphics.setColor(0,1,1,0.3) --Translucent cyan
-        if lShiftIsDown then love.graphics.circle("line", self.prevClickX, self.prevClickY, r)
+        if self.subMode == "circle" then love.graphics.circle("line", self.prevClickX, self.prevClickY, r)
         else love.graphics.circle("fill", self.prevClickX, self.prevClickY, r) end
     end
 
@@ -232,11 +233,9 @@ function Panel2d:mousePressed(mx, my, button)
         self.currentModel:deSelect() 
     end
 
-    if self.toolMode == "vertex" then
-        if not (lShiftDown or lCtrlDown) then
-            local tx, ty = self:screenPosToModelPos(mx, my)
-            self.currentModel:addVertexOnPlane(tx, ty, self.axes)
-        end
+    if self.toolMode == "vertex" and self.subMode == "single" then
+        local tx, ty = self:screenPosToModelPos(mx, my)
+        self.currentModel:addVertexOnPlane(tx, ty, self.axes)
     end
 
     self.prevClickX = mx
@@ -259,8 +258,8 @@ function Panel2d:mouseReleased(mx, my, button)
                 else self:toggleVertexSelectionWithinRectangle(self.prevClickX, self.prevClickY, mx, my, true) end
             end
         end
-    elseif self.toolMode == "vertex" then -- Draw circle centered at previous mouseLeft press
-        if lShiftDown then -- Draw circle
+    elseif self.toolMode == "vertex" then
+        if self.subMode == "circle" then -- Draw circle
             local cx, cy = self:screenPosToModelPos(self.prevClickX, self.prevClickY)
             local mPosMX, mPosMY = self:screenPosToModelPos(mx, my)
             local dx, dy = cx - mPosMX, cy - mPosMY
@@ -275,7 +274,7 @@ function Panel2d:mouseReleased(mx, my, button)
             elseif self.axes == "yz" or self.axes == "zy" then
                 self.currentModel:drawCircle(0, cx, cy, radius, plane, segments, connectLines)
             end
-        elseif lCtrlDown then -- Draw sphere
+        elseif self.subMode == "sphere" then -- Draw sphere
             local cx, cy = self:screenPosToModelPos(self.prevClickX, self.prevClickY)
             local mPosMX, mPosMY = self:screenPosToModelPos(mx, my)
             local dx, dy = cx - mPosMX, cy - mPosMY

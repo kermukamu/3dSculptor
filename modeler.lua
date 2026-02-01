@@ -16,6 +16,7 @@ function Modeler.new(x, y, w, h, host)
 	self.h = h - 2 * self.lineWidth
 
 	self.toolMode = self.host:getToolMode()
+	self.subMode = self.host:getSubToolMode()
 	self.panSpeed = 100
 
 	-- Setup 3D model
@@ -35,6 +36,7 @@ function Modeler:update(dt)
 	self.timer = math.max(self.timer + dt, 0)
 	self.currentModel:update(dt)
 	self.toolMode = self.host:getToolMode()
+	self.subMode = self.host:getSubToolMode()
 
 	if self.host:getActiveSection() == self then self:handleArrowInput(dt) end
 end
@@ -54,6 +56,7 @@ function Modeler:draw()
 		local mx, my = love.mouse.getPosition()
 		local w, h = mx-self.prevClickX, my-self.prevClickY
 		love.graphics.setColor(1,1,1,0.5) -- Translucent white
+		if love.keyboard.isDown("lalt") then love.graphics.setColor(1,0.5,0,0.5) end -- Translucent orange
 		love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
 	end
 
@@ -87,7 +90,7 @@ end
 
 function Modeler:drawCurrentToolNotice()
 	love.graphics.setColor(0.8,0.8,0.8,1) -- opaque gray
-    local notice = "Tool: " .. self.toolMode
+    local notice = "Tool: " .. self.toolMode .. " – " .. self.subMode
     local fontH = love.graphics.getFont():getHeight()
     local tx = self:getX() + self:getW()/32
     local ty = self:getY() + self:getH() - self:getH()/32 - fontH
