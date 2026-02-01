@@ -57,7 +57,7 @@ function Panel2d:draw()
         and love.mouse.isDown(1) then
         local mx, my = love.mouse.getPosition()
         local w, h = mx-self.prevClickX, my-self.prevClickY
-        love.graphics.setColor(0,1,0,0.3) -- Translucent green
+        love.graphics.setColor(1,1,1,0.5) -- Translucent white
         love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
     end
 
