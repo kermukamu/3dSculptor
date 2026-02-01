@@ -13,7 +13,7 @@ function Toolbar.new(x, y, iconSize, host)
 
     self.modes = {
         ["selection"] = iconSelection,
-        ["move selection"] = iconMove,
+        ["move"] = iconMove,
         ["vertex"] = iconVertex
     }
 
