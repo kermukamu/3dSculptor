@@ -6,16 +6,20 @@ function Toolbar.new(x, y, iconSize, host)
     local self = setmetatable({}, Toolbar)
     self.host = host
 
+    local path = "icons/"
+    local iconSelection = love.graphics.newImage(path .. "selection.png")
+    local iconMove = love.graphics.newImage(path .. "move.png")
+    local iconVertex = love.graphics.newImage(path .. "vertex.png")
+
     self.modes = {
-        ["selection"] = "S",
-        ["move"] = "E",
-        ["vertex"] = "V"
+        ["selection"] = iconSelection,
+        ["move selection"] = iconMove,
+        ["vertex"] = iconVertex
     }
 
     self.x = x
     self.y = y
     self.size = iconSize
-    self.font = love.graphics.newFont(self.size)
 
     -- Other
     self.timer = 0
@@ -36,9 +40,8 @@ function Toolbar:draw()
         love.graphics.rectangle("fill", x, y, self.size, self.size)
         love.graphics.setColor(0,0,0,1) -- Black
         love.graphics.rectangle("line", x, y, self.size, self.size)
-        local tx = x + self.size/2 - self.font:getWidth(v)/2
-        local ty = y + self.size/2 - self.font:getHeight()/2
-        love.graphics.printf(v, self.font, tx, ty, self.size)
+        local iconScale = self.size/v:getWidth()
+        love.graphics.draw(v, x, y, 0, self.iconScale, self.iconScale)
         i = i + 1
     end
 end
