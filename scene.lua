@@ -76,9 +76,9 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.keyActions = {
 		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
 		["c"] = {function() self:getCurrentModel():joinSelectedToNearestSelected() end, "Connects each selected vertex to nearest selected vertex"},
-		["s"] = {function() self:setToolMode("selection") end, "Turns selection mode on"},
+		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
 		["v"] = {function() self:byActionTurnVertexModeOn() end, "Turns vertex mode on"},
-		["e"] = {function() self:setToolMode("move") end, "Turns move mode on"},
+		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move mode on"},
 		["a"] = {function() self:selectAllModel() end, "Selects all"},
 		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
     }
@@ -192,6 +192,15 @@ function Scene:byActionTurnVertexModeOn()
 	else self.subMode = "single" end
 end
 
+function Scene:byActionTurnSelectionModeOn()
+	self.toolMode = "selection"
+	self.subMode = "rectangle"
+end
+
+function Scene:byActionTurnMoveModeOn()
+	self.toolMode = "move"
+	self.subMode = "selected"
+end
 -- Getters and setters
 
 function Scene:vertexNumberingIsOn() return self.vertexNumbering end
