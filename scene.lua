@@ -28,6 +28,7 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.drawAxisMarker = true
 	self.drawVertices = true
 	self.toolMode = "selection"
+	self.subMode = "rectangle"
 	self.circleSegments = 64
 	self.sphereSegments = 12
 
@@ -76,7 +77,7 @@ function Scene.new(title, screenWidth, screenHeight)
 		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
 		["c"] = {function() self:getCurrentModel():joinSelectedToNearestSelected() end, "Connects each selected vertex to nearest selected vertex"},
 		["s"] = {function() self:setToolMode("selection") end, "Turns selection mode on"},
-		["v"] = {function() self:setToolMode("vertex") end, "Turns vertex mode on"},
+		["v"] = {function() self:byActionTurnVertexModeOn() end, "Turns vertex mode on"},
 		["e"] = {function() self:setToolMode("move") end, "Turns move mode on"},
 		["a"] = {function() self:selectAllModel() end, "Selects all"},
 		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
@@ -145,8 +146,7 @@ function Scene:mousePressed(mx, my, button)
 		self.activeSection = self.console
 	end
 	if
-		self:isWithinSection(mx, my, self.toolbar:getX(), self.toolbar:getY(),
-		self.toolbar:getWidth(), self.toolbar:getHeight()) then
+		self.toolbar:isWithinSection(mx, my) then
 		self.activeSection = self.toolbar
 	end
 	if self.activeSection and self.activeSection.mousePressed then
@@ -185,6 +185,13 @@ function Scene:deSelectAll()
 	return self.modeler:deSelectAll()
 end
 
+function Scene:byActionTurnVertexModeOn()
+	self.toolMode = "vertex"
+	if love.keyboard.isDown("lshift") then self.subMode = "circle"
+	elseif love.keyboard.isDown("lctrl") then self.subMode = "sphere"
+	else self.subMode = "single" end
+end
+
 -- Getters and setters
 
 function Scene:vertexNumberingIsOn() return self.vertexNumbering end
@@ -193,6 +200,7 @@ function Scene:drawVerticesIsOn() return self.drawVertices end
 function Scene:drawAxisMarkerIsOn() return self.drawAxisMarker end
 
 function Scene:getToolMode() return self.toolMode end
+function Scene:getSubToolMode() return self.subMode end
 function Scene:getActiveSection() return self.activeSection end
 function Scene:getCircleSegments() return self.circleSegments end
 function Scene:getSphereSegments() return self.sphereSegments end
@@ -218,6 +226,7 @@ function Scene:setVertexCoords(value) self.vertexCoords = value end
 function Scene:setDrawVertices(value) self.drawVertices = value end
 function Scene:setDrawAxis(value) self.drawAxis = value end
 function Scene:setToolMode(mode) self.toolMode = mode end
+function Scene:setSubToolMode(mode) self.subMode = mode end
 
 
 return {Scene = Scene}
