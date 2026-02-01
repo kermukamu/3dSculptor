@@ -15,7 +15,7 @@ The project includes an example model (made with the tool itself), which can be 
 Example photos:
 
 1) A loaded gem model file and a drawn sphere in the editor
-<img width="5760" height="1200" alt="image" src="https://github.com/user-attachments/assets/64bcdbb8-2c3d-48d4-b978-c4efdf1a6726" />
+<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/4c62ee2f-92d3-40cb-b544-cb42c25c5cea" />
 
 2) A section of the wireframe gem model getting rectangularly selected
 <img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/67944334-4a58-4f82-b840-f8e336aa285e" />
