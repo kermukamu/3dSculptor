@@ -4,6 +4,8 @@ local cmodeler = require("modeler")
 local Modeler = cmodeler.Modeler
 local cpanel2d = require("panel2d")
 local Panel2d = cpanel2d.Panel2d
+local ctoolbar = require("toolbar")
+local Toolbar = ctoolbar.Toolbar
 
 -- Scene "class"
 local Scene = {}
@@ -64,12 +66,19 @@ function Scene.new(title, screenWidth, screenHeight)
 	local yzPanelY = love.graphics.getHeight()/2 - yzPanelH/2 + yOffset
 	self.yzPanel = Panel2d.new(yzPanelX, yzPanelY, yzPanelW, yzPanelH, "yz", self)
 
+	-- Position Toolbar on top section of modeler
+	local toolbarIconSize = screenWidth * (1 / 32)
+	local toolbarX = modelerX + modelerW - toolbarIconSize - self.modeler:getFrameLineWidth()*2
+	local toolbarY = modelerY
+	self.toolbar = Toolbar.new(toolbarX, toolbarY, toolbarIconSize, self)
+
 	self.keyActions = {
 		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
 		["c"] = {function() self:getCurrentModel():joinSelectedToNearestSelected() end, "Connects each selected vertex to nearest selected vertex"},
-		["s"] = {function() self:turnSelectionModeOn() end, "Turns selection mode on"},
-		["v"] = {function() self:turnVertexModeOn() end, "Turns vertex mode on"},
-		["e"] = {function() self:turnMoveModeOn() end, "Turns move mode on"}
+		["s"] = {function() self:setToolMode("selection") end, "Turns selection mode on"},
+		["v"] = {function() self:setToolMode("vertex") end, "Turns vertex mode on"},
+		["e"] = {function() self:setToolMode("move") end, "Turns move mode on"},
+		["a"] = {function() self:selectAllModel() end, "Selects all"}
     }
 
 	self.activeSection = self.modeler
@@ -82,6 +91,7 @@ function Scene:update(dt)
 	self.xzPanel:update(dt)
 	self.xyPanel:update(dt)
 	self.yzPanel:update(dt)
+	self.toolbar:update(dt)
 end
 
 function Scene:draw()
@@ -90,42 +100,57 @@ function Scene:draw()
 	self.xyPanel:draw()
 	self.yzPanel:draw()
 	self.console:draw()
+	self.toolbar:draw()
 end
 
 function Scene:keyPressed(key)
-	if key == "a" and love.keyboard.isDown("lctrl") and self.activeSection.selectAll then
-		self.activeSection:selectAll()
-	elseif self.activeSection.keyPressed then
+	if getmetatable(self.activeSection).__index == Console then
 		self.activeSection:keyPressed(key)
+	else
+		local action = self:getModelerKeyActions()[key]
+		if action then action[1]() end 
 	end
 end
 
 function Scene:textInput(t)
-	self.activeSection:textInput(t)
+	if self.activeSection and self.activeSection.textInput then
+		self.activeSection:textInput(t)
+	end
 end
 
 function Scene:mousePressed(mx, my, button)
 	if self:isWithinSection(mx, my, self.modeler.x, self.modeler.y,
 		self.modeler.w, self.modeler.h) then
 		self.activeSection = self.modeler
-	elseif 
+	end
+	if 
 		self:isWithinSection(mx, my, self.xzPanel.x, self.xzPanel.y,
 		self.xzPanel.w, self.xzPanel.h) then
 		self.activeSection = self.xzPanel
-	elseif
+	end
+	if
 		self:isWithinSection(mx, my, self.xyPanel.x, self.xyPanel.y,
 		self.xyPanel.w, self.xyPanel.h) then
 		self.activeSection = self.xyPanel
-	elseif
+	end
+	if
 		self:isWithinSection(mx, my, self.yzPanel.x, self.yzPanel.y,
 		self.yzPanel.w, self.yzPanel.h) then
 		self.activeSection = self.yzPanel
-	elseif
+	end
+	if
 		self:isWithinSection(mx, my, self.console.x, self.console.y,
 		self.console.w, self.console.h) then
 		self.activeSection = self.console
 	end
-	self.activeSection:mousePressed(mx, my, button)
+	if
+		self:isWithinSection(mx, my, self.toolbar:getX(), self.toolbar:getY(),
+		self.toolbar:getWidth(), self.toolbar:getHeight()) then
+		self.activeSection = self.toolbar
+	end
+	if self.activeSection and self.activeSection.mousePressed then
+		self.activeSection:mousePressed(mx, my, button)
+	end
 end
 
 function Scene:mouseReleased(mx, my, button)
@@ -141,12 +166,18 @@ function Scene:mouseMoved(x, y, dx, dy)
 end
 
 function Scene:wheelMoved(x, y)
-	self.activeSection:wheelMoved(x, y)
+	if self.activeSection and self.activeSection.wheelMoved then
+		self.activeSection:wheelMoved(x, y)
+	end
 end
 
 function Scene:isWithinSection(x, y, secX, secY, secW, secH)
 	return (secX < x and x < (secX + secW)) and
 			(secY < y and y < (secY + secH))
+end
+
+function Scene:selectAllModel()
+	return self.modeler:selectAll()
 end
 
 -- Getters and setters
@@ -181,9 +212,7 @@ function Scene:setVertexNumbering(value) self.vertexNumbering = value end
 function Scene:setVertexCoords(value) self.vertexCoords = value end
 function Scene:setDrawVertices(value) self.drawVertices = value end
 function Scene:setDrawAxis(value) self.drawAxis = value end
-function Scene:turnSelectionModeOn() self.toolMode = "selection" end
-function Scene:turnVertexModeOn() self.toolMode = "vertex" end
-function Scene:turnMoveModeOn() self.toolMode = "move" end
+function Scene:setToolMode(mode) self.toolMode = mode end
 
 
 return {Scene = Scene}
