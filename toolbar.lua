@@ -15,7 +15,7 @@ function Toolbar.new(x, y, iconSize, host)
 
     self.modes = {
         ["selection"] = {{"rectangle", iconSelection}},
-        ["move"] = {{"move", iconMove}},
+        ["move"] = {{"selected", iconMove}},
         ["vertex"] = {{"single", iconVertex}, {"circle", iconCircle}, {"sphere", iconSphere}}
     }
 
