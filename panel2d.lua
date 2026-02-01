@@ -218,11 +218,6 @@ function Panel2d:handleArrowInput(dt)
     if love.keyboard.isDown("down") then self:panCamera(0, -self.panSpeed * dt) end
 end
 
-function Panel2d:keyPressed(key)
-    local action = self.host:getModelerKeyActions()[key]
-    if action then action[1]() end
-end
-
 function Panel2d:textInput(t)
 end
 

@@ -98,11 +98,6 @@ function Modeler:handleArrowInput(dt)
 	if love.keyboard.isDown("down") then cm:panCamera(0, self.panSpeed * dt) end
 end
 
-function Modeler:keyPressed(key)
-	local action = self.host:getModelerKeyActions()[key]
-	if action then action[1]() end 
-end
-
 function Modeler:wheelMoved(x, y)
 	local dz = self.currentModel:getDZ()
 	if y > 0 then -- Wheel moved up
@@ -153,6 +148,7 @@ function Modeler:mouseMoved(x, y, dx, dy)
 end
 
 -- Getters and setters
+function Modeler:getFrameLineWidth() return self.lineWidth end
 function Modeler:getX() return self.x end
 function Modeler:getY() return self.y end
 function Modeler:getW() return self.w end
