@@ -27,7 +27,7 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.clickRange = 5
     self.screen = {}
     self.gridXRes = 6
-    self.gridYRes = self.gridXRes*1.5
+    self.gridYRes = 8
 
     -- Other
     self.timer = 0
