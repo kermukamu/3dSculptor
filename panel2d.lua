@@ -28,6 +28,7 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.screen = {}
     self.gridXRes = 6
     self.gridYRes = 8
+    
 
     -- Other
     self.timer = 0
