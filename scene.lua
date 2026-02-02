@@ -187,9 +187,15 @@ end
 
 function Scene:byActionTurnVertexModeOn()
 	self.toolMode = "vertex"
-	if love.keyboard.isDown("lshift") then self.subMode = "circle"
-	elseif love.keyboard.isDown("lctrl") then self.subMode = "sphere"
-	else self.subMode = "single" end
+
+	-- If already in any vertex submode, shift submode forward
+	if self.subMode == "single" then 
+		self.subMode = "circle"
+	elseif self.subMode == "circle" then 
+		self.subMode = "sphere"
+	else 
+		self.subMode = "single"
+	end
 end
 
 function Scene:byActionTurnSelectionModeOn()
