@@ -6,8 +6,10 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
 	local self = setmetatable({}, Cool3d)
     self.host = host
 
-	self.points = {} -- AKA vertices
-	self.lines = {} -- between assigned vertices
+	self.points = {} -- Stores vertices as x y z. Indices = numbering
+	self.lines = {} -- Position of each entry matches a vertex index, the entry value is another vertex
+    self.pointsCB = {} -- Points saved on clipboard
+    self.linesCB = {} -- Lines saved on clipboard
 	self.lineWidth = 1
     self.dx = 0
     self.dy = 0
@@ -35,96 +37,6 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.x2d = x2d or 0
     self.y2d = y2d or 0
 	return self
-end
-
-function Cool3d:readFile(filename)
-    if filename == nil then return "No filename given" end
-	local contents, err = love.filesystem.read(filename)
-	if not contents then return "Could not open file" end
-
-    self:clear()
-	--Separate lines
-	for line in contents:gmatch("[^\r\n]+") do
-		-- Separate each value in a line, form should be x1 y1 z1 i1 i2 i3 i4...\n
-		local pointParts = {}
-		local lineParts = {}
-		local i = 1
-		for part in line:gmatch("%S+") do
-			if i > 3 then table.insert(lineParts, tonumber(part))
-			else table.insert(pointParts, tonumber(part)) end
-			i = i + 1
-		end
-		table.insert(self.points, pointParts)
-		table.insert(self.lines, lineParts)
-	end
-
-    return "Read table!"
-end
-
-function Cool3d:saveFile(filename)
-    if filename == nil then return "No filename given" end
-    local fileText = ""
-    for i = 1, #self.points, 1 do
-        local p = self.points[i]
-        fileText = fileText .. tostring(p[1]) .. " ".. tostring(p[2]) .. " ".. tostring(p[3])
-        for j = 1, #self.lines[i], 1 do
-            fileText = fileText .. " " .. tostring(self.lines[i][j])
-        end
-        fileText = fileText .. "\n"
-    end
-
-    local success, message = love.filesystem.write(filename, fileText)
-    if success then 
-        return "File successfully saved to " .. love.filesystem.getSaveDirectory()
-    else
-        return "Write unsuccessful"
-    end
-end
-
-function Cool3d:clear()
-    self.points = {}
-    self.lines = {}
-end
-
-function Cool3d:project(xyz)
-	local x = xyz[1]
-	local y = xyz[2]
-	local z = xyz[3]
-	if z == 0 then return {0,0} end
-    return {x / z, y / z}
-end
-
-function Cool3d:translateXYZ(xyz, dxyz)
-    return {xyz[1] + dxyz[1], xyz[2] + dxyz[2], xyz[3] + dxyz[3]}
-end
-
-function Cool3d:calcRotationTable(Phi, Theta)
-    local cosP = math.cos(Phi)
-    local sinP = math.sin(Phi)
-    local cosT = math.cos(Theta)
-    local sinT = math.sin(Theta)
-    return {cosP, sinP, cosT, sinT}
-end
-
-function Cool3d:rotate(xyz, rotTable)
-    local cosP = rotTable[1]
-    local sinP = rotTable[2]
-    local cosT = rotTable[3]
-    local sinT = rotTable[4]
-
-    local x, y, z = xyz[1], xyz[2], xyz[3]
-
-    -- Theta
-    local x1 =  cosT * x + sinT * z
-    local y1 =  y
-    local z1 = -sinT * x + cosT * z
-
-    -- Phi
-    local x2 = x1
-    local y2 =  cosP * y1 - sinP * z1
-    local z2 =  sinP * y1 + cosP * z1
-
-    return {x2, y2, z2}
 end
 
 function Cool3d:update(dt)
@@ -230,17 +142,6 @@ function Cool3d:drawModel()
     end
 end
 
-function Cool3d:panCamera(dx, dy)
-    self.dx = self.dx + dx*self.dz/self.zCompression
-    self.dy = self.dy + dy*self.dz/self.zCompression
-end
-
-function Cool3d:setCamera(x, y, z)
-    self.dx = x or self.dx
-    self.dy = y or self.dy
-    self.dz = z or self.dz
-end
-
 function Cool3d:drawAxisMarker()
     love.graphics.setLineWidth(self.lineWidth)
 
@@ -292,6 +193,192 @@ function Cool3d:drawAxisMarker()
             end
         end
     end
+end
+
+function Cool3d:readFile(filename)
+    if filename == nil then return "No filename given" end
+	local contents, err = love.filesystem.read(filename)
+	if not contents then return "Could not open file" end
+
+    self:clear()
+	--Separate lines
+	for line in contents:gmatch("[^\r\n]+") do
+		-- Separate each value in a line, form should be x1 y1 z1 i1 i2 i3 i4...\n
+		local pointParts = {}
+		local lineParts = {}
+		local i = 1
+		for part in line:gmatch("%S+") do
+			if i > 3 then table.insert(lineParts, tonumber(part))
+			else table.insert(pointParts, tonumber(part)) end
+			i = i + 1
+		end
+		table.insert(self.points, pointParts)
+		table.insert(self.lines, lineParts)
+	end
+
+    return "Read table!"
+end
+
+function Cool3d:saveFile(filename)
+    if filename == nil then return "No filename given" end
+    local fileText = ""
+    for i = 1, #self.points, 1 do
+        local p = self.points[i]
+        fileText = fileText .. tostring(p[1]) .. " ".. tostring(p[2]) .. " ".. tostring(p[3])
+        for j = 1, #self.lines[i], 1 do
+            fileText = fileText .. " " .. tostring(self.lines[i][j])
+        end
+        fileText = fileText .. "\n"
+    end
+
+    local success, message = love.filesystem.write(filename, fileText)
+    if success then 
+        return "File successfully saved to " .. love.filesystem.getSaveDirectory()
+    else
+        return "Write unsuccessful"
+    end
+end
+
+function Cool3d:copySelected()
+    -- Clear clipboard first
+    self.pointsCB = {}
+    self.linesCB = {}
+
+    -- Collect selected vertex indices
+    local selectedIndices = {}
+    for i = 1, #self.points do
+        if self.selectedVertices[i] then
+            table.insert(selectedIndices, i)
+        end
+    end
+
+    if #selectedIndices == 0 then return end
+
+    local indexMap = {}
+
+    -- Copy vertices and calculate their average position
+    local xSum, ySum, zSum = 0, 0, 0
+    for newIndex, oldIndex in ipairs(selectedIndices) do
+        indexMap[oldIndex] = newIndex
+
+        local v = self.points[oldIndex]
+        local x, y, z = v[1], v[2], v[3]
+
+        self.pointsCB[newIndex] = {x, y, z}
+        self.linesCB[newIndex] = {}
+
+        xSum = xSum + x
+        ySum = ySum + y
+        zSum = zSum + z
+    end
+
+    local count = #selectedIndices
+    local xAvg = xSum / count
+    local yAvg = ySum / count
+    local zAvg = zSum / count
+
+    -- Subtract average to move to origin
+    for i = 1, #self.pointsCB do
+        self.pointsCB[i][1] = self.pointsCB[i][1] - xAvg
+        self.pointsCB[i][2] = self.pointsCB[i][2] - yAvg
+        self.pointsCB[i][3] = self.pointsCB[i][3] - zAvg
+    end
+
+    -- Copy lines where both endpoints are selected
+    for _, oldIndex in ipairs(selectedIndices) do
+        local newIndex = indexMap[oldIndex]
+        local links = self.lines[oldIndex]
+
+        if links then
+            for _, oldNeighbor in ipairs(links) do
+                local newNeighbor = indexMap[oldNeighbor]
+                if newNeighbor then
+                    -- Both vertices selected → keep this line
+                    table.insert(self.linesCB[newIndex], newNeighbor)
+                end
+            end
+        end
+    end
+end
+
+
+function Cool3d:pasteSelected(x, y, z) -- Paste to xyz
+    if #self.pointsCB == 0 then return end
+    local baseIndex = #self.points
+
+    -- Add all pasted vertices and matching empty line lists
+    for _, p in ipairs(self.pointsCB) do
+        local newPoint = self:translateXYZ(p, {x, y, z})
+        table.insert(self.points, newPoint)
+        table.insert(self.lines, {}) -- placeholder
+    end
+
+    -- Rebuild the connections between the newly added vertices
+    for i, links in ipairs(self.linesCB) do
+        local newIndex = baseIndex + i
+        for _, neighborIndex in ipairs(links) do
+            local newNeighborIndex = baseIndex + neighborIndex
+            table.insert(self.lines[newIndex], newNeighborIndex)
+        end
+    end
+end
+
+
+function Cool3d:clear()
+    self.points = {}
+    self.lines = {}
+end
+
+function Cool3d:project(xyz)
+	local x = xyz[1]
+	local y = xyz[2]
+	local z = xyz[3]
+	if z == 0 then return {0,0} end
+    return {x / z, y / z}
+end
+
+function Cool3d:translateXYZ(xyz, dxyz)
+    return {xyz[1] + dxyz[1], xyz[2] + dxyz[2], xyz[3] + dxyz[3]}
+end
+
+function Cool3d:calcRotationTable(Phi, Theta)
+    local cosP = math.cos(Phi)
+    local sinP = math.sin(Phi)
+    local cosT = math.cos(Theta)
+    local sinT = math.sin(Theta)
+    return {cosP, sinP, cosT, sinT}
+end
+
+function Cool3d:rotate(xyz, rotTable)
+    local cosP = rotTable[1]
+    local sinP = rotTable[2]
+    local cosT = rotTable[3]
+    local sinT = rotTable[4]
+
+    local x, y, z = xyz[1], xyz[2], xyz[3]
+
+    -- Theta
+    local x1 =  cosT * x + sinT * z
+    local y1 =  y
+    local z1 = -sinT * x + cosT * z
+
+    -- Phi
+    local x2 = x1
+    local y2 =  cosP * y1 - sinP * z1
+    local z2 =  sinP * y1 + cosP * z1
+
+    return {x2, y2, z2}
+end
+
+function Cool3d:panCamera(dx, dy)
+    self.dx = self.dx + dx*self.dz/self.zCompression
+    self.dy = self.dy + dy*self.dz/self.zCompression
+end
+
+function Cool3d:setCamera(x, y, z)
+    self.dx = x or self.dx
+    self.dy = y or self.dy
+    self.dz = z or self.dz
 end
 
 function Cool3d:addVertex(x, y, z)
