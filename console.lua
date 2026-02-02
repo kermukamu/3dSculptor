@@ -54,10 +54,7 @@ function Console.new(x, y, w, h, host)
 
 	self.comboList = {
 		["Space+LeftMouse"] = "Rotates 3D view",
-		["Shift+LeftMouse"] = "Holds selection if in selection mode",
-		["Shift+R+LeftMouse"] = "Selects within a rectangular area",
-		["LShift+LeftMouse"] = "Draws a circle if in vertex mode",
-		["LCtrl+LeftMouse"] = "Draws a sphere if in vertex mode"
+		["Shift+LeftMouse"] = "Holds selection if in selection mode"
 	}
 	self.response = ""
 	return self
