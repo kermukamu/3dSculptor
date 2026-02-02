@@ -324,6 +324,22 @@ function Panel2d:screenPosToModelPos(mx, my)
     return modelX, modelY
 end
 
+function Panel2d:copy()
+    self:getCurrentModel():copySelected()
+end
+
+function Panel2d:paste()
+    local plane = self.axes
+    local x, y = self:screenPosToModelPos(love.mouse.getPosition())
+    if plane == "xz" or plane == "zx" then
+        self:getCurrentModel():pasteSelected(x, 0, y)
+    elseif plane == "xy" or plane == "yx" then
+        self:getCurrentModel():pasteSelected(x, y, 0)
+    elseif plane == "yz" or plane == "zy" then
+        self:getCurrentModel():pasteSelected(0, x, y)
+    end
+end
+
 function Panel2d:deSelect()
     if self.currentModel then 
         self.currentModel:deSelect()
