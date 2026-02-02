@@ -82,6 +82,10 @@ function Modeler:deSelectAll()
 	self:getCurrentModel():deSelect()
 end
 
+function Modeler:copy()
+	self:getCurrentModel():copySelected()
+end
+
 function Modeler:drawHiddenVerticesComplaint()
     love.graphics.setColor(1,0.2,0,1) -- opaque brown
     local complaint = "The complete model is not visible, try increasing view distance"
