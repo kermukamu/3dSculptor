@@ -54,7 +54,9 @@ function Console.new(x, y, w, h, host)
 
 	self.comboList = {
 		["Space+LeftMouse"] = "Rotates 3D view",
-		["Shift+LeftMouse"] = "Holds selection if in selection mode"
+		["Shift+LeftMouse"] = "Holds selection if in selection mode",
+		["Ctrl+C"] = "Copy selection",
+		["Ctrl+V"] = "Paste selection"
 	}
 	self.response = ""
 	return self
