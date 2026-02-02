@@ -75,9 +75,9 @@ function Scene.new(title, screenWidth, screenHeight)
 
 	self.keyActions = {
 		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
-		["c"] = {function() self:getCurrentModel():joinSelectedToNearestSelected() end, "Connects each selected vertex to nearest selected vertex"},
+		["c"] = {function() self:byActionC() end, "Connects each selected vertex to nearest selected vertex"},
 		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
-		["v"] = {function() self:byActionTurnVertexModeOn() end, "Turns vertex mode on"},
+		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
 		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move mode on"},
 		["a"] = {function() self:selectAllModel() end, "Selects all"},
 		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
@@ -185,16 +185,32 @@ function Scene:deSelectAll()
 	return self.modeler:deSelectAll()
 end
 
-function Scene:byActionTurnVertexModeOn()
-	self.toolMode = "vertex"
+function Scene:byActionV()
+	if love.keyboard.isDown("lctrl") then
+		if self.activeSection and self.activeSection.paste then
+			self.activeSection:paste()
+		end
+	else
+		self.toolMode = "vertex"
+	
+		-- If already in any vertex submode, shift submode forward
+		if self.subMode == "single" then 
+			self.subMode = "circle"
+		elseif self.subMode == "circle" then 
+			self.subMode = "sphere"
+		else 
+			self.subMode = "single"
+		end
+	end
+end
 
-	-- If already in any vertex submode, shift submode forward
-	if self.subMode == "single" then 
-		self.subMode = "circle"
-	elseif self.subMode == "circle" then 
-		self.subMode = "sphere"
-	else 
-		self.subMode = "single"
+function Scene:byActionC()
+	if love.keyboard.isDown("lctrl") then
+		if self.activeSection and self.activeSection.copy then
+			self.activeSection:copy()
+		end
+	else
+		self:getCurrentModel():joinSelectedToNearestSelected()
 	end
 end
 
