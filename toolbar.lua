@@ -41,7 +41,7 @@ function Toolbar:draw()
     for k, v in pairs(self.modes) do
         local y = self.y + self.size*(i)
         local x = self.x
-        if k == currentToolMode then -- If selected draw all sub icons next to each other
+        if k == currentToolMode and self.host:getActiveSection() == self then -- If selected draw all sub icons next to each other
             for j = 1, #v, 1 do
                 local subMode = v[j][1]
                 local subIcon = v[j][2]
@@ -56,6 +56,10 @@ function Toolbar:draw()
         else
             local toolIcon = v[1][2] -- Choose first from sub icons
             love.graphics.setColor(1,1,1,1) -- White
+            if k == currentToolMode then 
+                love.graphics.setColor(0.5,0.5,0.5,1) -- Gray
+                toolIcon = self:getSubModeIcon(currentToolMode, currentSubMode)
+            end
             love.graphics.rectangle("fill", x, y, self.size, self.size)
             local iconScale = self.size/toolIcon:getWidth()
             love.graphics.draw(toolIcon, x, y, 0, iconScale, iconScale)
@@ -68,6 +72,12 @@ end
 function Toolbar:mousePressed(mx, my, button)
     if button == 1 then
         self:switchToModeWithin(mx, my)
+    end
+end
+
+function Toolbar:getSubModeIcon(tool, sub)
+    for _, a in ipairs(self.modes[tool]) do
+        if a[1] == sub then return a[2] end
     end
 end
 
