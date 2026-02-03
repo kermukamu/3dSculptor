@@ -6,6 +6,8 @@ local cpanel2d = require("panel2d")
 local Panel2d = cpanel2d.Panel2d
 local ctoolbar = require("toolbar")
 local Toolbar = ctoolbar.Toolbar
+local ccolortool = require("colortool")
+local ColorTool = ccolortool.ColorTool
 
 -- Scene "class"
 local Scene = {}
@@ -31,6 +33,7 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.subMode = "rectangle"
 	self.circleSegments = 64
 	self.sphereSegments = 12
+	self.activeColor = {0.4, 0.4, 0.8, 0.6} -- Default
 
 	-- Position console to bottom third
 	local consoleW = screenWidth
@@ -67,11 +70,17 @@ function Scene.new(title, screenWidth, screenHeight)
 	local yzPanelY = love.graphics.getHeight()/2 - yzPanelH/2 + yOffset
 	self.yzPanel = Panel2d.new(yzPanelX, yzPanelY, yzPanelW, yzPanelH, "yz", self)
 
-	-- Position Toolbar on top section of modeler
+	-- Position Toolbar on top right section of modeler
 	local toolbarIconSize = screenWidth * (1 / 32)
 	local toolbarX = modelerX + modelerW - toolbarIconSize - self.modeler:getFrameLineWidth()*2
 	local toolbarY = modelerY
 	self.toolbar = Toolbar.new(toolbarX, toolbarY, toolbarIconSize, self)
+
+	-- Position color tool on bottom right corner of modeler
+	local colorToolIconSize = screenWidth * (1 / 32)
+	local colorToolX = modelerX + modelerW - colorToolIconSize - self.modeler:getFrameLineWidth()*2
+	local colorToolY = modelerY + modelerH - colorToolIconSize - self.modeler:getFrameLineWidth()*2 - yOffset
+	self.colorTool = ColorTool.new(colorToolX, colorToolY, colorToolIconSize, self)
 
 	self.keyActions = {
 		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
@@ -99,6 +108,8 @@ function Scene:update(dt)
 	self.xyPanel:update(dt)
 	self.yzPanel:update(dt)
 	self.toolbar:update(dt)
+	self.colorTool:update(dt)
+	self.activeColor = self.colorTool:getSelectedColor()
 end
 
 function Scene:draw()
@@ -108,6 +119,7 @@ function Scene:draw()
 	self.yzPanel:draw()
 	self.console:draw()
 	self.toolbar:draw()
+	self.colorTool:draw()
 end
 
 function Scene:keyPressed(key)
@@ -153,6 +165,10 @@ function Scene:mousePressed(mx, my, button)
 	if
 		self.toolbar:isWithinSection(mx, my) then
 		self.activeSection = self.toolbar
+	end
+	if
+		self.colorTool:isWithinSection(mx, my) then
+		self.activeSection = self.colorTool
 	end
 	if self.activeSection and self.activeSection.mousePressed then
 		self.activeSection:mousePressed(mx, my, button)
@@ -226,7 +242,7 @@ function Scene:byActionJ()
 end
 
 function Scene:byActionF()
-	self:getCurrentModel():addFaceForSelected()
+	self:getCurrentModel():addFaceForSelected(self.activeColor)
 end
 
 function Scene:byActionTurnSelectionModeOn()
@@ -255,6 +271,7 @@ function Scene:getSubToolMode() return self.subMode end
 function Scene:getActiveSection() return self.activeSection end
 function Scene:getCircleSegments() return self.circleSegments end
 function Scene:getSphereSegments() return self.sphereSegments end
+function Scene:getActiveColor() return self.activeColor end
 
 function Scene:getCurrentModel()
 	if self.modeler ~= nil then
