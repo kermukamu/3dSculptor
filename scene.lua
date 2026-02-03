@@ -138,37 +138,27 @@ function Scene:textInput(t)
 end
 
 function Scene:mousePressed(mx, my, button)
-	if self:isWithinSection(mx, my, self.modeler.x, self.modeler.y,
+	if self.toolbar:isWithinSection(mx, my) then
+		self.activeSection = self.toolbar
+	elseif self.colorTool:isWithinSection(mx, my) then
+		self.activeSection = self.colorTool
+	elseif self:isWithinSection(mx, my, self.modeler.x, self.modeler.y,
 		self.modeler.w, self.modeler.h) then
 		self.activeSection = self.modeler
-	end
-	if 
-		self:isWithinSection(mx, my, self.xzPanel.x, self.xzPanel.y,
+	elseif self:isWithinSection(mx, my, self.xzPanel.x, self.xzPanel.y,
 		self.xzPanel.w, self.xzPanel.h) then
 		self.activeSection = self.xzPanel
-	end
-	if
-		self:isWithinSection(mx, my, self.xyPanel.x, self.xyPanel.y,
+	elseif self:isWithinSection(mx, my, self.xyPanel.x, self.xyPanel.y,
 		self.xyPanel.w, self.xyPanel.h) then
 		self.activeSection = self.xyPanel
-	end
-	if
-		self:isWithinSection(mx, my, self.yzPanel.x, self.yzPanel.y,
+	elseif self:isWithinSection(mx, my, self.yzPanel.x, self.yzPanel.y,
 		self.yzPanel.w, self.yzPanel.h) then
 		self.activeSection = self.yzPanel
-	end
-	if
-		self:isWithinSection(mx, my, self.console.x, self.console.y,
+	elseif self:isWithinSection(mx, my, self.console.x, self.console.y,
 		self.console.w, self.console.h) then
 		self.activeSection = self.console
-	end
-	if
-		self.toolbar:isWithinSection(mx, my) then
-		self.activeSection = self.toolbar
-	end
-	if
-		self.colorTool:isWithinSection(mx, my) then
-		self.activeSection = self.colorTool
+	else
+		self.activeSection = nil
 	end
 	if self.activeSection and self.activeSection.mousePressed then
 		self.activeSection:mousePressed(mx, my, button)
