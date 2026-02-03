@@ -56,7 +56,9 @@ function Console.new(x, y, w, h, host)
 		["Space+LeftMouse"] = "Rotates 3D view",
 		["Shift+LeftMouse"] = "Holds selection if in selection mode",
 		["Ctrl+C"] = "Copy selection",
-		["Ctrl+V"] = "Paste selection"
+		["Ctrl+V"] = "Paste selection",
+		["Alt+C"] = "Disconnect selected vertices",
+		["Alt+LeftMouse"] = "Deselect if in selection mode"
 	}
 	self.response = ""
 	return self
