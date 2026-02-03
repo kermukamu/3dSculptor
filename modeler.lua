@@ -122,8 +122,9 @@ function Modeler:textInput(t)
 end
 
 function Modeler:mousePressed(mx, my, button)
-	if not (((love.keyboard.isDown("lshift") or love.keyboard.isDown("lalt")) 
-		and self.toolMode == "selection") or self.toolMode == "move selected") then 
+	if not (((love.keyboard.isDown("lshift") or love.keyboard.isDown("lalt") 
+		or love.keyboard.isDown("space")) and self.toolMode == "selection") 
+		or self.toolMode == "move selected") then 
 		self:deSelectAll() 
 	end
 	self.prevClickX = mx
@@ -140,11 +141,19 @@ function Modeler:mouseReleased(mx, my, button)
     	if button == 1 and not spaceDown then -- left click
     		if (math.abs(mx - self.prevClickX) < 5) 
     			and (math.abs(my - self.prevClickY) < 5) then -- Very small area between press and release
-                if lAltDown then self.currentModel:toggleVertexSelectionWithinClick(mx, my, false)
-                else self.currentModel:toggleVertexSelectionWithinClick(mx, my, true) end
+                if lAltDown then 
+                	self.currentModel:toggleVertexSelectionWithinClick(mx, my, false)
+                else 
+                	self.currentModel:toggleVertexSelectionWithinClick(mx, my, true) 
+                end
             else
-                if lAltDown then self.currentModel:toggleVertexSelectionWithinRectangle(self.prevClickX, self.prevClickY, mx, my, false)
-                else self.currentModel:toggleVertexSelectionWithinRectangle(self.prevClickX, self.prevClickY, mx, my, true) end
+                if lAltDown then 
+                	self.currentModel:toggleVertexSelectionWithinRectangle(
+                		self.prevClickX, self.prevClickY, mx, my, false)
+                else
+                	self.currentModel:toggleVertexSelectionWithinRectangle(
+                		self.prevClickX, self.prevClickY, mx, my, true) 
+               	end
             end
     	end
 	end
