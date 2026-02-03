@@ -75,9 +75,10 @@ function Scene.new(title, screenWidth, screenHeight)
 
 	self.keyActions = {
 		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
-		["c"] = {function() self:byActionC() end, "Connects each selected vertex to nearest selected vertex"},
+		["c"] = {function() self:byActionC() end, "Use while holding left ctrl to copy selected"},
 		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
 		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
+		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if alt is held down"},
 		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move selected mode on"},
 		["a"] = {function() self:selectAllModel() end, "Selects all"},
 		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
@@ -209,7 +210,11 @@ function Scene:byActionC()
 		if self.activeSection and self.activeSection.copy then
 			self.activeSection:copy()
 		end
-	elseif love.keyboard.isDown("lalt") then
+	end
+end
+
+function Scene:byActionJ()
+	if love.keyboard.isDown("lalt") then
 		self:getCurrentModel():disconnectSelected()
 	else
 		self:getCurrentModel():joinSelected()
