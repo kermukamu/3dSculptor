@@ -21,4 +21,4 @@ Example photos:
 <img width="998" height="1031" alt="image" src="https://github.com/user-attachments/assets/86122311-cc7c-4784-a019-51dd464911fe" />
 
 3) The gem model with faces
-<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/aa8e192f-79cf-4835-b350-9de3917c678a" />
+<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/e2e56106-fe06-41ec-b25b-8014941e5e64" />
