@@ -279,11 +279,11 @@ function Panel2d:mouseReleased(mx, my, button)
             local segments = self.host:getCircleSegments()
             local connectLines = true
             if self.axes == "xz" or self.axes == "zx" then
-                self.currentModel:drawCircle(cx, 0, cy, radius, plane, segments, connectLines)
+                self.currentModel:addCircle(cx, 0, cy, radius, plane, segments, connectLines)
             elseif self.axes == "xy" or self.axes == "yx" then
-                self.currentModel:drawCircle(cx, cy, 0, radius, plane, segments, connectLines)
+                self.currentModel:addCircle(cx, cy, 0, radius, plane, segments, connectLines)
             elseif self.axes == "yz" or self.axes == "zy" then
-                self.currentModel:drawCircle(0, cx, cy, radius, plane, segments, connectLines)
+                self.currentModel:addCircle(0, cx, cy, radius, plane, segments, connectLines)
             end
         elseif self.subMode == "sphere" then -- Draw sphere
             local cx, cy = self:screenPosToModelPos(self.prevClickX, self.prevClickY)
@@ -293,11 +293,11 @@ function Panel2d:mouseReleased(mx, my, button)
             local segments = self.host:getSphereSegments()
             local connectLines = true
             if self.axes == "xz" or self.axes == "zx" then
-                self:getCurrentModel():drawSphere(cx, 0, cy, radius, segments, connectLines)
+                self:getCurrentModel():addSphere(cx, 0, cy, radius, segments, connectLines)
             elseif self.axes == "xy" or self.axes == "yx" then
-                self:getCurrentModel():drawSphere(cx, cy, 0, radius, segments, connectLines)
+                self:getCurrentModel():addSphere(cx, cy, 0, radius, segments, connectLines)
             elseif self.axes == "yz" or self.axes == "zy" then
-                self:getCurrentModel():drawSphere(0, cx, cy, radius, segments, connectLines)
+                self:getCurrentModel():addSphere(0, cx, cy, radius, segments, connectLines)
             end
         end
     end

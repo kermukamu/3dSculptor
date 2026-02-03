@@ -251,7 +251,7 @@ function Console:comDrawCircle()
 		tonumber(self.args[1]), tonumber(self.args[2]), tonumber(self.args[3]),
 		tonumber(self.args[4]), self.args[5], tonumber(self.args[6]), self:toBoolean(self.args[7])
 	if not (con == nil) then
-		self.response = self.host.modeler.currentModel:drawCircle(centerX, centerY, centerZ,
+		self.response = self.host.modeler.currentModel:addCircle(centerX, centerY, centerZ,
 			radius, plane, segments, con)
 	else self.response = "connectLines must be a boolean value" end
 end

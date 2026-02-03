@@ -466,7 +466,7 @@ function Cool3d:joinSelected()
     end
 end
 
-function Cool3d:drawCircle(centerX, centerY, centerZ, radius, plane, segments, connectLines)
+function Cool3d:addCircle(centerX, centerY, centerZ, radius, plane, segments, connectLines)
     local seg = segments or 16
     if seg < 3 then return "Atleast 3 segments required" end
     local connect = connectLines
@@ -513,7 +513,7 @@ function Cool3d:drawCircle(centerX, centerY, centerZ, radius, plane, segments, c
     return "Circle drawn"
 end
 
-function Cool3d:drawSphere(cx, cy, cz, radius, segments, connectLines)
+function Cool3d:addSphere(cx, cy, cz, radius, segments, connectLines)
     local connect = connectLines
     local seg = segments or 6
     if seg < 6 then return "At least 6 segments required" end
