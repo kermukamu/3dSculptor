@@ -1,4 +1,4 @@
-A 3D wireframe model editing tool. Uses LÖVE for event loops, inputs and drawing 2D objects.
+A 3D model editing tool. Uses LÖVE for event loops, inputs and drawing 2D objects.
 
 Steps to run:
 
@@ -19,3 +19,6 @@ Example photos:
 
 2) The same model with a selected region being translated in x and y coordinates
 <img width="998" height="1031" alt="image" src="https://github.com/user-attachments/assets/86122311-cc7c-4784-a019-51dd464911fe" />
+
+3) The gem model with faces
+<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/aa8e192f-79cf-4835-b350-9de3917c678a" />
