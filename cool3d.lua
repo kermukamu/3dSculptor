@@ -8,8 +8,12 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
 
 	self.points = {} -- Stores vertices as x y z. Indices = numbering
 	self.lines = {} -- Position of each entry matches a vertex index, the entry value is another vertex
+    self.faces = {} -- Each entry consists of all vertex indices that form a face
+    self.faceColors = {} -- The index of each entry is equivalent to indices of each face entry. Values inside each entry are R G B O
+
     self.pointsCB = {} -- Points saved on clipboard
     self.linesCB = {} -- Lines saved on clipboard
+
 	self.lineWidth = 1
     self.dx = 0
     self.dy = 0
@@ -19,7 +23,6 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.rotAnglePhi = 0
     self.rotAngleTheta = 0
     self.viewingRotTable = {0, 0, 0, 0}
-    self.timer = 0
     self.zSpeed = 0.2
 
     self.dxMarker = 0
@@ -28,6 +31,7 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.zCompression = 1000
     self.textScale = 1
     self.screen = {}
+    self.pointsWorld = {}
     self.selectedVertices = {}
     self.firstSelectedVert = nil
     self.clickRange = 5
@@ -36,6 +40,8 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
 
     self.x2d = x2d or 0
     self.y2d = y2d or 0
+
+    self.timer = 0
 	return self
 end
 
@@ -55,11 +61,14 @@ function Cool3d:updateModel()
     -- The table will have the transformed, rotated and projected vertices (2D)
     -- The z values of transformed vertices are also stored in self as they are needed to scale marker elements
     self.screen = {}
+    self.pointsWorld = {}
     self.allModelWithinView = true
     for i = 1, #self.points do
         -- Rotations and translations
         local p = self:rotate(self.points[i], self.viewingRotTable)
         p = self:translateXYZ(p, {self.dx, self.dy, self.dz})
+
+        self.pointsWorld[i] = p
 
         local proj = {0, 0}
         if p[3] and p[3] > 0.001 then -- Translated z is not outside the view (monitor)
@@ -85,6 +94,8 @@ function Cool3d:draw()
 end
 
 function Cool3d:drawModel()
+    self:drawFaces()
+
     love.graphics.setColor(1, 1, 1)
     love.graphics.setLineWidth(self.lineWidth)
 
@@ -198,6 +209,59 @@ function Cool3d:drawAxisMarker()
     end
 end
 
+function Cool3d:drawFaces()
+    if not self.faces or #self.faces == 0 then return end
+
+    -- build a list of face indices with depth
+    local faceOrder = {}
+    for i, face in ipairs(self.faces) do
+        local depth = self:faceDepth(face)
+        faceOrder[#faceOrder+1] = {i = i, depth = depth}
+    end
+
+    -- sort back to front, so nearer faces overwrite further ones
+    table.sort(faceOrder, function(a,b) return a.depth > b.depth end)
+
+    -- draw
+    for _, f in ipairs(faceOrder) do
+        local face = self.faces[f.i]
+        local poly = {}
+
+        local visible = true
+        for _, vi in ipairs(face) do
+            local s = self.screen[vi]
+            if not s then
+                visible = false
+                break
+            end
+            poly[#poly+1] = s[1]
+            poly[#poly+1] = s[2]
+        end
+
+        if visible then
+            local col = self.faceColors[f.i] or {0.4, 0.4, 0.8, 0.6}
+            love.graphics.setColor(col[1], col[2], col[3], col[4])
+            love.graphics.polygon("fill", poly)
+        end
+    end
+
+    love.graphics.setColor(1,1,1,1) -- reset
+end
+
+function Cool3d:faceDepth(face)
+    local sum = 0
+    local count = 0
+    for _, vi in ipairs(face) do
+        local p = self.pointsWorld[vi]
+        if p then
+            sum = sum + p[3]
+            count = count + 1
+        end
+    end
+    return count > 0 and sum / count or 0
+end
+
+
 function Cool3d:readFile(filename)
     if filename == nil then return "No filename given" end
 	local contents, err = love.filesystem.read(filename)
@@ -206,17 +270,32 @@ function Cool3d:readFile(filename)
     self:clear()
 	--Separate lines
 	for line in contents:gmatch("[^\r\n]+") do
-		-- Separate each value in a line, form should be x1 y1 z1 i1 i2 i3 i4...\n
-		local pointParts = {}
-		local lineParts = {}
-		local i = 1
-		for part in line:gmatch("%S+") do
-			if i > 3 then table.insert(lineParts, tonumber(part))
-			else table.insert(pointParts, tonumber(part)) end
-			i = i + 1
-		end
-		table.insert(self.points, pointParts)
-		table.insert(self.lines, lineParts)
+        local firstChar = string.sub(line, 1, 1)
+        if firstChar == "F" then -- A row containing face data
+            -- Each row should be in form "r g b o i1 i2 i3 i4"
+            local color = {}
+            local facePoints = {}
+            local i = 1
+            for part in line:sub(2):gmatch("%S+") do
+                if i > 4 then table.insert(facePoints, tonumber(part))
+                else table.insert(color, tonumber(part)) end
+                i = i + 1
+            end
+            table.insert(self.faceColors, color)
+            table.insert(self.faces, facePoints)
+        else -- Vertex and line data
+            -- Separate each value in a line, form should be x1 y1 z1 i1 i2 i3 i4...\n
+            local pointParts = {}
+            local lineParts = {}
+            local i = 1
+            for part in line:gmatch("%S+") do
+            	if i > 3 then table.insert(lineParts, tonumber(part))
+            	else table.insert(pointParts, tonumber(part)) end
+            	i = i + 1
+            end
+            table.insert(self.points, pointParts)
+            table.insert(self.lines, lineParts)
+        end
 	end
 
     return "Read table!"
@@ -230,6 +309,17 @@ function Cool3d:saveFile(filename)
         fileText = fileText .. tostring(p[1]) .. " ".. tostring(p[2]) .. " ".. tostring(p[3])
         for j = 1, #self.lines[i], 1 do
             fileText = fileText .. " " .. tostring(self.lines[i][j])
+        end
+        fileText = fileText .. "\n"
+    end
+
+    for i = 1, #self.faces, 1 do
+        local f = self.faces[i]
+        local r, g, b, o = tostring(self.faceColors[i][1]), tostring(self.faceColors[i][2]),
+            tostring(self.faceColors[i][3]), tostring(self.faceColors[i][4])
+        fileText = fileText .. "F " .. r .. " " .. g .. " " .. b .. " " .. o
+        for j = 1, #self.faces[i], 1 do
+            fileText = fileText .. " " .. tostring(self.faces[i][j])
         end
         fileText = fileText .. "\n"
     end
@@ -328,6 +418,10 @@ end
 function Cool3d:clear()
     self.points = {}
     self.lines = {}
+    self.faces = {}
+    self.faceColors = {}
+    self.selectedVertices = {}
+    self.firstSelectedVert = nil
 end
 
 function Cool3d:project(xyz)
@@ -415,6 +509,34 @@ function Cool3d:removeVertex(number)
         table.remove(self.lines[lTI[1]], lTI[2]) -- Others to vertex
     end
 
+    -- Update faces
+    local newFaces = {}
+    local newColors = {}
+    
+    for fi, face in ipairs(self.faces) do
+        local newFace = {}
+        local keepFace = true
+    
+        for _, vi in ipairs(face) do
+            if vi == number then
+                keepFace = false
+                break
+            elseif vi > number then
+                table.insert(newFace, vi - 1)
+            else
+                table.insert(newFace, vi)
+            end
+        end
+    
+        if keepFace and #newFace >= 3 then
+            table.insert(newFaces, newFace)
+            table.insert(newColors, self.faceColors[fi])
+        end
+    end
+    
+    self.faces = newFaces
+    self.faceColors = newColors
+
     -- Remove the vertex itself
     table.remove(self.points, number)
 end
@@ -464,6 +586,76 @@ function Cool3d:joinSelected()
             self:connect(selected[i], selected[j])
         end
     end
+end
+
+function Cool3d:addFace(points, r, g, b, o)
+    if #points < 3 then return end
+    local face = {}
+    for _, p in ipairs(points) do
+        table.insert(face, p)
+    end
+    table.insert(self.faces, face)
+    table.insert(self.faceColors, {r,g,b,o})
+end
+
+function Cool3d:addFaceForSelected()
+    local selected = {}
+    for i, isSelected in pairs(self.selectedVertices) do
+        if isSelected and self.points[i] then
+            table.insert(selected, i)
+        end
+    end
+
+    if #selected < 3 then
+        return "At least 3 selected vertices required to form a face"
+    end
+
+    -- Try to order the using screen-space angles to avoid self-intersections
+    local allHaveScreen = true
+    for _, i in ipairs(selected) do
+        if not self.screen[i] then
+            allHaveScreen = false
+            break
+        end
+    end
+
+    local ordered = {}
+
+    if allHaveScreen then
+        -- Compute centroid in 2D screen space
+        local cx, cy = 0, 0
+        for _, i in ipairs(selected) do
+            local s = self.screen[i]
+            cx = cx + s[1]
+            cy = cy + s[2]
+        end
+        cx = cx / #selected
+        cy = cy / #selected
+
+        -- Build list with angles
+        local temp = {}
+        for _, i in ipairs(selected) do
+            local s = self.screen[i]
+            local angle = math.atan2(s[2] - cy, s[1] - cx)
+            table.insert(temp, { index = i, angle = angle })
+        end
+
+        table.sort(temp, function(a, b) return a.angle < b.angle end)
+
+        for _, entry in ipairs(temp) do
+            table.insert(ordered, entry.index)
+        end
+    else
+        table.sort(selected)
+        ordered = selected
+    end
+
+    -- Default face color
+    local r, g, b, o = 0.4, 0.4, 0.8, 0.6
+
+    self:addFace(ordered, r, g, b, o)
+
+    return "Face created from selected vertices"
 end
 
 function Cool3d:addCircle(centerX, centerY, centerZ, radius, plane, segments, connectLines)
