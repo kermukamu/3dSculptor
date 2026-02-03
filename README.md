@@ -14,11 +14,6 @@ The project includes an example model (made with the tool itself), which can be 
 
 Example photos:
 
-1) A loaded gem model file and a drawn sphere in the editor
-<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/4c62ee2f-92d3-40cb-b544-cb42c25c5cea" />
+1) A gem model with faces
+<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/671f1dd7-5f68-4545-a920-b89d4ebff887" />
 
-2) The same model with a selected region being translated in x and y coordinates
-<img width="998" height="1031" alt="image" src="https://github.com/user-attachments/assets/86122311-cc7c-4784-a019-51dd464911fe" />
-
-3) The gem model with faces
-<img width="1000" height="1030" alt="image" src="https://github.com/user-attachments/assets/e2e56106-fe06-41ec-b25b-8014941e5e64" />
