@@ -78,7 +78,7 @@ function Scene.new(title, screenWidth, screenHeight)
 		["c"] = {function() self:byActionC() end, "Connects each selected vertex to nearest selected vertex"},
 		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
 		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
-		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move mode on"},
+		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move selected mode on"},
 		["a"] = {function() self:selectAllModel() end, "Selects all"},
 		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
     }
@@ -222,7 +222,7 @@ function Scene:byActionTurnSelectionModeOn()
 end
 
 function Scene:byActionTurnMoveModeOn()
-	self.toolMode = "move"
+	self.toolMode = "move selected"
 		-- If already in any vertex submode, shift submode forward
 	if self.subMode == "translate" then 
 		self.subMode = "rotate"

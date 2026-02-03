@@ -240,7 +240,7 @@ function Panel2d:mousePressed(mx, my, button)
     local spaceDown = love.keyboard.isDown("space")
 
     if not (((lShiftDown or lAltDown) and self.toolMode == "selection") 
-        or self.toolMode == "move") then 
+        or self.toolMode == "move selected") then 
         self.currentModel:deSelect() 
     end
 
@@ -307,7 +307,7 @@ function Panel2d:mouseMoved(x, y, dx, dy)
     local sdx, sdy = dx / self.viewScale, dy / self.viewScale
     local toolMode = self.host:getToolMode()
     local subMode = self.host:getSubToolMode()
-    if toolMode == "move" then
+    if toolMode == "move selected" then
         if subMode == "translate" and love.mouse.isDown(1) then
             if self.axes == "xz" or self.axes == "zx" then 
                 self.currentModel:transformSelected(sdx, 0, -sdy) 

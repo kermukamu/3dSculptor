@@ -123,7 +123,7 @@ end
 
 function Modeler:mousePressed(mx, my, button)
 	if not (((love.keyboard.isDown("lshift") or love.keyboard.isDown("lalt")) 
-		and self.toolMode == "selection") or self.toolMode == "move") then 
+		and self.toolMode == "selection") or self.toolMode == "move selected") then 
 		self:deSelectAll() 
 	end
 	self.prevClickX = mx
