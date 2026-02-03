@@ -301,7 +301,6 @@ function Cool3d:copySelected()
     end
 end
 
-
 function Cool3d:pasteSelected(x, y, z) -- Paste to xyz
     if #self.pointsCB == 0 then return end
     local baseIndex = #self.points
@@ -322,7 +321,6 @@ function Cool3d:pasteSelected(x, y, z) -- Paste to xyz
         end
     end
 end
-
 
 function Cool3d:clear()
     self.points = {}
@@ -437,6 +435,32 @@ function Cool3d:disconnect(v1, v2)
     end
     for _, lTI in ipairs(lTableIndices) do
         table.remove(self.lines[lTI[1]], lTI[2])
+    end
+end
+
+function Cool3d:disconnectSelected()
+    local selected = {}
+    for k, v in pairs(self.selectedVertices) do
+        if v then table.insert(selected, k) end
+    end
+
+    for i=1, #selected-1 do
+        for j=i, #selected do
+            self:disconnect(selected[i], selected[j])
+        end
+    end
+end
+
+function Cool3d:joinSelected()
+    local selected = {}
+    for k, v in pairs(self.selectedVertices) do
+        if v then table.insert(selected, k) end
+    end
+
+    for i=1, #selected-1 do
+        for j=i, #selected do
+            self:connect(selected[i], selected[j])
+        end
     end
 end
 
