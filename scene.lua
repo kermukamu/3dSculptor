@@ -223,7 +223,12 @@ end
 
 function Scene:byActionTurnMoveModeOn()
 	self.toolMode = "move"
-	self.subMode = "selected"
+		-- If already in any vertex submode, shift submode forward
+	if self.subMode == "translate" then 
+		self.subMode = "rotate"
+	else 
+		self.subMode = "translate"
+	end
 end
 -- Getters and setters
 
