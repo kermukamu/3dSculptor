@@ -45,24 +45,15 @@ function Cool3d:update(dt)
     self.rotAnglePhi = (self.rotAnglePhi + math.pi * self.rotSpeedPhi * dt)
     self.rotAngleTheta = (self.rotAngleTheta + math.pi * self.rotSpeedTheta * dt)
     self.viewingRotTable = self:calcRotationTable(self.rotAnglePhi, self.rotAngleTheta)
+    self:updateModel()
 
     self.dz = math.max(self.dz, 0)
 end
 
-function Cool3d:draw()
-    self:drawModel()
-    if self.host:drawAxisMarkerIsOn() then self:drawAxisMarker() end
-end
-
-function Cool3d:drawModel()
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.setLineWidth(self.lineWidth)
-
-    local w, h = love.graphics.getDimensions()
-
+function Cool3d:updateModel()
     -- Screen will be reset every time the model is drawn.
     -- The table will have the transformed, rotated and projected vertices (2D)
-    -- The z values of transformed vertices are also stored in self as they are needed elsewhere
+    -- The z values of transformed vertices are also stored in self as they are needed to scale marker elements
     self.screen = {}
     self.allModelWithinView = true
     for i = 1, #self.points do
@@ -85,10 +76,22 @@ function Cool3d:drawModel()
             self.screen[i] = nil
             self.allModelWithinView = false
         end
+    end
+end
 
+function Cool3d:draw()
+    self:drawModel()
+    if self.host:drawAxisMarkerIsOn() then self:drawAxisMarker() end
+end
+
+function Cool3d:drawModel()
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.setLineWidth(self.lineWidth)
+
+    for i = 1, #self.screen do
         if self.screen[i] ~= nil then
             -- Text next to vertices
-            local tScaling = self.zCompression*self.textScale/p[3]
+            local tScaling = self.zCompression*self.textScale/self.screen[i][3]
             if self.selectedVertices[i] then
                 if self.host:vertexNumberingIsOn() then
                     -- love.graphics.setColor(1,1,0,1) -- Yellow
@@ -145,7 +148,6 @@ end
 function Cool3d:drawAxisMarker()
     love.graphics.setLineWidth(self.lineWidth)
 
-    local w, h = love.graphics.getDimensions()
     local screen = {} -- Unlike in drawModel(), locals are used
     local size = self.host:getW()/32
     local points = {{0, 0, 0}, {size, 0, 0}, {0, size, 0}, {0, 0, size}}
