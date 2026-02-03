@@ -209,8 +209,10 @@ function Scene:byActionC()
 		if self.activeSection and self.activeSection.copy then
 			self.activeSection:copy()
 		end
+	elseif love.keyboard.isDown("lalt") then
+		self:getCurrentModel():disconnectSelected()
 	else
-		self:getCurrentModel():joinSelectedToNearestSelected()
+		self:getCurrentModel():joinSelected()
 	end
 end
 
