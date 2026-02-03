@@ -1,4 +1,4 @@
-A 3D wireframe model editing tool. Uses LÖVE for event loops, inputs and drawing 2D objects.
+A 3D model editing tool. Uses LÖVE for event loops, inputs and drawing 2D objects.
 
 Steps to run:
 
