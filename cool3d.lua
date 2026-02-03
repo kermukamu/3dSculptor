@@ -101,8 +101,8 @@ function Cool3d:drawModel()
                 end
     
                 if self.host:vertexCoordsIsOn() then
-                    local text = tostring(self.points[i][1]) .. " " ..
-                        tostring(self.points[i][2]) .. " " .. tostring(self.points[i][3])
+                    local text = string.format("%.2f", self.points[i][1]) .. " " ..
+                        string.format("%.2f", self.points[i][2]) .. " " .. string.format("%.2f", self.points[i][3])
                     local yOffset = love.graphics.getFont():getHeight() * (tScaling)
                     --love.graphics.setColor(1,0.5,0,1) -- Orange
                     love.graphics.setColor(0,0.5,0,1) -- Darker green
@@ -148,6 +148,7 @@ end
 function Cool3d:drawAxisMarker()
     love.graphics.setLineWidth(self.lineWidth)
 
+    -- Both projection calculations and drawing is handled here due to the light computational weight of the axis marker
     local screen = {} -- Unlike in drawModel(), locals are used
     local size = self.host:getW()/32
     local points = {{0, 0, 0}, {size, 0, 0}, {0, size, 0}, {0, 0, size}}
@@ -387,13 +388,12 @@ function Cool3d:addVertex(x, y, z)
 end
 
 function Cool3d:addVertexOnPlane(vx, vy, plane)
-    local x, y = self:r2Dec(vx), self:r2Dec(vy)
     if plane == "xz" or plane == "zx" then
-        self:addVertex(x, 0, y)
+        self:addVertex(vx, 0, vy)
     elseif plane == "xy" or plane == "yx" then
-        self:addVertex(x, y, 0)
+        self:addVertex(vx, vy, 0)
     elseif plane == "yz" or plane == "zy" then
-        self:addVertex(0, x, y)
+        self:addVertex(0, vx, vy)
     end
 end
 
@@ -485,19 +485,19 @@ function Cool3d:drawCircle(centerX, centerY, centerZ, radius, plane, segments, c
         for _, p in ipairs(aux) do
             local point = {p[1], p[2], 0}
             point = self:translateXYZ(point, {centerX, centerY, centerZ})
-            self:addVertex(self:r2Dec(point[1]), self:r2Dec(point[2]), self:r2Dec(point[3]))
+            self:addVertex(point[1], point[2], point[3])
         end
     elseif plane == "xz" or plane == "zx" then
         for _, p in ipairs(aux) do
             local point = {p[1], 0, p[2]}
             point = self:translateXYZ(point, {centerX, centerY, centerZ})
-            self:addVertex(self:r2Dec(point[1]), self:r2Dec(point[2]), self:r2Dec(point[3]))
+            self:addVertex(point[1], point[2], point[3])
         end
     elseif plane == "yz" or plane == "zy" then
         for _, p in ipairs(aux) do
             local point = {0, p[1], p[2]}
             point = self:translateXYZ(point, {centerX, centerY, centerZ})
-            self:addVertex(self:r2Dec(point[1]), self:r2Dec(point[2]), self:r2Dec(point[3]))
+            self:addVertex(point[1], point[2], point[3])
         end
     else return "Plane parameter is incorrect" end
 
@@ -535,15 +535,15 @@ function Cool3d:drawSphere(cx, cy, cz, radius, segments, connectLines)
             local x = cx + radius * sinP * math.cos(theta)
             local y = cy + radius * cosP
             local z = cz + radius * sinP * math.sin(theta)
-            self:addVertex(self:r2Dec(x), self:r2Dec(y), self:r2Dec(z))
+            self:addVertex(x, y, z)
             index[lat][lon] = #self.points
         end
     end
 
     -- Top pole and bottom pole
-    self:addVertex(self:r2Dec(cx), self:r2Dec(cy + radius), self:r2Dec(cz))
+    self:addVertex(cx, cy + radius, cz)
     local top = #self.points
-    self:addVertex(self:r2Dec(cx), self:r2Dec(cy - radius), self:r2Dec(cz))
+    self:addVertex(cx, cy - radius, cz)
     local bottom = #self.points
 
     if connect then
@@ -591,10 +591,6 @@ function Cool3d:drawSphere(cx, cy, cz, radius, segments, connectLines)
     return "Sphere added"
 end
 
-function Cool3d:r2Dec(value)
-    return math.floor(100*value) / 100
-end
-
 function Cool3d:deSelect()
     self.selectedVertices = {}
     self.firstSelectedVert = nil
@@ -640,9 +636,103 @@ function Cool3d:transformSelected(dx, dy, dz)
         if selected then
             local v = self.points[i]
             local vx, vy, vz = v[1]+dx, v[2]+dy, v[3]+dz
-            self.points[i] = {self:r2Dec(vx), self:r2Dec(vy), self:r2Dec(vz)}
+            self.points[i] = {vx, vy, vz}
         end
     end
+end
+
+function Cool3d:rotateSelected(argPhi, argTheta)
+    -- Collect selected indices and compute their center
+    local selected = {}
+    local xSum, ySum, zSum = 0, 0, 0
+
+    for i, isSelected in pairs(self.selectedVertices) do
+        if isSelected and self.points[i] then
+            table.insert(selected, i)
+            local v = self.points[i]
+            xSum = xSum + v[1]
+            ySum = ySum + v[2]
+            zSum = zSum + v[3]
+        end
+    end
+
+    -- Nothing selected → nothing to do
+    if #selected == 0 then return end
+
+    local count = #selected
+    local xAvg = xSum / count
+    local yAvg = ySum / count
+    local zAvg = zSum / count
+
+    -- Convert degrees to radians and build rotation table
+    local deg2rad = math.pi / 180
+    local phi   = (argPhi   or 0) * deg2rad
+    local theta = (argTheta or 0) * deg2rad
+    local rotTable = self:calcRotationTable(phi, theta)
+
+    -- Rotate each selected vertex around the selection center
+    for _, i in ipairs(selected) do
+        local v = self.points[i]
+        -- Translate to center
+        local tx = v[1] - xAvg
+        local ty = v[2] - yAvg
+        local tz = v[3] - zAvg
+
+        local rotated = self:rotate({tx, ty, tz}, rotTable)
+
+        -- Translate back and store
+        self.points[i] = {rotated[1] + xAvg, rotated[2] + yAvg, rotated[3] + zAvg}
+    end
+end
+
+function Cool3d:rotateSelectedXY(angleDeg) 
+    -- A Separate function as the default phi theta approach has a blindspot for xy plane
+    local selected = {}
+    local xSum, ySum, zSum = 0, 0, 0
+
+    for i, v in pairs(self.selectedVertices) do
+        if v and self.points[i] then
+            table.insert(selected, i)
+            local p = self.points[i]
+            xSum = xSum + p[1]
+            ySum = ySum + p[2]
+            zSum = zSum + p[3]
+        end
+    end
+
+    if #selected == 0 then return end
+
+    local cx = xSum / #selected
+    local cy = ySum / #selected
+    local cz = zSum / #selected
+
+    local angle = angleDeg * math.pi / 180
+
+    for _, i in ipairs(selected) do
+        local p = self.points[i]
+
+        -- Move to center and rotate
+        local localPos = {p[1] - cx, p[2] - cy, p[3] - cz}
+        local rotated = self:rotateZ(localPos, angle)
+
+        -- Move back
+        self.points[i] = {rotated[1] + cx, rotated[2] + cy, 
+            rotated[3] + cz}
+    end
+end
+
+function Cool3d:rotateZ(xyz, angle)
+    local cosA = math.cos(angle)
+    local sinA = math.sin(angle)
+
+    local x = xyz[1]
+    local y = xyz[2]
+    local z = xyz[3]
+
+    local x2 = cosA * x - sinA * y
+    local y2 = sinA * x + cosA * y
+
+    return {x2, y2, z}
 end
 
 function Cool3d:deleteSelected()
@@ -695,9 +785,31 @@ function Cool3d:multiplyModelSize(m)
         if selected then
             local v = self.points[i]
             local vx, vy, vz = v[1]*m, v[2]*m, v[3]*m
-            self.points[i] = {self:r2Dec(vx), self:r2Dec(vy), self:r2Dec(vz)}
+            self.points[i] = {vx, vy, vz}
         end
     end
+end
+
+function Cool3d:getSelectionCenter()
+    local xSum, ySum, zSum = 0, 0, 0
+    local count = 0
+    for k, v in pairs(self.selectedVertices) do
+        if v and self.points[k] then
+            local x, y, z = self.points[k][1], self.points[k][2], self.points[k][3]
+            xSum = xSum + x
+            ySum = ySum + y
+            zSum = zSum + z
+            count = count + 1
+        end
+    end
+    if count == 0 then
+        return 0, 0, 0
+    end
+
+    local xAvg = xSum / count
+    local yAvg = ySum / count
+    local zAvg = zSum / count
+    return xAvg, yAvg, zAvg
 end
 
 function Cool3d:isWithinView(x, y)
