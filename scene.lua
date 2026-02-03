@@ -78,13 +78,16 @@ function Scene.new(title, screenWidth, screenHeight)
 		["c"] = {function() self:byActionC() end, "Use while holding left ctrl to copy selected"},
 		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
 		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
-		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if alt is held down"},
+		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if left alt is held down"},
 		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move selected mode on"},
 		["a"] = {function() self:selectAllModel() end, "Selects all"},
 		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
     }
 
 	self.activeSection = self.modeler
+
+	-- Load example model
+	self:getCurrentModel():readFile("3d/gem.txt")
 	return self
 end
 
