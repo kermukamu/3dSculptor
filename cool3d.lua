@@ -598,7 +598,7 @@ function Cool3d:addFace(points, r, g, b, o)
     table.insert(self.faceColors, {r,g,b,o})
 end
 
-function Cool3d:addFaceForSelected()
+function Cool3d:addFaceForSelected(color)
     local selected = {}
     for i, isSelected in pairs(self.selectedVertices) do
         if isSelected and self.points[i] then
@@ -650,8 +650,7 @@ function Cool3d:addFaceForSelected()
         ordered = selected
     end
 
-    -- Default face color
-    local r, g, b, o = 0.4, 0.4, 0.8, 0.6
+    local r, g, b, o = color[1], color[2], color[3], color[4]
 
     self:addFace(ordered, r, g, b, o)
 
