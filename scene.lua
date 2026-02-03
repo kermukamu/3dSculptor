@@ -79,6 +79,7 @@ function Scene.new(title, screenWidth, screenHeight)
 		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
 		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
 		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if left alt is held down"},
+		["f"] = {function() self:byActionF() end, "Creates a face between selected vertices"},
 		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move selected mode on"},
 		["a"] = {function() self:selectAllModel() end, "Selects all"},
 		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
@@ -222,6 +223,10 @@ function Scene:byActionJ()
 	else
 		self:getCurrentModel():joinSelected()
 	end
+end
+
+function Scene:byActionF()
+	self:getCurrentModel():addFaceForSelected()
 end
 
 function Scene:byActionTurnSelectionModeOn()
