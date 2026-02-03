@@ -28,7 +28,9 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.screen = {}
     self.gridXRes = 6
     self.gridYRes = 8
-    
+    self.rotIndicator = false
+    self.rotIndicatorX = 0
+    self.rotIndicatorY = 0
 
     -- Other
     self.timer = 0
@@ -74,6 +76,14 @@ function Panel2d:draw()
         love.graphics.setColor(0,1,1,0.3) --Translucent cyan
         if self.subMode == "circle" then love.graphics.circle("line", self.prevClickX, self.prevClickY, r)
         else love.graphics.circle("fill", self.prevClickX, self.prevClickY, r) end
+    end
+
+    -- Rotation indicator
+    if self.rotIndicator then
+        love.graphics.setColor(0, 1, 1, 1) -- Cyan
+        love.graphics.circle("line", self.rotIndicatorX, self.rotIndicatorY, self.w/32)
+        love.graphics.circle("line", self.rotIndicatorX, self.rotIndicatorY, self.w/64)
+        self.rotIndicator = false
     end
 
     if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
@@ -295,13 +305,38 @@ end
 
 function Panel2d:mouseMoved(x, y, dx, dy)
     local sdx, sdy = dx / self.viewScale, dy / self.viewScale
-    if self.host:getToolMode() == "move" and love.mouse.isDown(1) then
-        if self.axes == "xz" or self.axes == "zx" then 
-            self.currentModel:transformSelected(sdx, 0, -sdy) 
-        elseif self.axes == "xy" or self.axes == "yx" then 
-            self.currentModel:transformSelected(sdx, -sdy, 0) 
-        elseif self.axes == "yz" or self.axes == "zy" then 
-            self.currentModel:transformSelected(0, sdx, -sdy) 
+    local toolMode = self.host:getToolMode()
+    local subMode = self.host:getSubToolMode()
+    if toolMode == "move" then
+        if subMode == "translate" and love.mouse.isDown(1) then
+            if self.axes == "xz" or self.axes == "zx" then 
+                self.currentModel:transformSelected(sdx, 0, -sdy) 
+            elseif self.axes == "xy" or self.axes == "yx" then 
+                self.currentModel:transformSelected(sdx, -sdy, 0) 
+            elseif self.axes == "yz" or self.axes == "zy" then 
+                self.currentModel:transformSelected(0, sdx, -sdy) 
+            end
+        elseif subMode == "rotate" and love.mouse.isDown(1) then
+            -- Model rotates depending on the relative position of the mouse to the
+            -- model's translated projection center on the 2d panel to allow for
+            -- intuitive rotation
+            local mx, my = love.mouse.getPosition()
+            local cx, cy = self:modelPosToScreenPos(self.currentModel:getSelectionCenter())
+            self.rotIndicatorX = cx
+            self.rotIndicatorY = cy
+            self.rotIndicator = true
+
+            local ix, iy = cx-mx, cy-my
+            if ix > -0.001 and 0.001 > ix then ix = 1 end
+            if iy > -0.001 and 0.001 > iy then iy = 1 end
+            local rdx, rdy = sdx*iy/math.abs(iy), -sdy*ix/math.abs(ix)
+            if self.axes == "xz" or self.axes == "zx" then
+                self.currentModel:rotateSelected(0, rdx+rdy) 
+            elseif self.axes == "xy" or self.axes == "yx" then 
+                self.currentModel:rotateSelectedXY(-(rdx+rdy))
+            elseif self.axes == "yz" or self.axes == "zy" then 
+                self.currentModel:rotateSelected(-(rdx+rdy), 0) 
+            end
         end
     end
 end
@@ -312,6 +347,27 @@ function Panel2d:wheelMoved(x, y)
     elseif y < 0 then -- Wheel moved down
         self.viewScale = self.viewScale - math.max(self.viewScale/10, 0.01)
     end
+end
+
+function Panel2d:modelPosToScreenPos(x, y, z)
+    local sx, sy = 0, 0
+    if self.axes == "xz" or self.axes == "zx" then
+        sx = x
+        sy = z 
+    elseif self.axes == "xy" or self.axes == "yx" then
+        sx = x
+        sy = y
+    elseif self.axes == "yz" or self.axes == "zy" then
+        sx = y
+        sy = z
+    end
+    local xShift = self:getXShift()
+    local yShift = self:getYShift()
+    local planeX = sx
+    local planeY = -sy
+    local mx = planeX * self.viewScale + xShift
+    local my = planeY * self.viewScale + yShift
+    return mx, my
 end
 
 function Panel2d:screenPosToModelPos(mx, my)
