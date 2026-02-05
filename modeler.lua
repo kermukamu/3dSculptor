@@ -174,6 +174,7 @@ function Modeler:getY() return self.y end
 function Modeler:getW() return self.w end
 function Modeler:getH() return self.h end
 function Modeler:getCurrentModel() return self.currentModel end
+function Modeler:getActiveColor() return self.host:getActiveColor() end
 function Modeler:drawAxisMarkerIsOn() return self.host:drawAxisMarkerIsOn() end
 function Modeler:vertexNumberingIsOn() return self.host:vertexNumberingIsOn() end
 function Modeler:vertexCoordsIsOn() return self.host:vertexCoordsIsOn() end
