@@ -137,6 +137,7 @@ function Scene:draw()
 end
 
 function Scene:keyPressed(key)
+	if key == nil or self.activeSection == nil then return end
 	if getmetatable(self.activeSection).__index == Console then
 		self.activeSection:keyPressed(key)
 	else
