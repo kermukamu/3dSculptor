@@ -247,7 +247,7 @@ function Panel2d:mousePressed(mx, my, button)
     local subMode = self.host:getSubToolMode()
 
     if not (((lShiftDown or lAltDown) and toolMode == "selection") 
-        or toolMode == "move selected") then 
+        or toolMode == "move selected" or toolMode == "move camera") then 
         self.currentModel:deSelect() 
     end
 

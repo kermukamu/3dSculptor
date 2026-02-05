@@ -122,9 +122,10 @@ function Modeler:textInput(t)
 end
 
 function Modeler:mousePressed(mx, my, button)
+	local toolMode = self.toolMode
 	if not (((love.keyboard.isDown("lshift") or love.keyboard.isDown("lalt") 
-		or love.keyboard.isDown("space")) and self.toolMode == "selection") 
-		or self.toolMode == "move selected") then 
+		or love.keyboard.isDown("space")) and toolMode == "selection") 
+		or toolMode == "move selected" or toolMode == "move camera") then 
 		self:deSelectAll() 
 	end
 	self.prevClickX = mx
@@ -169,7 +170,7 @@ function Modeler:mouseMoved(x, y, dx, dy)
 		self.currentModel:incrementOrientation(-dy, -dx)
 		love.mouse.setRelativeMode(false)
 	end
-	if (toolMode == "move camera" and subMode == "translate") and love.mouse.isDown(1) then
+	if toolMode == "move camera" and subMode == "translate" and love.mouse.isDown(1) then
 		self.currentModel:panCamera(dx, -dy)
 	end
 end
