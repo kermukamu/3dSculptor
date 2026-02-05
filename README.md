@@ -16,3 +16,6 @@ Example photos:
 
 1) A gem model and a sphere with faces
 <img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/57d63aa5-1ca4-429f-81e5-384e0026b642" />
+
+2) A "dude" modeled within the editor
+<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/9a8a1113-cdd8-444d-b290-db38685e4793" />
