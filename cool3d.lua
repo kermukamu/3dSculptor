@@ -11,6 +11,8 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.faces = {} -- Each entry consists of all vertex indices that form a face
     self.faceColors = {} -- The index of each entry is equivalent to indices of each face entry. Values inside each entry are R G B O
 
+    self.buffer = {} -- Contains last 10 models in form {points, lines, faces, faceColors}
+
     self.pointsCB = {} -- Points saved on clipboard
     self.linesCB = {} -- Lines saved on clipboard
 
@@ -89,6 +91,60 @@ function Cool3d:updateModel()
             self.screen[i] = nil
             self.allModelWithinView = false
         end
+    end
+end
+
+function Cool3d:saveToBuffer()
+    -- Limit buffer size to 10
+    if #self.buffer >= 10 then table.remove(self.buffer, 1) end
+
+    local points = {}
+    local lines = {}
+    for i, p in ipairs(self.points) do
+        table.insert(points, {p[1], p[2], p[3]})
+        lines[i] = {}
+        if self.lines[i] then
+            for _, l in ipairs(self.lines[i]) do
+                table.insert(lines[i], l)
+            end
+        end
+    end
+    local faces = {}
+    local faceColors = {}
+    for i, f in ipairs(self.faces) do
+        local face = {}
+        for _, vi in ipairs(self.faces[i]) do
+            table.insert(face, vi)
+        end
+        faces[i] = face
+        faceColors[i] = {self.faceColors[i][1], self.faceColors[i][2], self.faceColors[i][3], self.faceColors[i][4]}
+    end
+
+    table.insert(self.buffer, {points, lines, faces, faceColors})
+end
+
+function Cool3d:loadFromBuffer()
+    local bm = table.remove(self.buffer) -- pop last
+    if not bm then return nil end -- Buffer is empty
+    self:clear()
+    local points, lines, faces, faceColors = bm[1], bm[2], bm[3], bm[4]
+
+    for i, p in ipairs(points) do
+        self.points[i] = {p[1], p[2], p[3]}
+        self.lines[i] = {}
+        if lines[i] then
+            for _, l in ipairs(lines[i]) do
+                table.insert(self.lines[i], l)
+            end
+        end
+    end
+    for i, f in ipairs(faces) do
+        local face = {}
+        for _, vi in ipairs(faces[i]) do
+            table.insert(face, vi)
+        end
+        self.faces[i] = face
+        self.faceColors[i] = {faceColors[i][1], faceColors[i][2], faceColors[i][3], faceColors[i][4]}
     end
 end
 
@@ -431,7 +487,6 @@ function Cool3d:copySelected()
         end
     end
 end
-
 
 function Cool3d:pasteSelected(x, y, z) -- Paste to xyz
     if #self.pointsCB == 0 then return end
@@ -1187,6 +1242,16 @@ function Cool3d:getAxisMarkerX() return self.host:getX() + self.host:getW()/8 en
 function Cool3d:getAxisMarkerY() return self.host:getY() + self.host:getH() - self.host:getH()/8 end
 function Cool3d:getAllModelWithinView() return self.allModelWithinView end
 function Cool3d:getDZ(value) return self.dz end
+function Cool3d:getSelectedCount()
+    local count = 0
+    for i, isSelected in pairs(self.selectedVertices) do
+        if isSelected and self.points[i] then
+            count = count + 1
+        end
+    end
+    return count
+end
+
 function Cool3d:setDZ(value) self.dz = value end
 function Cool3d:toggleVertexSelection(number, val)
     if not val then
