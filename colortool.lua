@@ -52,6 +52,7 @@ function ColorTool:draw()
 end
 
 function ColorTool:mousePressed(mx, my, button)
+    
     if button == 1 then
         if not self.isOpen then
             self:open()
