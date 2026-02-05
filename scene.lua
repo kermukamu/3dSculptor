@@ -95,12 +95,13 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.colorTool = ColorTool.new(colorToolX, colorToolY, colorToolIconSize, self)
 
 	self.keyActions = {
-		["delete"] = {function() self:getCurrentModel():deleteSelected() end, "Deletes current selection"},
+		["delete"] = {function() self:byActionDelete() end, "Deletes current selection"},
 		["c"] = {function() self:byActionC() end, "Use while holding left ctrl to copy selected"},
 		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
 		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
 		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if left alt is held down"},
 		["f"] = {function() self:byActionF() end, "Creates a face between selected vertices"},
+		["z"] = {function() self:byActionZ() end, "Reverts action if left ctrl is held down"},
 		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move selected mode on"},
 		["a"] = {function() self:selectAllModel() end, "Selects all"},
 		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
@@ -213,9 +214,18 @@ function Scene:deSelectAll()
 	return self.modeler:deSelectAll()
 end
 
+function Scene:byActionDelete()
+	local currentModel = self:getCurrentModel()
+	if currentModel ~= nil then
+		currentModel:saveToBuffer()
+		currentModel:deleteSelected()
+	end
+end
+
 function Scene:byActionV()
 	if love.keyboard.isDown("lctrl") then
 		if self.activeSection and self.activeSection.paste then
+			self:getCurrentModel():saveToBuffer()
 			self.activeSection:paste()
 		end
 	else
@@ -250,15 +260,34 @@ function Scene:byActionC()
 end
 
 function Scene:byActionJ()
-	if love.keyboard.isDown("lalt") then
-		self:getCurrentModel():disconnectSelected()
-	else
-		self:getCurrentModel():joinSelected()
+	local currentModel = self:getCurrentModel()
+	if currentModel ~= nil then
+		local count = currentModel:getSelectedCount()
+		if count >= 2 then
+			currentModel:saveToBuffer()
+			if love.keyboard.isDown("lalt") then
+				self:getCurrentModel():disconnectSelected()
+			else
+				self:getCurrentModel():joinSelected()
+			end
+		end
 	end
 end
 
 function Scene:byActionF()
-	self:getCurrentModel():addFaceForSelected(self.activeColor)
+	local currentModel = self:getCurrentModel()
+	if currentModel ~= nil then
+		if currentModel:getSelectedCount() >= 3 then
+			self:getCurrentModel():saveToBuffer()
+			currentModel:addFaceForSelected(self.activeColor)
+		end
+	end
+end
+
+function Scene:byActionZ()
+	if self.activeSection ~= self.console and love.keyboard.isDown("lctrl") then
+		self:getCurrentModel():loadFromBuffer()
+	end
 end
 
 function Scene:byActionTurnSelectionModeOn()
