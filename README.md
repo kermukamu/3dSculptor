@@ -14,8 +14,8 @@ The project includes an example model (made with the tool itself), which can be 
 
 Example photos:
 
-1) A gem model and a sphere with faces
-<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/57d63aa5-1ca4-429f-81e5-384e0026b642" />
+1) A gem model and spheres with faces
+<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/8575b88a-3fc8-4c81-a94e-0ec1d2958a9f" />
 
 2) A "dude" modeled within the editor
-<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/9a8a1113-cdd8-444d-b290-db38685e4793" />
+<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/c0d16a8d-7dd0-4302-8e9f-8aea3fd68599" />
