@@ -252,6 +252,7 @@ function Panel2d:mousePressed(mx, my, button)
     end
 
     if toolMode == "vertex" and subMode == "single" then
+        self:getCurrentModel():saveToBuffer()
         local tx, ty = self:screenPosToModelPos(mx, my)
         self.currentModel:addVertexOnPlane(tx, ty, self.axes)
     end
@@ -277,6 +278,7 @@ function Panel2d:mouseReleased(mx, my, button)
             end
         end
     elseif self.toolMode == "vertex" then
+        self:getCurrentModel():saveToBuffer()
         if self.subMode == "circle" then -- Draw circle
             local cx, cy = self:screenPosToModelPos(self.prevClickX, self.prevClickY)
             local mPosMX, mPosMY = self:screenPosToModelPos(mx, my)
@@ -317,6 +319,7 @@ function Panel2d:mouseMoved(x, y, dx, dy)
     local toolMode = self.host:getToolMode()
     local subMode = self.host:getSubToolMode()
     if toolMode == "move selected" then
+        self:getCurrentModel():saveToBuffer()
         if subMode == "translate" and love.mouse.isDown(1) then
             if self.axes == "xz" or self.axes == "zx" then 
                 self.currentModel:transformSelected(sdx, 0, -sdy) 

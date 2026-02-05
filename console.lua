@@ -57,6 +57,7 @@ function Console.new(x, y, w, h, host)
 		["Shift+LeftMouse"] = "Holds selection if in selection mode",
 		["Ctrl+C"] = "Copy selection",
 		["Ctrl+V"] = "Paste selection",
+		["Ctrl+Z"] = "Reverse action",
 		["Alt+J"] = "Disconnect selected vertices",
 		["Alt+LeftMouse"] = "Deselect if in selection mode"
 	}
@@ -127,6 +128,7 @@ function Console:comAddVertex()
 	else
 		local currentModel = self.host:getCurrentModel()
 		if currentModel ~= nil then
+			getCurrentModel:saveToBuffer()
 			currentModel:addVertex(x,y,z)
 			self.response = "Added vertex to " .. tostring(x) .. ", " .. tostring(y) .. ", " .. tostring(z)
 		end
@@ -141,6 +143,7 @@ function Console:comRemoveVertex()
 	else
 		local currentModel = self.host:getCurrentModel()
 		if currentModel ~= nil then
+			currentModel:saveToBuffer()
 			currentModel:removeVertex(number)
 			self.response = "Removed vertex at "
 		end
@@ -154,6 +157,7 @@ function Console:comConnect()
 	else
 		local currentModel = self.host:getCurrentModel()
 		if currentModel ~= nil then
+			currentModel:saveToBuffer()
 			currentModel:connect(v1, v2)
 			self.response = "Connected " .. tostring(v1) .. " to " .. tostring(v2)
 		end
@@ -167,6 +171,7 @@ function Console:comDisconnect()
 	else
 		local currentModel = self.host:getCurrentModel()
 		if currentModel ~= nil then
+			currentModel:saveToBuffer()
 			currentModel:disconnect(v1, v2)
 			self.response = "Disconnected " .. tostring(v1) .. " from " .. tostring(v2)
 		end
@@ -251,8 +256,12 @@ function Console:comDrawCircle()
 		tonumber(self.args[1]), tonumber(self.args[2]), tonumber(self.args[3]),
 		tonumber(self.args[4]), self.args[5], tonumber(self.args[6]), self:toBoolean(self.args[7])
 	if not (con == nil) then
-		self.response = self.host.modeler.currentModel:addCircle(centerX, centerY, centerZ,
-			radius, plane, segments, con)
+		local currentModel = self.host:getCurrentModel()
+		if currentModel ~= nil then
+			currentModel:saveToBuffer()
+			self.response = self.host.modeler.currentModel:addCircle(centerX, centerY, centerZ,
+				radius, plane, segments, con)
+		end
 	else self.response = "connectLines must be a boolean value" end
 end
 
@@ -262,6 +271,7 @@ function Console:comMultiplyModel()
 		self.response = "Argument must be a number"
 	else
 		local currentModel = self.host:getCurrentModel()
+		currentModel:saveToBuffer()
 		if currentModel ~= nil then
 			currentModel:multiplyModelSize(arg)
 			self.response = "Multiplied the selection by " .. tostring(arg)
@@ -270,8 +280,12 @@ function Console:comMultiplyModel()
 end
 
 function Console:comClear()
-	self.host.modeler.currentModel:clear()
-	self.response = "Cleared the model"
+	local currentModel = self.host:getCurrentModel()
+	if currentModel ~= nil then
+		currentModel:saveToBuffer()
+		currentModel:clear()
+		self.response = "Cleared the model"
+	end
 end
 
 function Console:update(dt)
