@@ -94,66 +94,9 @@ function Cool3d:draw()
 end
 
 function Cool3d:drawModel()
-    self:drawFaces()
-
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.setLineWidth(self.lineWidth)
-
-    for i = 1, #self.screen do
-        if self.screen[i] ~= nil then
-            -- Text next to vertices
-            local tScaling = self.zCompression*self.textScale/self.screen[i][3]
-            if self.selectedVertices[i] then
-                if self.host:vertexNumberingIsOn() then
-                    -- love.graphics.setColor(1,1,0,1) -- Yellow
-                    love.graphics.setColor(0,1,0,1) -- Green
-                    love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, tScaling, tScaling)
-                    love.graphics.setColor(1,1,1,1)
-                end
-    
-                if self.host:vertexCoordsIsOn() then
-                    local text = string.format("%.2f", self.points[i][1]) .. " " ..
-                        string.format("%.2f", self.points[i][2]) .. " " .. string.format("%.2f", self.points[i][3])
-                    local yOffset = love.graphics.getFont():getHeight() * (tScaling)
-                    --love.graphics.setColor(1,0.5,0,1) -- Orange
-                    love.graphics.setColor(0,0.5,0,1) -- Darker green
-                    love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, tScaling, tScaling)
-                    love.graphics.setColor(1,1,1,1)
-                end
-            end
-    
-            -- The rectangles drawn at vertices
-            if self.host:drawVerticesIsOn() then
-                local size = math.min(self.zCompression*self.host:getW()/(64*self.screen[i][3]), 25)
-                love.graphics.setColor(0,1,1,1) -- Cyan
-                if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if selected
-                love.graphics.rectangle("fill", self.screen[i][1]-size/2, self.screen[i][2]-size/2, size, size)
-            end
-        end
-    end
- 
-    -- Draw lines by connection indices
-    local drawn = {}
-
-    love.graphics.setColor(1,1,1,1) -- white
-    for i = 1, #self.lines do
-        local a = self.screen[i]
-        local links = self.lines[i]
-
-        if a and links then
-            for _, k in ipairs(links) do
-                local b = self.screen[k]
-                if b then
-                    local key1 = i .. "-" .. k
-                    local key2 = k .. "-" .. i
-                    if not drawn[key1] and not drawn[key2] then
-                        love.graphics.line(a[1], a[2], b[1], b[2])
-                        drawn[key1] = true
-                    end
-                end
-            end
-        end
-    end
+    if self.host:drawFacesIsOn() then self:drawFaces() end
+    if self.host:drawLinesIsOn() then self:drawLines() end
+    if self.host:drawVerticesIsOn() then self:drawVertices() end
 end
 
 function Cool3d:drawAxisMarker()
@@ -246,6 +189,65 @@ function Cool3d:drawFaces()
     end
 
     love.graphics.setColor(1,1,1,1) -- reset
+end
+
+function Cool3d:drawLines()
+    -- Draw lines by connection indices
+    local drawn = {}
+
+    love.graphics.setColor(1,1,1,1) -- white
+    for i = 1, #self.lines do
+        local a = self.screen[i]
+        local links = self.lines[i]
+
+        if a and links then
+            for _, k in ipairs(links) do
+                local b = self.screen[k]
+                if b then
+                    local key1 = i .. "-" .. k
+                    local key2 = k .. "-" .. i
+                    if not drawn[key1] and not drawn[key2] then
+                        love.graphics.line(a[1], a[2], b[1], b[2])
+                        drawn[key1] = true
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+function Cool3d:drawVertices()
+    for i = 1, #self.screen do
+        if self.screen[i] ~= nil then
+            -- Text next to vertices
+            local tScaling = self.zCompression*self.textScale/self.screen[i][3]
+            if self.selectedVertices[i] then
+                if self.host:vertexNumberingIsOn() then
+                    -- love.graphics.setColor(1,1,0,1) -- Yellow
+                    love.graphics.setColor(0,1,0,1) -- Green
+                    love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, tScaling, tScaling)
+                    love.graphics.setColor(1,1,1,1)
+                end
+    
+                if self.host:vertexCoordsIsOn() then
+                    local text = string.format("%.2f", self.points[i][1]) .. " " ..
+                        string.format("%.2f", self.points[i][2]) .. " " .. string.format("%.2f", self.points[i][3])
+                    local yOffset = love.graphics.getFont():getHeight() * (tScaling)
+                    --love.graphics.setColor(1,0.5,0,1) -- Orange
+                    love.graphics.setColor(0,0.5,0,1) -- Darker green
+                    love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, tScaling, tScaling)
+                    love.graphics.setColor(1,1,1,1)
+                end
+            end
+    
+            -- The rectangles drawn at vertices
+            local size = math.min(self.zCompression*self.host:getW()/(64*self.screen[i][3]), 25)
+            love.graphics.setColor(0,1,1,1) -- Cyan
+            if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if selected
+            love.graphics.rectangle("fill", self.screen[i][1]-size/2, self.screen[i][2]-size/2, size, size)
+        end
+    end
 end
 
 function Cool3d:faceDepth(face)
