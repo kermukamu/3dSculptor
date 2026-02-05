@@ -62,6 +62,7 @@ function Cool3d:updateModel()
     -- The table will have the transformed, rotated and projected vertices (2D)
     -- The z values of transformed vertices are also stored in self as they are needed to scale marker elements
     self.screen = {}
+    self.drawScreen = {}
     self.pointsWorld = {}
     self.allModelWithinView = true
     for i = 1, #self.points do

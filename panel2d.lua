@@ -138,6 +138,7 @@ function Panel2d:drawModel()
         local yShift = self:getYShift()
 
         self.screen = {}
+        self.drwaScreen = {}
         self.allModelWithinView = true
         -- Project, draw as rectangle if selected
         for i = 1, #points do
