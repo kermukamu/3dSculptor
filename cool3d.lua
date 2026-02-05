@@ -544,6 +544,20 @@ function Cool3d:removeVertex(number)
     table.remove(self.points, number)
 end
 
+function Cool3d:removeFace(index)
+    if not self.faces or not self.faces[index] then
+        return false, "Face index out of range"
+    end
+
+    -- Remove the face and its matching color entry
+    table.remove(self.faces, index)
+    if self.faceColors then
+        table.remove(self.faceColors, index)
+    end
+
+    return true
+end
+
 function Cool3d:connect(v1, v2)
     table.insert(self.lines[v1], v2)
 end
@@ -591,9 +605,51 @@ function Cool3d:joinSelected()
     end
 end
 
+function Cool3d:faceExistsBetween(points)
+    -- Returns the index if a face has exactly matching vertex set with input points
+    -- Else returns nil
+
+    if not points or #points < 3 then return false end
+    if not self.faces or #self.faces == 0 then return false end
+
+    local targetCount = #points
+
+    local pointSet = {}
+    for _, idx in ipairs(points) do
+        if pointSet[idx] then
+            -- Duplicate vertex index in input
+            return false
+        end
+        pointSet[idx] = true
+    end
+
+    for faceIndex, face in ipairs(self.faces) do
+        -- Face must have exactly the same number of vertices
+        if #face == targetCount then
+            local match = true
+
+            -- Every vertex in the face must appear in the input set
+            for _, vi in ipairs(face) do
+                if not pointSet[vi] then
+                    match = false
+                    break
+                end
+            end
+
+            if match then
+                return faceIndex
+            end
+        end
+    end
+
+    return nil
+end
+
 function Cool3d:addFace(points, r, g, b, o)
     if #points < 3 then return end
     local face = {}
+    local existingReplica = self:faceExistsBetween(points)
+    if existingReplica ~= nil then self:removeFace(existingReplica) end
     for _, p in ipairs(points) do
         table.insert(face, p)
     end
