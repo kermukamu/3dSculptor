@@ -340,12 +340,16 @@ function Cool3d:copySelected()
     -- Clear clipboard first
     self.pointsCB = {}
     self.linesCB = {}
+    self.facesCB = {}
+    self.faceColorsCB = {}
 
     -- Collect selected vertex indices
     local selectedIndices = {}
+    local selectedSet = {}
     for i = 1, #self.points do
         if self.selectedVertices[i] then
             table.insert(selectedIndices, i)
+            selectedSet[i] = true
         end
     end
 
@@ -396,7 +400,38 @@ function Cool3d:copySelected()
             end
         end
     end
+
+    -- Copy faces whose all vertices are selected
+    if self.faces and #self.faces > 0 then
+        for fi, face in ipairs(self.faces) do
+            local keepFace = true
+            local newFace = {}
+
+            for _, vi in ipairs(face) do
+                if not selectedSet[vi] then
+                    keepFace = false
+                    break
+                end
+                table.insert(newFace, indexMap[vi])
+            end
+
+            if keepFace and #newFace >= 3 then
+                table.insert(self.facesCB, newFace)
+                if self.faceColors and self.faceColors[fi] then
+                    table.insert(self.faceColorsCB, {
+                        self.faceColors[fi][1],
+                        self.faceColors[fi][2],
+                        self.faceColors[fi][3],
+                        self.faceColors[fi][4],
+                    })
+                else
+                    table.insert(self.faceColorsCB, {1,1,1,1})
+                end
+            end
+        end
+    end
 end
+
 
 function Cool3d:pasteSelected(x, y, z) -- Paste to xyz
     if #self.pointsCB == 0 then return end
@@ -415,6 +450,29 @@ function Cool3d:pasteSelected(x, y, z) -- Paste to xyz
         for _, neighborIndex in ipairs(links) do
             local newNeighborIndex = baseIndex + neighborIndex
             table.insert(self.lines[newIndex], newNeighborIndex)
+        end
+    end
+
+    -- Rebuild faces for the newly added vertices
+    if self.facesCB and #self.facesCB > 0 then
+        for fi, face in ipairs(self.facesCB) do
+            local newFace = {}
+            for _, vi in ipairs(face) do
+                table.insert(newFace, baseIndex + vi)
+            end
+
+            table.insert(self.faces, newFace)
+
+            if self.faceColorsCB and self.faceColorsCB[fi] then
+                table.insert(self.faceColors, {
+                    self.faceColorsCB[fi][1],
+                    self.faceColorsCB[fi][2],
+                    self.faceColorsCB[fi][3],
+                    self.faceColorsCB[fi][4],
+                })
+            else
+                table.insert(self.faceColors, {1,1,1,1})
+            end
         end
     end
 end
