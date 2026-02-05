@@ -94,7 +94,7 @@ function Toolbar:switchToModeWithin(mx, my)
     end
 end
 
-function Toolbar:isWithinSection(x, y) -- Check if position is within toolbar, returns a table containing the clicked icon
+function Toolbar:isWithinSection(x, y)
     for _, xy in ipairs(self.drawnIconPositions) do
         local iconX = xy[1]
         local iconY = xy[2]
