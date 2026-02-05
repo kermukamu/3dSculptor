@@ -4,6 +4,8 @@ local cmodeler = require("modeler")
 local Modeler = cmodeler.Modeler
 local cpanel2d = require("panel2d")
 local Panel2d = cpanel2d.Panel2d
+local cswitchbar = require("switchbar")
+local Switchbar = cswitchbar.Switchbar
 local ctoolbar = require("toolbar")
 local Toolbar = ctoolbar.Toolbar
 local ccolortool = require("colortool")
@@ -29,6 +31,8 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.vertexCoords = true
 	self.drawAxisMarker = true
 	self.drawVertices = true
+	self.drawLines = true
+	self.drawFaces = true
 	self.toolMode = "selection"
 	self.subMode = "rectangle"
 	self.circleSegments = 64
@@ -70,6 +74,12 @@ function Scene.new(title, screenWidth, screenHeight)
 	local yzPanelY = love.graphics.getHeight()/2 - yzPanelH/2 + yOffset
 	self.yzPanel = Panel2d.new(yzPanelX, yzPanelY, yzPanelW, yzPanelH, "yz", self)
 
+	-- Position flag switch bar on top of modeler
+	local switchbarIconSize = screenHeight * (1 / 32)
+	local switchbarX = modelerX + modelerW/8
+	local switchbarY = modelerY
+	self.switchbar = Switchbar.new(switchbarX, switchbarY, switchbarIconSize, self)
+
 	-- Position Toolbar on top right section of modeler
 	local toolbarIconSize = screenWidth * (1 / 32)
 	local toolbarX = modelerX + modelerW - toolbarIconSize - self.modeler:getFrameLineWidth()*2
@@ -107,6 +117,7 @@ function Scene:update(dt)
 	self.xzPanel:update(dt)
 	self.xyPanel:update(dt)
 	self.yzPanel:update(dt)
+	self.switchbar:update(dt)
 	self.toolbar:update(dt)
 	self.colorTool:update(dt)
 	self.activeColor = self.colorTool:getSelectedColor()
@@ -118,6 +129,7 @@ function Scene:draw()
 	self.xyPanel:draw()
 	self.yzPanel:draw()
 	self.console:draw()
+	self.switchbar:draw()
 	self.toolbar:draw()
 	self.colorTool:draw()
 end
@@ -138,7 +150,9 @@ function Scene:textInput(t)
 end
 
 function Scene:mousePressed(mx, my, button)
-	if self.toolbar:isWithinSection(mx, my) then
+	if self.switchbar:isWithinSection(mx, my) then
+		self.activeSection = self.switchbar
+	elseif self.toolbar:isWithinSection(mx, my) then
 		self.activeSection = self.toolbar
 	elseif self.colorTool:isWithinSection(mx, my) then
 		self.activeSection = self.colorTool
@@ -254,6 +268,8 @@ end
 function Scene:vertexNumberingIsOn() return self.vertexNumbering end
 function Scene:vertexCoordsIsOn() return self.vertexCoords end
 function Scene:drawVerticesIsOn() return self.drawVertices end
+function Scene:drawLinesIsOn() return self.drawLines end
+function Scene:drawFacesIsOn() return self.drawFaces end
 function Scene:drawAxisMarkerIsOn() return self.drawAxisMarker end
 
 function Scene:getToolMode() return self.toolMode end
@@ -282,7 +298,9 @@ end
 function Scene:setVertexNumbering(value) self.vertexNumbering = value end
 function Scene:setVertexCoords(value) self.vertexCoords = value end
 function Scene:setDrawVertices(value) self.drawVertices = value end
-function Scene:setDrawAxis(value) self.drawAxis = value end
+function Scene:setDrawLines(value) self.drawLines = value end
+function Scene:setDrawFaces(value) self.drawFaces = value end
+function Scene:setDrawAxis(value) self.drawAxisMarker = value end
 function Scene:setToolMode(mode) self.toolMode = mode end
 function Scene:setSubToolMode(mode) self.subMode = mode end
 
