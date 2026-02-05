@@ -13,11 +13,14 @@ function Toolbar.new(x, y, iconSize, host)
     local iconVertex = love.graphics.newImage(path .. "vertex.png")
     local iconCircle = love.graphics.newImage(path .. "circle.png")
     local iconSphere = love.graphics.newImage(path .. "sphere.png")
+    local iconCameraMove = love.graphics.newImage(path .. "move_camera.png")
+    local iconCameraRotate = love.graphics.newImage(path .. "rotate_camera.png")
 
     self.modes = {
         ["selection"] = {{"rectangle", iconSelection}},
         ["move selected"] = {{"translate", iconMove}, {"rotate", iconRotate}},
-        ["vertex"] = {{"single", iconVertex}, {"circle", iconCircle}, {"sphere", iconSphere}}
+        ["vertex"] = {{"single", iconVertex}, {"circle", iconCircle}, {"sphere", iconSphere}},
+        ["move camera"] = {{"translate", iconCameraMove}, {"rotate", iconCameraRotate}}
     }
 
     self.x = x

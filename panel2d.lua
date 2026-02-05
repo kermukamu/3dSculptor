@@ -164,7 +164,7 @@ function Panel2d:drawModel()
             end
 
             if self.host:drawVerticesIsOn() then
-                local size = math.min(self.w*self.viewScale/(64), 25)
+                local size = math.min(self.w*self.viewScale/(128), 25)
                 love.graphics.setColor(0,1,1,1) -- Cyan
                 if selectedPoints[i] then love.graphics.setColor(0,1,0,1) end -- Green
                 love.graphics.rectangle("fill", xS-size/2, yS-size/2, size, size)
@@ -243,13 +243,15 @@ function Panel2d:mousePressed(mx, my, button)
     local lCtrlDown = love.keyboard.isDown("lctrl")
     local lAltDown = love.keyboard.isDown("lalt")
     local spaceDown = love.keyboard.isDown("space")
+    local toolMode = self.host:getToolMode()
+    local subMode = self.host:getSubToolMode()
 
-    if not (((lShiftDown or lAltDown) and self.toolMode == "selection") 
-        or self.toolMode == "move selected") then 
+    if not (((lShiftDown or lAltDown) and toolMode == "selection") 
+        or toolMode == "move selected") then 
         self.currentModel:deSelect() 
     end
 
-    if self.toolMode == "vertex" and self.subMode == "single" then
+    if toolMode == "vertex" and subMode == "single" then
         local tx, ty = self:screenPosToModelPos(mx, my)
         self.currentModel:addVertexOnPlane(tx, ty, self.axes)
     end
@@ -338,13 +340,17 @@ function Panel2d:mouseMoved(x, y, dx, dy)
             if iy > -0.001 and 0.001 > iy then iy = 1 end
             local rdx, rdy = sdx*iy/math.abs(iy), -sdy*ix/math.abs(ix)
             if self.axes == "xz" or self.axes == "zx" then
-                self.currentModel:rotateSelected(0, rdx+rdy) 
-            elseif self.axes == "xy" or self.axes == "yx" then 
+                self.currentModel:rotateSelected(0, rdx+rdy)
+            elseif self.axes == "xy" or self.axes == "yx" then
                 self.currentModel:rotateSelectedXY(-(rdx+rdy))
-            elseif self.axes == "yz" or self.axes == "zy" then 
-                self.currentModel:rotateSelected(-(rdx+rdy), 0) 
+            elseif self.axes == "yz" or self.axes == "zy" then
+                self.currentModel:rotateSelected(-(rdx+rdy), 0)
             end
         end
+    end
+
+    if (toolMode == "move camera" and subMode == "translate") and love.mouse.isDown(1) then
+        self:panCamera(dx, dy)
     end
 end
 

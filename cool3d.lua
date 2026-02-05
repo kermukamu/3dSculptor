@@ -245,7 +245,7 @@ function Cool3d:drawVertices()
             end
     
             -- The rectangles drawn at vertices
-            local size = math.min(self.zCompression*self.host:getW()/(64*self.drawScreen[i][3]), 25)
+            local size = math.min(self.zCompression*self.host:getW()/(128*self.drawScreen[i][3]), 25)
             love.graphics.setColor(0,1,1,1) -- Cyan
             if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if selected
             love.graphics.rectangle("fill", self.drawScreen[i][1]-size/2, self.drawScreen[i][2]-size/2, size, size)

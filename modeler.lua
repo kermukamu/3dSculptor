@@ -160,10 +160,17 @@ function Modeler:mouseReleased(mx, my, button)
 end
 
 function Modeler:mouseMoved(x, y, dx, dy)
-	if love.keyboard.isDown("space") and love.mouse.isDown(1) then -- Rotate
+	local toolMode = self.host:getToolMode()
+	local subMode = self.host:getSubToolMode()
+	if (love.keyboard.isDown("space") or (toolMode == "move camera" and subMode == "rotate"))
+		and love.mouse.isDown(1) then -- Rotate 
+		
 		love.mouse.setRelativeMode(true)
 		self.currentModel:incrementOrientation(-dy, -dx)
 		love.mouse.setRelativeMode(false)
+	end
+	if (toolMode == "move camera" and subMode == "translate") and love.mouse.isDown(1) then
+		self.currentModel:panCamera(dx, -dy)
 	end
 end
 

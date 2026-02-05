@@ -41,16 +41,16 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.sphereSegments = 12
 	self.activeColor = {0.4, 0.4, 0.8, 0.6} -- Default
 
-	-- Position console to bottom third
-	local consoleW = screenWidth
+	-- Position console to bottom left third
+	local consoleW = screenWidth * (1 / 2)
 	local consoleH = screenHeight * (1 / 3)
 	local consoleX = 0
 	local consoleY = love.graphics.getHeight() - consoleH + yOffset
 	self.console = Console.new(consoleX, consoleY, consoleW, consoleH, self)
 
-	-- Position 3d modeler to top left third
+	-- Position 3d modeler to top and middle left thirds
 	local modelerW = screenWidth * (1 / 2)
-	local modelerH = screenHeight * (1 / 3)
+	local modelerH = screenHeight * (2 / 3)
 	local modelerX = 0
 	local modelerY = yOffset
 	self.modeler = Modeler.new(modelerX, modelerY, modelerW, modelerH, self)
@@ -62,18 +62,18 @@ function Scene.new(title, screenWidth, screenHeight)
 	local xzPanelY = yOffset
 	self.xzPanel = Panel2d.new(xzPanelX, xzPanelY, xzPanelW, xzPanelH, "xz", self)
 
-	-- Position XY 2D panel to middle left third
+	-- Position XY 2D panel to middle right third
 	local xyPanelW = screenWidth * (1 / 2)
 	local xyPanelH = screenHeight * (1 / 3)
-	local xyPanelX = 0
+	local xyPanelX = love.graphics.getWidth() - xyPanelW
 	local xyPanelY = love.graphics.getHeight()/2 - xyPanelH/2 + yOffset
 	self.xyPanel = Panel2d.new(xyPanelX, xyPanelY, xyPanelW, xyPanelH, "xy", self)
 
-	-- Position YZ 2D panel to middle right third
+	-- Position YZ 2D panel to bottom right third
 	local yzPanelW = screenWidth * (1 / 2)
 	local yzPanelH = screenHeight * (1 / 3)
 	local yzPanelX = love.graphics.getWidth() - yzPanelW
-	local yzPanelY = love.graphics.getHeight()/2 - yzPanelH/2 + yOffset
+	local yzPanelY = love.graphics.getHeight() - yzPanelH + yOffset
 	self.yzPanel = Panel2d.new(yzPanelX, yzPanelY, yzPanelW, yzPanelH, "yz", self)
 
 	-- Position flag switch bar on top of modeler
@@ -236,6 +236,15 @@ function Scene:byActionC()
 	if love.keyboard.isDown("lctrl") then
 		if self.activeSection and self.activeSection.copy then
 			self.activeSection:copy()
+		end
+	else
+		self.toolMode = "move camera"
+
+		-- If already in any camera submode, shift submode forward
+		if self.subMode == "translate" then 
+			self.subMode = "rotate"
+		else 
+			self.subMode = "translate"
 		end
 	end
 end
