@@ -14,5 +14,5 @@ The project includes an example model (made with the tool itself), which can be 
 
 Example photos:
 
-1) A gem model with faces
-<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/0fe71fb6-682c-4763-bc4c-ab668ccc0b51" />
+1) A gem model and a sphere with faces
+<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/57d63aa5-1ca4-429f-81e5-384e0026b642" />
