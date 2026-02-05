@@ -178,5 +178,7 @@ function Modeler:drawAxisMarkerIsOn() return self.host:drawAxisMarkerIsOn() end
 function Modeler:vertexNumberingIsOn() return self.host:vertexNumberingIsOn() end
 function Modeler:vertexCoordsIsOn() return self.host:vertexCoordsIsOn() end
 function Modeler:drawVerticesIsOn() return self.host:drawVerticesIsOn() end
+function Modeler:drawLinesIsOn() return self.host:drawLinesIsOn() end
+function Modeler:drawFacesIsOn() return self.host:drawFacesIsOn() end
 
 return {Modeler = Modeler}
