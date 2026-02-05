@@ -30,7 +30,8 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.dzMarker = 1000
     self.zCompression = 1000
     self.textScale = 1
-    self.screen = {}
+    self.screen = {} -- Used to handle user interaction with projected points
+    self.drawScreen = {} -- These are sent to 2D drawing calls
     self.pointsWorld = {}
     self.selectedVertices = {}
     self.firstSelectedVert = nil
@@ -75,6 +76,7 @@ function Cool3d:updateModel()
             local proj = self:project(p)
             local vx = self.x2d + proj[1]*self.zCompression
             local vy = self.y2d - proj[2]*self.zCompression
+            self.drawScreen[i] = {vx, vy, p[3]}
             if self:isWithinView(vx, vy) then
                 self.screen[i] = {vx, vy, p[3]}
             else
@@ -82,6 +84,7 @@ function Cool3d:updateModel()
                 self.allModelWithinView = false
             end
         else
+            self.drawScreen[i] = nil
             self.screen[i] = nil
             self.allModelWithinView = false
         end
@@ -172,7 +175,7 @@ function Cool3d:drawFaces()
 
         local visible = true
         for _, vi in ipairs(face) do
-            local s = self.screen[vi]
+            local s = self.drawScreen[vi]
             if not s then
                 visible = false
                 break
@@ -197,12 +200,12 @@ function Cool3d:drawLines()
 
     love.graphics.setColor(1,1,1,1) -- white
     for i = 1, #self.lines do
-        local a = self.screen[i]
+        local a = self.drawScreen[i]
         local links = self.lines[i]
 
         if a and links then
             for _, k in ipairs(links) do
-                local b = self.screen[k]
+                local b = self.drawScreen[k]
                 if b then
                     local key1 = i .. "-" .. k
                     local key2 = k .. "-" .. i
@@ -216,17 +219,16 @@ function Cool3d:drawLines()
     end
 end
 
-
 function Cool3d:drawVertices()
-    for i = 1, #self.screen do
-        if self.screen[i] ~= nil then
+    for i = 1, #self.drawScreen do
+        if self.drawScreen[i] ~= nil then
             -- Text next to vertices
-            local tScaling = self.zCompression*self.textScale/self.screen[i][3]
+            local tScaling = self.zCompression*self.textScale/self.drawScreen[i][3]
             if self.selectedVertices[i] then
                 if self.host:vertexNumberingIsOn() then
                     -- love.graphics.setColor(1,1,0,1) -- Yellow
                     love.graphics.setColor(0,1,0,1) -- Green
-                    love.graphics.print(tostring(i), self.screen[i][1], self.screen[i][2], 0, tScaling, tScaling)
+                    love.graphics.print(tostring(i), self.drawScreen[i][1], self.drawScreen[i][2], 0, tScaling, tScaling)
                     love.graphics.setColor(1,1,1,1)
                 end
     
@@ -236,16 +238,16 @@ function Cool3d:drawVertices()
                     local yOffset = love.graphics.getFont():getHeight() * (tScaling)
                     --love.graphics.setColor(1,0.5,0,1) -- Orange
                     love.graphics.setColor(0,0.5,0,1) -- Darker green
-                    love.graphics.print(text, self.screen[i][1], self.screen[i][2] + yOffset, 0, tScaling, tScaling)
+                    love.graphics.print(text, self.drawScreen[i][1], self.drawScreen[i][2] + yOffset, 0, tScaling, tScaling)
                     love.graphics.setColor(1,1,1,1)
                 end
             end
     
             -- The rectangles drawn at vertices
-            local size = math.min(self.zCompression*self.host:getW()/(64*self.screen[i][3]), 25)
+            local size = math.min(self.zCompression*self.host:getW()/(64*self.drawScreen[i][3]), 25)
             love.graphics.setColor(0,1,1,1) -- Cyan
             if self.selectedVertices[i] then love.graphics.setColor(0,1,0,1) end -- Green if selected
-            love.graphics.rectangle("fill", self.screen[i][1]-size/2, self.screen[i][2]-size/2, size, size)
+            love.graphics.rectangle("fill", self.drawScreen[i][1]-size/2, self.drawScreen[i][2]-size/2, size, size)
         end
     end
 end
@@ -262,7 +264,6 @@ function Cool3d:faceDepth(face)
     end
     return count > 0 and sum / count or 0
 end
-
 
 function Cool3d:readFile(filename)
     if filename == nil then return "No filename given" end
@@ -659,10 +660,11 @@ function Cool3d:addFaceForSelected(color)
     return "Face created from selected vertices"
 end
 
-function Cool3d:addCircle(centerX, centerY, centerZ, radius, plane, segments, connectLines)
+function Cool3d:addCircle(centerX, centerY, centerZ, radius, plane, segments, connectLines, addFaces)
     local seg = segments or 16
     if seg < 3 then return "Atleast 3 segments required" end
     local connect = connectLines
+    local makeFaces = addFaces
     local angleDT = 2*math.pi/segments
 
     -- First set circle points in an auxiliary coordinate system
@@ -703,11 +705,25 @@ function Cool3d:addCircle(centerX, centerY, centerZ, radius, plane, segments, co
         table.insert(self.lines[linTot-seg+1], linTot)
     end
 
+    if makeFaces then
+        local circleFacePoints = {}
+        for i = #self.points-#aux+1, #self.points, 1 do
+            table.insert(circleFacePoints, i)
+        end
+        local color = self.host:getActiveColor()
+        local red = color[1] or 1
+        local green = color[2] or 1
+        local blue = color[3] or 1
+        local opaq = color[4] or 0.5
+        self:addFace(circleFacePoints, red, green, blue, opaq)
+    end
+
     return "Circle drawn"
 end
 
-function Cool3d:addSphere(cx, cy, cz, radius, segments, connectLines)
+function Cool3d:addSphere(cx, cy, cz, radius, segments, connectLines, addFaces)
     local connect = connectLines
+    local makeFaces = addFaces
     local seg = segments or 6
     if seg < 6 then return "At least 6 segments required" end
 
@@ -739,7 +755,13 @@ function Cool3d:addSphere(cx, cy, cz, radius, segments, connectLines)
     self:addVertex(cx, cy - radius, cz)
     local bottom = #self.points
 
-    if connect then
+    if connect or makeFaces then
+        local color = self.host:getActiveColor()
+        local red = color[1] or 1
+        local green = color[2] or 1
+        local blue = color[3] or 1
+        local opaq = color[4] or 0.5
+
         -- Triangles between latitude bands
         for lat = 1, seg - 2 do
             for lon = 0, seg - 1 do
@@ -748,15 +770,20 @@ function Cool3d:addSphere(cx, cy, cz, radius, segments, connectLines)
                 local c = index[lat + 1][lon]
                 local d = index[lat + 1][(lon + 1) % seg]
 
-                -- First
-                self:connect(a, b)
-                self:connect(b, c)
-                self:connect(c, a)
+                -- Connect / add face for first and second triangle
+                if connect then
+                    self:connect(a, b)
+                    self:connect(b, c)
+                    self:connect(c, a)
 
-                -- Second
-                self:connect(b, d)
-                self:connect(d, c)
-                self:connect(c, b)
+                    self:connect(b, d)
+                    self:connect(d, c)
+                    self:connect(c, b)
+                end
+                if makeFaces then
+                    self:addFace({a, b, c}, red, green, blue, opaq)
+                    self:addFace({b, d, c}, red, green, blue, opaq)
+                end
             end
         end
 
@@ -765,9 +792,14 @@ function Cool3d:addSphere(cx, cy, cz, radius, segments, connectLines)
             local a = index[1][lon]
             local b = index[1][(lon + 1) % seg]
 
-            self:connect(top, a)
-            self:connect(a, b)
-            self:connect(b, top)
+            if connect then
+                self:connect(top, a)
+                self:connect(a, b)
+                self:connect(b, top)
+            end
+            if makeFaces then
+                self:addFace({top, a, b}, red, green, blue, opaq)
+            end
         end
 
         -- Bottom cap
@@ -775,9 +807,14 @@ function Cool3d:addSphere(cx, cy, cz, radius, segments, connectLines)
             local a = index[seg - 1][lon]
             local b = index[seg - 1][(lon + 1) % seg]
 
-            self:connect(a, bottom)
-            self:connect(bottom, b)
-            self:connect(b, a)
+            if connect then
+                self:connect(a, bottom)
+                self:connect(bottom, b)
+                self:connect(b, a)
+            end
+            if makeFaces then
+                self:addFace({a, bottom, b}, red, green, blue, opaq)
+            end
         end
     end
 
