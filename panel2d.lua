@@ -25,7 +25,9 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.dy = 0
     self.viewScale = 1
     self.clickRange = 5
-    self.screen = {}
+    self.screen = {} -- Used to handle user interaction with projected points
+    self.drawScreen = {} -- These are sent to 2D drawing calls
+
     self.gridXRes = 6
     self.gridYRes = 8
     self.rotIndicator = false
@@ -151,6 +153,8 @@ function Panel2d:drawModel()
             else return end -- Axes are not defined
             xS = x*self.viewScale + xShift
             yS = y*self.viewScale + yShift
+
+            self.drawScreen[i] = {xS, yS, z}
             if self:isWithinView(xS, yS) then
                 self.screen[i] = {xS, yS, z}
             else
@@ -158,7 +162,7 @@ function Panel2d:drawModel()
                 self.allModelWithinView = false
             end
 
-            if self.screen[i] ~= nil and self.host:drawVerticesIsOn() then
+            if self.host:drawVerticesIsOn() then
                 local size = math.min(self.w*self.viewScale/(64), 25)
                 love.graphics.setColor(0,1,1,1) -- Cyan
                 if selectedPoints[i] then love.graphics.setColor(0,1,0,1) end -- Green
@@ -172,12 +176,12 @@ function Panel2d:drawModel()
         love.graphics.setColor(1,1,1,1) -- White
         love.graphics.setLineWidth(self.lineWidth)
         for i = 1, #lines do
-            local a = self.screen[i]
+            local a = self.drawScreen[i]
             local links = lines[i]
     
             if a and links then
                 for _, k in ipairs(links) do
-                    local b = self.screen[k]
+                    local b = self.drawScreen[k]
                     if b then
                         local key1 = i .. "-" .. k
                         local key2 = k .. "-" .. i
@@ -277,13 +281,14 @@ function Panel2d:mouseReleased(mx, my, button)
             local radius = math.sqrt((dx*dx) + (dy*dy))
             local plane = self.axes
             local segments = self.host:getCircleSegments()
-            local connectLines = true
+            local connectLines = self.host:addLinesIsOn()
+            local addFaces = self.host:addFacesIsOn()
             if self.axes == "xz" or self.axes == "zx" then
-                self.currentModel:addCircle(cx, 0, cy, radius, plane, segments, connectLines)
+                self.currentModel:addCircle(cx, 0, cy, radius, plane, segments, connectLines, addFaces)
             elseif self.axes == "xy" or self.axes == "yx" then
-                self.currentModel:addCircle(cx, cy, 0, radius, plane, segments, connectLines)
+                self.currentModel:addCircle(cx, cy, 0, radius, plane, segments, connectLines, addFaces)
             elseif self.axes == "yz" or self.axes == "zy" then
-                self.currentModel:addCircle(0, cx, cy, radius, plane, segments, connectLines)
+                self.currentModel:addCircle(0, cx, cy, radius, plane, segments, connectLines, addFaces)
             end
         elseif self.subMode == "sphere" then -- Draw sphere
             local cx, cy = self:screenPosToModelPos(self.prevClickX, self.prevClickY)
@@ -291,13 +296,14 @@ function Panel2d:mouseReleased(mx, my, button)
             local dx, dy = cx - mPosMX, cy - mPosMY
             local radius = math.sqrt((dx*dx) + (dy*dy))
             local segments = self.host:getSphereSegments()
-            local connectLines = true
+            local connectLines = self.host:addLinesIsOn()
+            local addFaces = self.host:addFacesIsOn()
             if self.axes == "xz" or self.axes == "zx" then
-                self:getCurrentModel():addSphere(cx, 0, cy, radius, segments, connectLines)
+                self:getCurrentModel():addSphere(cx, 0, cy, radius, segments, connectLines, addFaces)
             elseif self.axes == "xy" or self.axes == "yx" then
-                self:getCurrentModel():addSphere(cx, cy, 0, radius, segments, connectLines)
+                self:getCurrentModel():addSphere(cx, cy, 0, radius, segments, connectLines, addFaces)
             elseif self.axes == "yz" or self.axes == "zy" then
-                self:getCurrentModel():addSphere(0, cx, cy, radius, segments, connectLines)
+                self:getCurrentModel():addSphere(0, cx, cy, radius, segments, connectLines, addFaces)
             end
         end
     end
