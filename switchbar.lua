@@ -11,12 +11,16 @@ function Switchbar.new(x, y, iconSize, host)
     local iconDrawVertices = love.graphics.newImage(path .. "flag_draw_vertices.png")
     local iconDrawLines = love.graphics.newImage(path .. "flag_draw_lines.png")
     local iconDrawFaces = love.graphics.newImage(path .. "flag_draw_faces.png")
+    local iconAddLines = love.graphics.newImage(path .. "flag_add_lines.png")
+    local iconAddFaces = love.graphics.newImage(path .. "flag_add_faces.png")
 
     self.modes = {
         ["axisMarker"] = {function() return self:getAxisMarker() end, iconAxisMarker, function() self:toggleAxisMarker() end},
         ["drawVertices"] = {function() return self:getDrawVertices() end, iconDrawVertices, function() self:toggleDrawVertices() end},
         ["drawLines"] = {function() return self:getDrawLines() end, iconDrawLines, function() self:toggleDrawLines() end},
-        ["drawFaces"] = {function() return self:getDrawFaces() end, iconDrawFaces, function() self:toggleDrawFaces() end}
+        ["drawFaces"] = {function() return self:getDrawFaces() end, iconDrawFaces, function() self:toggleDrawFaces() end},
+        ["addLines"] = {function() return self:getAddLines() end, iconAddLines, function() self:toggleAddLines() end},
+        ["addFaces"] = {function() return self:getAddFaces() end, iconAddFaces, function() self:toggleAddFaces() end}
     }
 
     self.x = x
@@ -108,14 +112,26 @@ function Switchbar:toggleDrawFaces()
     self.host:setDrawFaces(not previous)
 end
 
+function Switchbar:toggleAddLines()
+    local previous = self:getAddLines()
+    self.host:setAddLines(not previous)
+end
+
+function Switchbar:toggleAddFaces()
+    local previous = self:getAddFaces()
+    self.host:setAddFaces(not previous)
+end
+
 -- Getters
 
 function Switchbar:getX()
     return self.x
 end
+
 function Switchbar:getY()
     return self.y
 end
+
 function Switchbar:getAxisMarker()
     return self.host:drawAxisMarkerIsOn()
 end
@@ -130,6 +146,14 @@ end
 
 function Switchbar:getDrawFaces()
     return self.host:drawFacesIsOn()
+end
+
+function Switchbar:getAddLines()
+    return self.host:addLinesIsOn()
+end
+
+function Switchbar:getAddFaces()
+    return self.host:addFacesIsOn()
 end
 
 return {Switchbar = Switchbar}
