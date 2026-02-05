@@ -33,6 +33,8 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.drawVertices = true
 	self.drawLines = true
 	self.drawFaces = true
+	self.addLines = true
+	self.addFaces = true
 	self.toolMode = "selection"
 	self.subMode = "rectangle"
 	self.circleSegments = 64
@@ -152,10 +154,10 @@ end
 function Scene:mousePressed(mx, my, button)
 	if self.switchbar:isWithinSection(mx, my) then
 		self.activeSection = self.switchbar
-	elseif self.toolbar:isWithinSection(mx, my) then
-		self.activeSection = self.toolbar
 	elseif self.colorTool:isWithinSection(mx, my) then
 		self.activeSection = self.colorTool
+	elseif self.toolbar:isWithinSection(mx, my) then
+		self.activeSection = self.toolbar
 	elseif self:isWithinSection(mx, my, self.modeler.x, self.modeler.y,
 		self.modeler.w, self.modeler.h) then
 		self.activeSection = self.modeler
@@ -271,6 +273,8 @@ function Scene:drawVerticesIsOn() return self.drawVertices end
 function Scene:drawLinesIsOn() return self.drawLines end
 function Scene:drawFacesIsOn() return self.drawFaces end
 function Scene:drawAxisMarkerIsOn() return self.drawAxisMarker end
+function Scene:addLinesIsOn() return self.addLines end
+function Scene:addFacesIsOn() return self.addFaces end
 
 function Scene:getToolMode() return self.toolMode end
 function Scene:getSubToolMode() return self.subMode end
@@ -300,6 +304,8 @@ function Scene:setVertexCoords(value) self.vertexCoords = value end
 function Scene:setDrawVertices(value) self.drawVertices = value end
 function Scene:setDrawLines(value) self.drawLines = value end
 function Scene:setDrawFaces(value) self.drawFaces = value end
+function Scene:setAddLines(value) self.addLines = value end
+function Scene:setAddFaces(value) self.addFaces = value end
 function Scene:setDrawAxis(value) self.drawAxisMarker = value end
 function Scene:setToolMode(mode) self.toolMode = mode end
 function Scene:setSubToolMode(mode) self.subMode = mode end

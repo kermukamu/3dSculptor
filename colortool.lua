@@ -20,7 +20,7 @@ function ColorTool.new(x, y, iconSize, host)
 
     self.isOpen = false
     self.openScale = 4
-    self.selectedColor = {}
+    self.selectedColor = {0.4, 0.4, 0.8, 0.6}
 
     -- Other
     self.timer = 0
@@ -52,16 +52,18 @@ function ColorTool:draw()
 end
 
 function ColorTool:mousePressed(mx, my, button)
-    if not self.isOpen and button == 1 then
-        self:open()
-    else
-        imgData = self.iconImageData
-        local scale = self.openScale
-        local x, y = (mx-self:getOpenX())/scale, (my-self:getOpenY())/scale
-        r, g, b, a = imgData:getPixel(x, y)
-        self.selectedColor = {r, g, b, a}
-        self.lastClickX = mx
-        self.lastClickY = my
+    if button == 1 then
+        if not self.isOpen then
+            self:open()
+        else
+            imgData = self.iconImageData
+            local scale = self.openScale * self.size/imgData:getWidth()
+            local x, y = (mx-self:getOpenX())/scale, (my-self:getOpenY())/scale
+            r, g, b, a = imgData:getPixel(x, y)
+            self.selectedColor = {r, g, b, a}
+            self.lastClickX = mx
+            self.lastClickY = my
+        end
     end
 end
 
