@@ -96,14 +96,14 @@ function Scene.new(title, screenWidth, screenHeight)
 
 	self.keyActions = {
 		["delete"] = {function() self:byActionDelete() end, "Deletes current selection"},
+		["a"] = {function() self:byActionA() end, "Selects all"},
 		["c"] = {function() self:byActionC() end, "Use while holding left ctrl to copy selected"},
-		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
-		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
-		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if left alt is held down"},
 		["f"] = {function() self:byActionF() end, "Creates a face between selected vertices"},
+		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if left alt is held down"},
+		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
 		["z"] = {function() self:byActionZ() end, "Reverts action if left ctrl is held down"},
+		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
 		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move selected mode on"},
-		["a"] = {function() self:selectAllModel() end, "Selects all"},
 		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
     }
 
@@ -206,8 +206,12 @@ function Scene:isWithinSection(x, y, secX, secY, secW, secH)
 			(secY < y and y < (secY + secH))
 end
 
-function Scene:selectAllModel()
-	return self.modeler:selectAll()
+function Scene:byActionA()
+	if love.keyboard.isDown("lalt") then
+		self.modeler:deSelectAll()
+	else
+		self.modeler:selectAll()
+	end
 end
 
 function Scene:deSelectAll()
