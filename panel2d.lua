@@ -69,7 +69,7 @@ function Panel2d:draw()
         love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
     end
 
-    -- Circle/Sphere/rectangle drawing indicator
+    -- Circle/Sphere/rectangle/cuboid drawing indicator
     if self.host:getActiveSection() == self and self.toolMode == "vertex" 
         and self.subMode ~= "single" and love.mouse.isDown(1) then
         local mx, my = love.mouse.getPosition()
@@ -79,6 +79,7 @@ function Panel2d:draw()
         if self.subMode == "circle" then love.graphics.circle("line", self.prevClickX, self.prevClickY, r)
         elseif self.subMode == "sphere" then love.graphics.circle("fill", self.prevClickX, self.prevClickY, r)
         elseif self.subMode == "rectangle" then love.graphics.rectangle("line", self.prevClickX, self.prevClickY, dx, dy)
+        elseif self.subMode == "cuboid" then love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, dx, dy)
         end
     end
 
