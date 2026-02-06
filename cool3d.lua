@@ -598,13 +598,14 @@ function Cool3d:addVertex(x, y, z)
     table.insert(self.lines, {})
 end
 
-function Cool3d:addVertexOnPlane(vx, vy, plane)
+function Cool3d:addVertexOnPlane(vx, vy, plane, offset)
+    local off = offset or 0
     if plane == "xz" or plane == "zx" then
-        self:addVertex(vx, 0, vy)
+        self:addVertex(vx, off, vy)
     elseif plane == "xy" or plane == "yx" then
-        self:addVertex(vx, vy, 0)
+        self:addVertex(vx, vy, off)
     elseif plane == "yz" or plane == "zy" then
-        self:addVertex(0, vx, vy)
+        self:addVertex(off, vx, vy)
     end
 end
 
@@ -769,7 +770,7 @@ function Cool3d:addFace(points, r, g, b, o)
     end
     table.insert(self.faces, face)
     table.insert(self.faceColors, {r,g,b,o})
-end
+end 
 
 function Cool3d:addFaceForSelected(color)
     local selected = {}
@@ -989,6 +990,68 @@ function Cool3d:addSphere(cx, cy, cz, radius, segments, connectLines, addFaces)
     end
 
     return "Sphere added"
+end
+
+function Cool3d:addRectangle(x1, y1, x2, y2, plane, connectLines, addFaces)
+    local verts = {}
+    self:addVertexOnPlane(x1, y1, plane)
+    self:addVertexOnPlane(x2, y1, plane)
+    self:addVertexOnPlane(x2, y2, plane)
+    self:addVertexOnPlane(x1, y2, plane)
+
+    local lineIndex = #self.lines 
+    if connectLines then
+        self:connect(lineIndex-3, lineIndex-2)
+        self:connect(lineIndex-2, lineIndex-1)
+        self:connect(lineIndex-1, lineIndex)
+        self:connect(lineIndex, lineIndex-3)
+    end
+
+    if addFaces then
+        local c = self.host:getActiveColor()
+        self:addFace({lineIndex-3, lineIndex-2, lineIndex-1, lineIndex}, c[1], c[2], c[3], c[4])
+    end
+end
+
+function Cool3d:addRectangularCuboid(x1, y1, x2, y2, height, plane, connectLines, addFaces)
+    local verts = {}
+    self:addVertexOnPlane(x1, y1, plane)
+    self:addVertexOnPlane(x2, y1, plane)
+    self:addVertexOnPlane(x2, y2, plane)
+    self:addVertexOnPlane(x1, y2, plane)
+
+    self:addVertexOnPlane(x1, y1, plane, height)
+    self:addVertexOnPlane(x2, y1, plane, height)
+    self:addVertexOnPlane(x2, y2, plane, height)
+    self:addVertexOnPlane(x1, y2, plane, height)
+
+    local lineIndex = #self.lines 
+    if connectLines then
+        self:connect(lineIndex-7, lineIndex-6)
+        self:connect(lineIndex-6, lineIndex-5)
+        self:connect(lineIndex-5, lineIndex-4)
+        self:connect(lineIndex-4, lineIndex-7)
+
+        self:connect(lineIndex-3, lineIndex-2)
+        self:connect(lineIndex-2, lineIndex-1)
+        self:connect(lineIndex-1, lineIndex)
+        self:connect(lineIndex, lineIndex-3)
+
+        self:connect(lineIndex-7, lineIndex-3)
+        self:connect(lineIndex-6, lineIndex-2)
+        self:connect(lineIndex-5, lineIndex-1)
+        self:connect(lineIndex-4, lineIndex)
+    end
+
+    if addFaces then
+        local c = self.host:getActiveColor()
+        self:addFace({lineIndex-7, lineIndex-6, lineIndex-5, lineIndex-4}, c[1], c[2], c[3], c[4])
+        self:addFace({lineIndex-3, lineIndex-2, lineIndex-1, lineIndex}, c[1], c[2], c[3], c[4])
+        self:addFace({lineIndex-7, lineIndex-6, lineIndex-2, lineIndex-3}, c[1], c[2], c[3], c[4])
+        self:addFace({lineIndex-6, lineIndex-5, lineIndex-1, lineIndex-2}, c[1], c[2], c[3], c[4])
+        self:addFace({lineIndex-5, lineIndex-4, lineIndex, lineIndex-1},  c[1], c[2], c[3], c[4])
+        self:addFace({lineIndex-7, lineIndex-4, lineIndex, lineIndex-3}, c[1], c[2], c[3], c[4])
+    end
 end
 
 function Cool3d:deSelect()

@@ -69,15 +69,17 @@ function Panel2d:draw()
         love.graphics.rectangle("fill", self.prevClickX, self.prevClickY, w, h)
     end
 
-    -- Circle drawing indicator
+    -- Circle/Sphere/rectangle drawing indicator
     if self.host:getActiveSection() == self and self.toolMode == "vertex" 
-        and (self.subMode == "circle" or self.subMode == "sphere") and love.mouse.isDown(1) then
+        and self.subMode ~= "single" and love.mouse.isDown(1) then
         local mx, my = love.mouse.getPosition()
         local dx, dy = mx-self.prevClickX, my-self.prevClickY
         local r = math.sqrt(dx*dx + dy*dy)
-        love.graphics.setColor(0,1,1,0.3) --Translucent cyan
+        love.graphics.setColor(0,1,1,0.8) --Translucent cyan
         if self.subMode == "circle" then love.graphics.circle("line", self.prevClickX, self.prevClickY, r)
-        else love.graphics.circle("fill", self.prevClickX, self.prevClickY, r) end
+        elseif self.subMode == "sphere" then love.graphics.circle("fill", self.prevClickX, self.prevClickY, r)
+        elseif self.subMode == "rectangle" then love.graphics.rectangle("line", self.prevClickX, self.prevClickY, dx, dy)
+        end
     end
 
     -- Rotation indicator
@@ -310,6 +312,19 @@ function Panel2d:mouseReleased(mx, my, button)
             elseif self.axes == "yz" or self.axes == "zy" then
                 self:getCurrentModel():addSphere(0, cx, cy, radius, segments, connectLines, addFaces)
             end
+        elseif self.subMode == "rectangle" then -- Draw rectangle
+            local x1, y1 = self:screenPosToModelPos(self.prevClickX, self.prevClickY)
+            local x2, y2 = self:screenPosToModelPos(mx, my)
+            local connectLines = self.host:addLinesIsOn()
+            local addFaces = self.host:addFacesIsOn()
+            self:getCurrentModel():addRectangle(x1, y1, x2, y2, self.axes, connectLines, addFaces)
+        elseif self.subMode == "cuboid" then -- Draw a rectangular cuboid
+            local x1, y1 = self:screenPosToModelPos(self.prevClickX, self.prevClickY)
+            local x2, y2 = self:screenPosToModelPos(mx, my)
+            local height = (math.abs(x1-x2)+math.abs(y1-y2))/2 -- Use average as a height
+            local connectLines = self.host:addLinesIsOn()
+            local addFaces = self.host:addFacesIsOn()
+            self:getCurrentModel():addRectangularCuboid(x1, y1, x2, y2, height, self.axes, connectLines, addFaces)
         end
     end
 end
