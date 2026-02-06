@@ -232,13 +232,7 @@ function Scene:byActionV()
 		self.toolMode = "vertex"
 	
 		-- If already in any vertex submode, shift submode forward
-		if self.subMode == "single" then 
-			self.subMode = "circle"
-		elseif self.subMode == "circle" then 
-			self.subMode = "sphere"
-		else 
-			self.subMode = "single"
-		end
+		self.subMode = self.toolbar:next(self.toolMode, self.subMode)
 	end
 end
 
@@ -250,12 +244,8 @@ function Scene:byActionC()
 	else
 		self.toolMode = "move camera"
 
-		-- If already in any camera submode, shift submode forward
-		if self.subMode == "translate" then 
-			self.subMode = "rotate"
-		else 
-			self.subMode = "translate"
-		end
+		-- If already in any vertex submode, shift submode forward
+		self.subMode = self.toolbar:next(self.toolMode, self.subMode)
 	end
 end
 
@@ -297,13 +287,11 @@ end
 
 function Scene:byActionTurnMoveModeOn()
 	self.toolMode = "move selected"
-		-- If already in any vertex submode, shift submode forward
-	if self.subMode == "translate" then 
-		self.subMode = "rotate"
-	else 
-		self.subMode = "translate"
-	end
+
+	-- If already in any vertex submode, shift submode forward
+	self.subMode = self.toolbar:next(self.toolMode, self.subMode)
 end
+
 -- Getters and setters
 
 function Scene:vertexNumberingIsOn() return self.vertexNumbering end
