@@ -13,13 +13,15 @@ function Toolbar.new(x, y, iconSize, host)
     local iconVertex = love.graphics.newImage(path .. "vertex.png")
     local iconCircle = love.graphics.newImage(path .. "circle.png")
     local iconSphere = love.graphics.newImage(path .. "sphere.png")
+    local iconRectangle = love.graphics.newImage(path .. "rectangle.png")
+    local iconCuboid = love.graphics.newImage(path .. "cube.png")
     local iconCameraMove = love.graphics.newImage(path .. "move_camera.png")
     local iconCameraRotate = love.graphics.newImage(path .. "rotate_camera.png")
 
     self.modes = {
         ["selection"] = {{"rectangle", iconSelection}},
         ["move selected"] = {{"translate", iconMove}, {"rotate", iconRotate}},
-        ["vertex"] = {{"single", iconVertex}, {"circle", iconCircle}, {"sphere", iconSphere}},
+        ["vertex"] = {{"single", iconVertex}, {"circle", iconCircle}, {"sphere", iconSphere}, {"rectangle", iconRectangle}, {"cuboid", iconCuboid}},
         ["move camera"] = {{"translate", iconCameraMove}, {"rotate", iconCameraRotate}}
     }
 
@@ -107,6 +109,15 @@ function Toolbar:isWithinSection(x, y)
         end
     end
     return false
+end
+
+function Toolbar:next(tool, sub)
+    for i=1, #self.modes[tool]-1, 1 do
+        if self.modes[tool][i][1] == sub then 
+            return self.modes[tool][i+1][1]
+        end
+    end
+    return self.modes[tool][1][1]
 end
 
 -- Getters
