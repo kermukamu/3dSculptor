@@ -95,8 +95,8 @@ function Cool3d:updateModel()
 end
 
 function Cool3d:saveToBuffer()
-    -- Limit buffer size to 10
-    if #self.buffer >= 10 then table.remove(self.buffer, 1) end
+    -- Limit buffer size to 50
+    if #self.buffer >= 50 then table.remove(self.buffer, 1) end
 
     local points = {}
     local lines = {}
