@@ -249,6 +249,10 @@ function Panel2d:mousePressed(mx, my, button)
     local toolMode = self.host:getToolMode()
     local subMode = self.host:getSubToolMode()
 
+    if toolMode == "move selected" and self.currentModel:getSelectedCount() > 0 then
+        self:getCurrentModel():saveToBuffer()
+    end 
+
     if not (((lShiftDown or lAltDown) and toolMode == "selection") 
         or toolMode == "move selected" or toolMode == "move camera") then 
         self.currentModel:deSelect() 
@@ -335,7 +339,6 @@ function Panel2d:mouseMoved(x, y, dx, dy)
     local toolMode = self.host:getToolMode()
     local subMode = self.host:getSubToolMode()
     if toolMode == "move selected" then
-        self:getCurrentModel():saveToBuffer()
         if subMode == "translate" and love.mouse.isDown(1) then
             if self.axes == "xz" or self.axes == "zx" then 
                 self.currentModel:transformSelected(sdx, 0, -sdy) 
