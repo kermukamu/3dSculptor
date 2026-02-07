@@ -88,6 +88,10 @@ function ColorTool:open()
     self.isOpen = true
 end
 
+function ColorTool:setSelectedColor(r, g, b)
+    self.selectedColor = {r, g, b}
+end
+
 -- Getters
 
 function ColorTool:isSetOpen()

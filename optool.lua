@@ -93,6 +93,10 @@ function OpTool:setX(x)
     self.x = x
 end
 
+function OpTool:setSelectedOpacity(o)
+    self.selectedOpacity = o
+end
+
 -- Getters
 
 function OpTool:getX()
