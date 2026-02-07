@@ -141,7 +141,7 @@ function Panel2d:drawModel()
         local yShift = self:getYShift()
 
         self.screen = {}
-        self.drwaScreen = {}
+        self.drawScreen = {}
         self.allModelWithinView = true
         -- Project, draw as rectangle if selected
         for i = 1, #points do
@@ -173,7 +173,7 @@ function Panel2d:drawModel()
                 love.graphics.rectangle("fill", xS-size/2, yS-size/2, size, size)
             end
         end
-    
+
         -- Draw lines by connection indices
         local drawn = {}
         

@@ -1305,6 +1305,8 @@ function Cool3d:getAxisMarkerX() return self.host:getX() + self.host:getW()/8 en
 function Cool3d:getAxisMarkerY() return self.host:getY() + self.host:getH() - self.host:getH()/8 end
 function Cool3d:getAllModelWithinView() return self.allModelWithinView end
 function Cool3d:getDZ(value) return self.dz end
+function Cool3d:getFaces() return self.faces end
+function Cool3d:getFaceColors() return self.faceColors end
 function Cool3d:getSelectedCount()
     local count = 0
     for i, isSelected in pairs(self.selectedVertices) do
