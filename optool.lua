@@ -89,6 +89,10 @@ function OpTool:open()
     self.isOpen = true
 end
 
+function OpTool:setX(x)
+    self.x = x
+end
+
 -- Getters
 
 function OpTool:getX()
@@ -97,6 +101,10 @@ end
 
 function OpTool:getY()
     return self.y
+end
+
+function OpTool:getSize()
+    return self.size
 end
 
 function OpTool:getOpenX()

@@ -90,6 +90,10 @@ end
 
 -- Getters
 
+function ColorTool:isSetOpen()
+    return self.isOpen
+end
+
 function ColorTool:getX()
     return self.x
 end
