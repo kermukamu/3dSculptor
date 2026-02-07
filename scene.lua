@@ -131,6 +131,11 @@ function Scene:update(dt)
 	self.switchbar:update(dt)
 	self.toolbar:update(dt)
 	self.colorTool:update(dt)
+	if self.colorTool:isSetOpen() then
+		self.opTool:setX(self.colorTool:getOpenX()-self.opTool:getSize())
+	else
+		self.opTool:setX(self.colorTool:getX()-self.opTool:getSize())
+	end
 	self.opTool:update(dt)
 	local color = self.colorTool:getSelectedColor()
 	local opacity = self.opTool:getSelectedOpacity()
