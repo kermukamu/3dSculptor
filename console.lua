@@ -49,7 +49,8 @@ function Console.new(x, y, w, h, host)
 		["clear"] = {function() self:comClear() end, "Clears the model, use 'clear'"},
 		["multiply"] = {function() self:comMultiplyModel() end, "Multiplies selection size, use 'multiply [multiplier]'"},
 		["circle"] = {function() self:comDrawCircle() end, "Draws a circle, use 'drawCircle [centerX] [centerY] [centerZ] [radius] [plane] [segments] [connectLines (true/false)]'"},
-		["currentMode"] = {function() self:comCurrentMode() end, "Gets current mode, use 'currentMode'"}
+		["currentMode"] = {function() self:comCurrentMode() end, "Gets current mode, use 'currentMode'"},
+		['setColor'] = {function() self:comSetActiveColor() end}, "Sets active color, use 'setColor [Red] [Green] [Blue] [Opacity]'"
 	}
 
 	self.comboList = {
@@ -248,6 +249,22 @@ function Console:comSetCamera()
 		self.host:getCurrentModel():setCamera(argX, argY, argZ)
 		self.response = "Set camera position to " .. tostring(argX) ..
 			", " .. tostring(argY) .. ", " .. tostring(argZ)
+	end
+end
+
+function Console:comSetActiveColor()
+	local r, g, b, o = tonumber(self.args[1]), tonumber(self.args[2]), 
+		tonumber(self.args[3]), tonumber(self.args[4])
+	if type(r) ~= "number" or type(g) ~= "number" or 
+		type(b) ~= "number" or type(o) ~= "number" then 
+		self.response = "Arguments must be numbers"
+	else
+		local currentModel = self.host:getCurrentModel()
+		if currentModel ~= nil then
+			self.host:setActiveColor(r/255, g/255, b/255, o/255)
+			self.response = "Set color to R" .. tostring(r) .. ", G" .. 
+			tostring(g) .. ", B" .. tostring(b) .. ", O" .. tostring(o)
+		end
 	end
 end
 
