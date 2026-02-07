@@ -356,6 +356,11 @@ function Scene:setDrawLines(value) self.drawLines = value end
 function Scene:setDrawFaces(value) self.drawFaces = value end
 function Scene:setAddLines(value) self.addLines = value end
 function Scene:setAddFaces(value) self.addFaces = value end
+function Scene:setActiveColor(r, g, b, o)
+	self.colorTool:setSelectedColor(r, g, b)
+	self.opTool:setSelectedOpacity(o)
+	self.activeColor = {r, g, b, o} 
+end
 function Scene:setDrawAxis(value) self.drawAxisMarker = value end
 function Scene:setToolMode(mode) self.toolMode = mode end
 function Scene:setSubToolMode(mode) self.subMode = mode end
