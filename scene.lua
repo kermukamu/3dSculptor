@@ -10,6 +10,8 @@ local ctoolbar = require("toolbar")
 local Toolbar = ctoolbar.Toolbar
 local ccolortool = require("colortool")
 local ColorTool = ccolortool.ColorTool
+local coptool = require("optool")
+local OpTool = coptool.OpTool
 
 -- Scene "class"
 local Scene = {}
@@ -94,6 +96,12 @@ function Scene.new(title, screenWidth, screenHeight)
 	local colorToolY = modelerY + modelerH - colorToolIconSize - self.modeler:getFrameLineWidth()*2 - yOffset
 	self.colorTool = ColorTool.new(colorToolX, colorToolY, colorToolIconSize, self)
 
+	-- Position opacity tool on the left side of color tool
+	local opToolIconSize = screenWidth * (1 / 32)
+	local opToolX = colorToolX - opToolIconSize
+	local opToolY = colorToolY
+	self.opTool = OpTool.new(opToolX, opToolY, opToolIconSize, self)
+
 	self.keyActions = {
 		["delete"] = {function() self:byActionDelete() end, "Deletes current selection"},
 		["a"] = {function() self:byActionA() end, "Selects all"},
@@ -123,7 +131,10 @@ function Scene:update(dt)
 	self.switchbar:update(dt)
 	self.toolbar:update(dt)
 	self.colorTool:update(dt)
-	self.activeColor = self.colorTool:getSelectedColor()
+	self.opTool:update(dt)
+	local color = self.colorTool:getSelectedColor()
+	local opacity = self.opTool:getSelectedOpacity()
+	self.activeColor = {color[1], color[2], color[3], opacity}
 end
 
 function Scene:draw()
@@ -134,6 +145,7 @@ function Scene:draw()
 	self.console:draw()
 	self.switchbar:draw()
 	self.toolbar:draw()
+	self.opTool:draw()
 	self.colorTool:draw()
 end
 
@@ -158,6 +170,8 @@ function Scene:mousePressed(mx, my, button)
 		self.activeSection = self.switchbar
 	elseif self.colorTool:isWithinSection(mx, my) then
 		self.activeSection = self.colorTool
+	elseif self.opTool:isWithinSection(mx, my) then
+		self.activeSection = self.opTool
 	elseif self.toolbar:isWithinSection(mx, my) then
 		self.activeSection = self.toolbar
 	elseif self:isWithinSection(mx, my, self.modeler.x, self.modeler.y,
