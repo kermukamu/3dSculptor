@@ -46,7 +46,9 @@ function ColorTool:draw()
     if self.isOpen and (self.lastClickX ~= nil) and (self.lastClickY ~= nil) then
         local rad = self.size/16
         local cx, cy = self.lastClickX, self.lastClickY
-        love.graphics.setColor(0,0,0,1) -- Black
+        love.graphics.setColor(1,1,1,1) -- White center
+        love.graphics.circle("fill", cx, cy, rad)
+        love.graphics.setColor(0,0,0,1) -- Black outline
         love.graphics.circle("line", cx, cy, rad)
     end
 end
@@ -60,8 +62,8 @@ function ColorTool:mousePressed(mx, my, button)
             imgData = self.iconImageData
             local scale = self.openScale * self.size/imgData:getWidth()
             local x, y = (mx-self:getOpenX())/scale, (my-self:getOpenY())/scale
-            r, g, b, a = imgData:getPixel(x, y)
-            self.selectedColor = {r, g, b, a}
+            r, g, b, _ = imgData:getPixel(x, y)
+            self.selectedColor = {r, g, b}
             self.lastClickX = mx
             self.lastClickY = my
         end
