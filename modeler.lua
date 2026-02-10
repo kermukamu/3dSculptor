@@ -141,22 +141,41 @@ function Modeler:mouseReleased(mx, my, button)
 
 	if self.toolMode == "selection" then
     	if button == 1 and not spaceDown then -- left click
-    		if (math.abs(mx - self.prevClickX) < 5) 
-    			and (math.abs(my - self.prevClickY) < 5) then -- Very small area between press and release
-                if lAltDown then 
-                	self.currentModel:toggleVertexSelectionWithinClick(mx, my, false)
-                else 
-                	self.currentModel:toggleVertexSelectionWithinClick(mx, my, true) 
-                end
-            else
-                if lAltDown then 
-                	self.currentModel:toggleVertexSelectionWithinRectangle(
-                		self.prevClickX, self.prevClickY, mx, my, false)
-                else
-                	self.currentModel:toggleVertexSelectionWithinRectangle(
-                		self.prevClickX, self.prevClickY, mx, my, true) 
-               	end
-            end
+    		if self.subMode == "vertex" then
+    			if (math.abs(mx - self.prevClickX) < 5) 
+    				and (math.abs(my - self.prevClickY) < 5) then -- Very small area between press and release
+            	    if lAltDown then 
+            	    	self.currentModel:toggleVertexSelectionWithinClick(mx, my, false)
+            	    else 
+            	    	self.currentModel:toggleVertexSelectionWithinClick(mx, my, true) 
+            	    end
+            	else
+            	    if lAltDown then 
+            	    	self.currentModel:toggleVertexSelectionWithinRectangle(
+            	    		self.prevClickX, self.prevClickY, mx, my, false)
+            	    else
+            	    	self.currentModel:toggleVertexSelectionWithinRectangle(
+            	    		self.prevClickX, self.prevClickY, mx, my, true) 
+            	   	end
+            	end
+        	elseif self.subMode == "face" then
+    			if (math.abs(mx - self.prevClickX) < 5) 
+    				and (math.abs(my - self.prevClickY) < 5) then -- Very small area between press and release
+            	    if lAltDown then 
+            	    	self.currentModel:toggleFaceSelectionWithinClick(mx, my, false)
+            	    else 
+            	    	self.currentModel:toggleFaceSelectionWithinClick(mx, my, true) 
+            	    end
+            	else
+            	    if lAltDown then 
+            	    	self.currentModel:toggleFaceSelectionWithinRectangle(
+            	    		self.prevClickX, self.prevClickY, mx, my, false)
+            	    else
+            	    	self.currentModel:toggleFaceSelectionWithinRectangle(
+            	    		self.prevClickX, self.prevClickY, mx, my, true) 
+            	   	end
+            	end
+        	end
     	end
 	end
 end

@@ -279,7 +279,7 @@ function Panel2d:mousePressed(mx, my, button)
                 local sCenter, _, _ = self.currentModel:getSelectionCenter()
                 self.currentModel:extrudeSelectedAroundPivot(Center, tx, ty, self.axes, 8)
             end
-        elseif subMode == "along line" then
+        elseif subMode == "to point" then
             self:getCurrentModel():saveToBuffer()
             local tx, ty = self:screenPosToModelPos(mx, my)
             if self.axes == "xz" or self.axes == "zx" then
