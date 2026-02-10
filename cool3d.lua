@@ -36,6 +36,7 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.drawScreen = {} -- These are sent to 2D drawing calls
     self.pointsWorld = {}
     self.selectedVertices = {}
+    self.selectedFaces = {}
     self.firstSelectedVert = nil
     self.clickRange = 5
 
@@ -244,6 +245,9 @@ function Cool3d:drawFaces()
         if visible then
             local col = self.faceColors[f.i] or {0.4, 0.4, 0.8, 0.6}
             love.graphics.setColor(col[1], col[2], col[3], col[4])
+            if self.selectedFaces[f.i] then 
+                love.graphics.setColor(1-col[1], 1-col[2], 1-col[3], 1) 
+            end
             love.graphics.polygon("fill", poly)
         end
     end
@@ -781,7 +785,7 @@ function Cool3d:addFaceForSelected(color)
     end
 
     if #selected < 3 then
-        return "At least 3 selected vertices required to form a face"
+        return "At least 3 selected verticesre required to form a face"
     end
 
     -- Try to order the using screen-space angles to avoid self-intersections
@@ -1462,6 +1466,7 @@ end
 function Cool3d:deSelect()
     self.selectedVertices = {}
     self.firstSelectedVert = nil
+    self.selectedFaces = {}
 end
 
 function Cool3d:selectAll()
@@ -1495,6 +1500,77 @@ function Cool3d:toggleVertexSelectionWithinRectangle(x1, y1, x2, y2, val)
             -- Silly lua doesn't support continue...
         elseif self:isWithinRectangle(x1, y1, x2, y2, self.screen[i][1], self.screen[i][2]) then
             if i ~= nil then self:toggleVertexSelection(i, val) end
+        end
+    end
+end
+
+function Cool3d:toggleFaceSelectionWithinClick(x, y, val)
+    if not self.faces or #self.faces == 0 then return end
+
+    local bestFace = nil
+    local bestDepth = nil
+
+    for fi, face in ipairs(self.faces) do
+        local poly = {}
+        local depthSum = 0
+        local count = 0
+        local allHaveScreen = true
+
+        -- Build 2D polygon from visible vertices
+        for _, vi in ipairs(face) do
+            local s = self.screen[vi]
+            if not s then
+                allHaveScreen = false
+                break
+            end
+            poly[#poly + 1] = s[1]
+            poly[#poly + 1] = s[2]
+            depthSum = depthSum + s[3]
+            count = count + 1
+        end
+
+        if allHaveScreen and count >= 3 then
+            if self:isPointInPolygon(x, y, poly) then
+                local depth = depthSum / count -- average depth for sorting
+
+                -- Pick the closest face to camera (smallest depth)
+                if (bestFace == nil) or (depth < bestDepth) then
+                    bestFace = fi
+                    bestDepth = depth
+                end
+            end
+        end
+    end
+
+    if bestFace then
+        self:toggleFaceSelection(bestFace, val)
+    end
+end
+
+function Cool3d:toggleFaceSelectionWithinRectangle(x1, y1, x2, y2, val)
+    if not self.faces or #self.faces == 0 then return end
+
+    for fi, face in ipairs(self.faces) do
+        local allHaveScreen = true
+        local anyVertexInside = false
+
+        for _, vi in ipairs(face) do
+            local s = self.screen[vi]
+            if not s then
+                allHaveScreen = false
+                break
+            end
+
+            if self:isWithinRectangle(x1, y1, x2, y2, s[1], s[2]) then
+                anyVertexInside = true
+                break
+            end
+        end
+
+        -- Only consider faces that are visible (all vertices have screen coords)
+        -- and have at least one vertex inside the rectangle.
+        if allHaveScreen and anyVertexInside then
+            self:toggleFaceSelection(fi, val)
         end
     end
 end
@@ -1607,7 +1683,16 @@ function Cool3d:deleteSelected()
     for i=#self.points, 1, -1 do
         if self.selectedVertices[i] then self:removeVertex(i) end
     end
+    for i=#self.faces, 1, -1 do
+        if self.selectedFaces[i] then self:removeFace(i) end
+    end
     self:deSelect()
+end
+
+function Cool3d:setSelectedFacesColor(color)
+    for i, f in pairs(self.selectedFaces) do
+        if f then self.faceColors[i] = color end
+    end
 end
 
 function Cool3d:joinSelectedToNearestSelected()
@@ -1700,6 +1785,33 @@ function Cool3d:isWithinRectangle(x1, y1, x2, y2, px, py)
     return px >= minX and px <= maxX and py >= minY and py <= maxY
 end
 
+function Cool3d:isPointInPolygon(px, py, poly)
+    -- poly = {x1, y1, x2, y2, ..., xn, yn}
+    local inside = false
+    local n = #poly
+
+    if n < 6 then return false end -- need at least 3 points
+
+    local j = n - 1  -- last point's x index (y is at j+1 == n)
+    for i = 1, n - 1, 2 do
+        local xi, yi = poly[i], poly[i + 1]
+        local xj, yj = poly[j], poly[j + 1]
+
+        -- Ray-casting
+        local intersect = ((yi > py) ~= (yj > py)) and
+            (px < (xj - xi) * (py - yi) / ((yj - yi) + 1e-12) + xi)
+
+        if intersect then
+            inside = not inside
+        end
+
+        j = i
+    end
+
+    return inside
+end
+
+
 -- Getters and setters
 
 function Cool3d:getPoints() return self.points end
@@ -1720,6 +1832,11 @@ function Cool3d:getSelectedCount()
             count = count + 1
         end
     end
+    for i, isSelected in pairs(self.selectedFaces) do
+        if isSelected and self.faces[i] then
+            count = count + 1
+        end
+    end
     return count
 end
 
@@ -1737,6 +1854,16 @@ function Cool3d:toggleVertexSelection(number, val)
         self.firstSelectedVert = number
     end
     self.selectedVertices[number] = true
+end
+
+function Cool3d:toggleFaceSelection(number, val)
+    if not val then
+        -- Deselection is done this way as normally deselected faces
+        -- are not stored at all in self.selectedFaces
+        self.selectedFaces[number] = nil
+        return nil
+    end
+    self.selectedFaces[number] = true
 end
 
 function Cool3d:setOrientation(argPhi, argTheta)
