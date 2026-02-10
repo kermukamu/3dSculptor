@@ -20,7 +20,7 @@ function OpTool.new(x, y, iconSize, host)
 
     self.isOpen = false
     self.openScale = 4
-    self.selectedOpacity = 0
+    self.selectedOpacity = 1
 
     -- Other
     self.timer = 0

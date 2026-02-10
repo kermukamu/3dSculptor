@@ -20,7 +20,7 @@ function ColorTool.new(x, y, iconSize, host)
 
     self.isOpen = false
     self.openScale = 4
-    self.selectedColor = {0.4, 0.4, 0.8, 0.6}
+    self.selectedColor = {0.4, 0.4, 0.8}
 
     -- Other
     self.timer = 0
