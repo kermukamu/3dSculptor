@@ -92,6 +92,7 @@ function Panel2d:draw()
     end
 
     if not self.allModelWithinView then self:drawHiddenVerticesComplaint() end
+    if self.host:snapXIsOn() and self.host:snapYIsOn() then self:drawAxisLockComplaint() end
 
     love.graphics.setScissor() -- Remove drawing area limit
 
@@ -266,33 +267,28 @@ function Panel2d:mousePressed(mx, my, button)
     end
 
     if toolMode == "extrude selected" then
+        self:getCurrentModel():saveToBuffer()
+        local sCenterX, sCenterY, sCenterZ = self.currentModel:getSelectionCenter()
+        local tx, ty = self:screenPosToModelPos(mx, my)
+        local x, y, z = 0, 0, 0
+        if self.axes == "xz" or self.axes == "zx" then
+            if self.host:snapXIsOn() then ty = sCenterZ end
+            if self.host:snapYIsOn() then tx = sCenterX end
+            x, y, z = tx, sCenterY, ty
+        elseif self.axes == "xy" or self.axes == "yx" then
+            if self.host:snapXIsOn() then ty = sCenterY end
+            if self.host:snapYIsOn() then tx = sCenterX end
+            x, y, z = tx, ty, sCenterZ
+        elseif self.axes == "yz" or self.axes == "zy" then
+            if self.host:snapXIsOn() then ty = sCenterZ end
+            if self.host:snapYIsOn() then tx = sCenterY end
+            x, y, z = sCenterX, tx, ty
+        end
         if subMode == "around pivot" then
-            self:getCurrentModel():saveToBuffer()
-            local tx, ty = self:screenPosToModelPos(mx, my)
-            if self.axes == "xz" or self.axes == "zx" then
-                local _, sCenter, _ = self.currentModel:getSelectionCenter()
-                self.currentModel:extrudeSelectedAroundPivot(tx, sCenter, ty, self.axes, 8)
-            elseif self.axes == "xy" or self.axes == "yx" then
-                local _, _, sCenter = self.currentModel:getSelectionCenter()
-                self.currentModel:extrudeSelectedAroundPivot(tx, ty, sCenter, self.axes, 8)
-            elseif self.axes == "yz" or self.axes == "zy" then
-                local sCenter, _, _ = self.currentModel:getSelectionCenter()
-                self.currentModel:extrudeSelectedAroundPivot(Center, tx, ty, self.axes, 8)
-            end
+            self.currentModel:extrudeSelectedAroundPivot(x, y, z, self.axes, 8)
         elseif subMode == "to point" then
-            self:getCurrentModel():saveToBuffer()
-            local tx, ty = self:screenPosToModelPos(mx, my)
-            if self.axes == "xz" or self.axes == "zx" then
-                local _, sCenter, _ = self.currentModel:getSelectionCenter()
-                self.currentModel:extrudeSelectedTo(tx, sCenter, ty, self.axes, autoselect)
-            elseif self.axes == "xy" or self.axes == "yx" then
-                local _, _, sCenter = self.currentModel:getSelectionCenter()
-                self.currentModel:extrudeSelectedTo(tx, ty, sCenter, self.axes, autoselect)
-            elseif self.axes == "yz" or self.axes == "zy" then
-                local sCenter, _, _ = self.currentModel:getSelectionCenter()
-                local autoselect = true
-                self.currentModel:extrudeSelectedTo(sCenter, tx, ty, self.axes, autoselect)
-            end
+            local autoselect = true
+            self.currentModel:extrudeSelectedTo(x, y, z, autoselect)
         end
     end
 
@@ -307,7 +303,7 @@ function Panel2d:mouseReleased(mx, my, button)
 
     if self.toolMode == "selection" then
         if button == 1 then -- left click
-            if (math.abs(mx - self.prevClickX) < 5) 
+            if (math.abs(mx - self.prevClickX) < 5)
                 and (math.abs(my - self.prevClickY) < 5) then -- Very small area between press and release
                 if lAltDown then self:toggleVertexSelectionWithinClick(mx, my, false)
                 else self:toggleVertexSelectionWithinClick(mx, my, true) end
@@ -372,6 +368,12 @@ function Panel2d:mouseMoved(x, y, dx, dy)
     local subMode = self.host:getSubToolMode()
     if toolMode == "move selected" then
         if subMode == "translate" and love.mouse.isDown(1) then
+            if self.host:snapXIsOn() then
+                sdy = 0
+            end
+            if self.host:snapYIsOn() then
+                sdx = 0
+            end
             if self.axes == "xz" or self.axes == "zx" then 
                 self.currentModel:transformSelected(sdx, 0, -sdy) 
             elseif self.axes == "xy" or self.axes == "yx" then 
@@ -505,8 +507,14 @@ end
 
 function Panel2d:drawHiddenVerticesComplaint()
     love.graphics.setColor(1,0.2,0,1) -- Brown
-    local complaint = "The complete model is not visible, try increasing view distance"
+    local complaint = "The complete model is not visible. Try increasing view distance to change this."
     love.graphics.print(complaint, self.x + self.w/32, self.y + self.h/32, 0)
+end
+
+function Panel2d:drawAxisLockComplaint()
+    love.graphics.setColor(1,0.2,0,1) -- Brown
+    local complaint = "Editing on both axes is locked. Unlock axes from the switch bar to change this."
+    love.graphics.print(complaint, self.x + self.w/32, self.y + self.h/12, 0)
 end
 
 function Panel2d:isWithinView(x, y)
