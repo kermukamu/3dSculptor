@@ -30,7 +30,7 @@ function Cool3d.new(x2d, y2d, modelDistance, host)
     self.dxMarker = 0
     self.dyMarker = 0
     self.dzMarker = 1000
-    self.zCompression = 1000
+    self.zCompression = 400
     self.textScale = 1
     self.screen = {} -- Used to handle user interaction with projected points
     self.drawScreen = {} -- These are sent to 2D drawing calls

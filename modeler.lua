@@ -22,7 +22,7 @@ function Modeler.new(x, y, w, h, host)
 	-- Setup 3D model
 	local modelX2D = (self.x + self.w) / 2 -- X of projection, in other words, x if z = 0 
 	local modelY2D = (self.y + self.h) / 2 -- Same for Y
-	local distance = 1200
+	local distance = 400
 	self.currentModel = Cool3d.new(modelX2D, modelY2D, distance, self)
 
 	-- Other
