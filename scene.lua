@@ -38,7 +38,7 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.addLines = true
 	self.addFaces = true
 	self.toolMode = "selection"
-	self.subMode = "rectangle"
+	self.subMode = "vertex"
 	self.circleSegments = 64
 	self.sphereSegments = 12
 	self.activeColor = {0.4, 0.4, 0.8, 1} -- Default
@@ -106,13 +106,14 @@ function Scene.new(title, screenWidth, screenHeight)
 		["delete"] = {function() self:byActionDelete() end, "Deletes current selection"},
 		["a"] = {function() self:byActionA() end, "Selects all"},
 		["c"] = {function() self:byActionC() end, "Use while holding left ctrl to copy selected"},
+		["e"] = {function() self:byActionE() end, "Turns move selected mode on"},
 		["f"] = {function() self:byActionF() end, "Creates a face between selected vertices"},
 		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if left alt is held down"},
+		["q"] = {function() self:byActionQ() end, "Sets active color to selected faces"},
+		["s"] = {function() self:byActionS() end, "Turns selection mode on"},
 		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
 		["x"] = {function() self:byActionX() end, "Turns extrusion mode on"},
 		["z"] = {function() self:byActionZ() end, "Reverts action if left ctrl is held down"},
-		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
-		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move selected mode on"},
 		["escape"] = {function() self:deSelectAll() end, "Deselects all"}
     }
 
@@ -226,14 +227,6 @@ function Scene:isWithinSection(x, y, secX, secY, secW, secH)
 			(secY < y and y < (secY + secH))
 end
 
-function Scene:byActionA()
-	if love.keyboard.isDown("lalt") then
-		self.modeler:deSelectAll()
-	else
-		self.modeler:selectAll()
-	end
-end
-
 function Scene:deSelectAll()
 	return self.modeler:deSelectAll()
 end
@@ -246,17 +239,11 @@ function Scene:byActionDelete()
 	end
 end
 
-function Scene:byActionV()
-	if love.keyboard.isDown("lctrl") then
-		if self.activeSection and self.activeSection.paste then
-			self:getCurrentModel():saveToBuffer()
-			self.activeSection:paste()
-		end
+function Scene:byActionA()
+	if love.keyboard.isDown("lalt") then
+		self.modeler:deSelectAll()
 	else
-		self.toolMode = "vertex"
-	
-		-- If already in any vertex submode, shift submode forward
-		self.subMode = self.toolbar:next(self.toolMode, self.subMode)
+		self.modeler:selectAll()
 	end
 end
 
@@ -270,6 +257,23 @@ function Scene:byActionC()
 
 		-- If already in any move camera submode, shift submode forward
 		self.subMode = self.toolbar:next(self.toolMode, self.subMode)
+	end
+end
+
+function Scene:byActionE()
+	self.toolMode = "move selected"
+
+	-- If already in any move selected submode, shift submode forward
+	self.subMode = self.toolbar:next(self.toolMode, self.subMode)
+end
+
+function Scene:byActionF()
+	local currentModel = self:getCurrentModel()
+	if currentModel ~= nil then
+		if currentModel:getSelectedCount() >= 3 then
+			self:getCurrentModel():saveToBuffer()
+			currentModel:addFaceForSelected(self.activeColor)
+		end
 	end
 end
 
@@ -288,13 +292,31 @@ function Scene:byActionJ()
 	end
 end
 
-function Scene:byActionF()
+function Scene:byActionQ()
 	local currentModel = self:getCurrentModel()
 	if currentModel ~= nil then
-		if currentModel:getSelectedCount() >= 3 then
+		currentModel:setSelectedFacesColor(self.activeColor)
+	end
+end
+
+function Scene:byActionS()
+	self.toolMode = "selection"
+	
+	-- If already in any selection submode, shift submode forward
+	self.subMode = self.toolbar:next(self.toolMode, self.subMode)
+end
+
+function Scene:byActionV()
+	if love.keyboard.isDown("lctrl") then
+		if self.activeSection and self.activeSection.paste then
 			self:getCurrentModel():saveToBuffer()
-			currentModel:addFaceForSelected(self.activeColor)
+			self.activeSection:paste()
 		end
+	else
+		self.toolMode = "vertex"
+	
+		-- If already in any vertex submode, shift submode forward
+		self.subMode = self.toolbar:next(self.toolMode, self.subMode)
 	end
 end
 
@@ -309,18 +331,6 @@ function Scene:byActionZ()
 	if self.activeSection ~= self.console and love.keyboard.isDown("lctrl") then
 		self:getCurrentModel():loadFromBuffer()
 	end
-end
-
-function Scene:byActionTurnSelectionModeOn()
-	self.toolMode = "selection"
-	self.subMode = "rectangle"
-end
-
-function Scene:byActionTurnMoveModeOn()
-	self.toolMode = "move selected"
-
-	-- If already in any move selected submode, shift submode forward
-	self.subMode = self.toolbar:next(self.toolMode, self.subMode)
 end
 
 -- Getters and setters
