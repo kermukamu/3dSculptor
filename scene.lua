@@ -37,6 +37,8 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.drawFaces = true
 	self.addLines = true
 	self.addFaces = true
+	self.snapX = false
+	self.snapY = false
 	self.toolMode = "selection"
 	self.subMode = "vertex"
 	self.circleSegments = 64
@@ -343,6 +345,8 @@ function Scene:drawFacesIsOn() return self.drawFaces end
 function Scene:drawAxisMarkerIsOn() return self.drawAxisMarker end
 function Scene:addLinesIsOn() return self.addLines end
 function Scene:addFacesIsOn() return self.addFaces end
+function Scene:snapXIsOn() return self.snapX end
+function Scene:snapYIsOn() return self.snapY end
 
 function Scene:getToolMode() return self.toolMode end
 function Scene:getSubToolMode() return self.subMode end
@@ -374,14 +378,16 @@ function Scene:setDrawLines(value) self.drawLines = value end
 function Scene:setDrawFaces(value) self.drawFaces = value end
 function Scene:setAddLines(value) self.addLines = value end
 function Scene:setAddFaces(value) self.addFaces = value end
+function Scene:setDrawAxis(value) self.drawAxisMarker = value end
+function Scene:setSnapX(value) self.snapX = value end
+function Scene:setSnapY(value) self.snapY = value end
+function Scene:setToolMode(mode) self.toolMode = mode end
+function Scene:setSubToolMode(mode) self.subMode = mode end
 function Scene:setActiveColor(r, g, b, o)
 	self.colorTool:setSelectedColor(r, g, b)
 	self.opTool:setSelectedOpacity(o)
 	self.activeColor = {r, g, b, o} 
 end
-function Scene:setDrawAxis(value) self.drawAxisMarker = value end
-function Scene:setToolMode(mode) self.toolMode = mode end
-function Scene:setSubToolMode(mode) self.subMode = mode end
 
 
 return {Scene = Scene}
