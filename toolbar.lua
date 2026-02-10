@@ -7,7 +7,8 @@ function Toolbar.new(x, y, iconSize, host)
     self.host = host
 
     local path = "icons/"
-    local iconSelection = love.graphics.newImage(path .. "selection.png")
+    local iconSelectionVertex = love.graphics.newImage(path .. "selection_vertex.png")
+    local iconSelectionFaces = love.graphics.newImage(path .. "selection_faces.png")
     local iconMove = love.graphics.newImage(path .. "move.png")
     local iconRotate = love.graphics.newImage(path .. "rotate.png")
     local iconVertex = love.graphics.newImage(path .. "vertex.png")
@@ -21,11 +22,11 @@ function Toolbar.new(x, y, iconSize, host)
     local iconExtrusionAroundPivot = love.graphics.newImage(path .. "extrude_around_pivot.png")
 
     self.modes = {
-        ["selection"] = {{"rectangle", iconSelection}},
+        ["selection"] = {{"vertex", iconSelectionVertex}, {"face", iconSelectionFaces}},
         ["move selected"] = {{"translate", iconMove}, {"rotate", iconRotate}},
         ["vertex"] = {{"single", iconVertex}, {"circle", iconCircle}, {"sphere", iconSphere}, {"rectangle", iconRectangle}, {"cuboid", iconCuboid}},
         ["move camera"] = {{"translate", iconCameraMove}, {"rotate", iconCameraRotate}},
-        ["extrude selected"] = {{"along line", iconExtrusionAlongLine}, {"around pivot", iconExtrusionAroundPivot}}
+        ["extrude selected"] = {{"to point", iconExtrusionAlongLine}, {"around pivot", iconExtrusionAroundPivot}}
     }
 
     self.x = x
