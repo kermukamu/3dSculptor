@@ -39,6 +39,7 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.addFaces = true
 	self.snapX = false
 	self.snapY = false
+	self.spin = true
 	self.toolMode = "selection"
 	self.subMode = "vertex"
 	self.circleSegments = 64
@@ -347,6 +348,7 @@ function Scene:addLinesIsOn() return self.addLines end
 function Scene:addFacesIsOn() return self.addFaces end
 function Scene:snapXIsOn() return self.snapX end
 function Scene:snapYIsOn() return self.snapY end
+function Scene:spinIsOn() return self.spin end
 
 function Scene:getToolMode() return self.toolMode end
 function Scene:getSubToolMode() return self.subMode end
@@ -381,6 +383,16 @@ function Scene:setAddFaces(value) self.addFaces = value end
 function Scene:setDrawAxis(value) self.drawAxisMarker = value end
 function Scene:setSnapX(value) self.snapX = value end
 function Scene:setSnapY(value) self.snapY = value end
+function Scene:setSpin(value)
+	local currentModel = self:getCurrentModel()
+	if value then
+		currentModel:setRotation(0, 10)
+		self.spin = true
+	else
+		currentModel:setRotation(0, 0)
+		self.spin = false
+	end
+end
 function Scene:setToolMode(mode) self.toolMode = mode end
 function Scene:setSubToolMode(mode) self.subMode = mode end
 function Scene:setActiveColor(r, g, b, o)

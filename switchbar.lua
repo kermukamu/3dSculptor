@@ -15,6 +15,7 @@ function Switchbar.new(x, y, iconSize, host)
     local iconAddFaces = love.graphics.newImage(path .. "flag_add_faces.png")
     local iconSnapX = love.graphics.newImage(path .. "flag_snap_x.png")
     local iconSnapY = love.graphics.newImage(path .. "flag_snap_y.png")
+    local iconSpin = love.graphics.newImage(path .. "flag_spin.png")
 
     self.modes = {
         ["axisMarker"] = {function() return self:getAxisMarker() end, iconAxisMarker, function() self:toggleAxisMarker() end},
@@ -24,7 +25,8 @@ function Switchbar.new(x, y, iconSize, host)
         ["addLines"] = {function() return self:getAddLines() end, iconAddLines, function() self:toggleAddLines() end},
         ["addFaces"] = {function() return self:getAddFaces() end, iconAddFaces, function() self:toggleAddFaces() end},
         ["snapX"] = {function() return self:getSnapX() end, iconSnapX, function() self:toggleSnapX() end},
-        ["snapY"] = {function() return self:getSnapY() end, iconSnapY, function() self:toggleSnapY() end}
+        ["snapY"] = {function() return self:getSnapY() end, iconSnapY, function() self:toggleSnapY() end},
+        ["spin"] = {function() return self:getSpin() end, iconSpin, function() self:toggleSpin() end}
     }
 
     self.x = x
@@ -136,6 +138,11 @@ function Switchbar:toggleSnapY()
     self.host:setSnapY(not previous)
 end
 
+function Switchbar:toggleSpin()
+    local previous = self:getSpin()
+    self.host:setSpin(not previous)
+end
+
 -- Getters
 
 function Switchbar:getX()
@@ -176,6 +183,10 @@ end
 
 function Switchbar:getSnapY()
     return self.host:snapYIsOn()
+end
+
+function Switchbar:getSpin()
+    return self.host:spinIsOn()
 end
 
 return {Switchbar = Switchbar}
