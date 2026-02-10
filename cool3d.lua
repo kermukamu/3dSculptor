@@ -1054,6 +1054,411 @@ function Cool3d:addRectangularCuboid(x1, y1, x2, y2, height, plane, connectLines
     end
 end
 
+function Cool3d:extrudeSelectedAroundPivot(px, py, pz, plane, segments)
+    segments = segments or 1
+    if segments < 2 then
+        return "At least 2 segments required"
+    end
+
+    plane = plane or "xy"
+    plane = string.lower(plane)
+
+    if plane ~= "xy" and plane ~= "yx" and
+       plane ~= "xz" and plane ~= "zx" and
+       plane ~= "yz" and plane ~= "zy" then
+        return "Plane parameter is incorrect"
+    end
+
+    -- Collect selected vertices
+    local selectedIndices = {}
+    local selectedSet = {}
+    for i = 1, #self.points do
+        if self.selectedVertices[i] then
+            table.insert(selectedIndices, i)
+            selectedSet[i] = true
+        end
+    end
+
+    if #selectedIndices == 0 then
+        return "No vertices selected"
+    end
+
+    -- Positions relative to pivot
+    local relPos = {}
+    for _, idx in ipairs(selectedIndices) do
+        local v = self.points[idx]
+        relPos[idx] = { v[1] - px, v[2] - py, v[3] - pz }
+    end
+
+    -- Faces to copy (all vertices selected)
+    local facesToCopy = {}
+    if self.faces and #self.faces > 0 then
+        for fi, face in ipairs(self.faces) do
+            local keepFace = true
+            for _, vi in ipairs(face) do
+                if not selectedSet[vi] then
+                    keepFace = false
+                    break
+                end
+            end
+            if keepFace then
+                table.insert(facesToCopy, fi)
+            end
+        end
+    end
+
+    -- Edges of the selection (for bridging faces)
+    -- Each (i -> j) only once with i < j.
+    local edges = {}
+    for _, i in ipairs(selectedIndices) do
+        local links = self.lines[i]
+        if links then
+            for _, j in ipairs(links) do
+                if selectedSet[j] then
+                    local a, b = i, j
+                    if a > b then a, b = b, a end -- normalize
+                    edges[a] = edges[a] or {}
+                    edges[a][b] = true
+                end
+            end
+        end
+    end
+
+    -- Flatten edge table into list { {i,j}, ... }
+    local edgeList = {}
+    for i, row in pairs(edges) do
+        for j, _ in pairs(row) do
+            table.insert(edgeList, {i, j})
+        end
+    end
+
+    -- Create copies of vertices around pivot
+    local angleStep = 2 * math.pi / segments
+
+    -- indexMaps[layer][origIndex] = newIndex
+    -- layer 0 is the original selection (no new vertices)
+    local indexMaps = {}
+    indexMaps[0] = {}
+    for _, idx in ipairs(selectedIndices) do
+        indexMaps[0][idx] = idx
+    end
+
+    for layer = 1, segments - 1 do
+        local angle = angleStep * layer
+        local cosA = math.cos(angle)
+        local sinA = math.sin(angle)
+
+        local indexMap = {}
+
+        for _, idx in ipairs(selectedIndices) do
+            local rp = relPos[idx]
+            local dx, dy, dz = rp[1], rp[2], rp[3]
+
+            local rx, ry, rz
+            if plane == "xy" or plane == "yx" then
+                -- Rotate around Z
+                rx =  cosA * dx - sinA * dy
+                ry =  sinA * dx + cosA * dy
+                rz =  dz
+            elseif plane == "xz" or plane == "zx" then
+                -- Rotate around Y
+                rx =  cosA * dx - sinA * dz
+                ry =  dy
+                rz =  sinA * dx + cosA * dz
+            elseif plane == "yz" or plane == "zy" then
+                -- Rotate around X
+                rx =  dx
+                ry =  cosA * dy - sinA * dz
+                rz =  sinA * dy + cosA * dz
+            end
+
+            local newX = px + rx
+            local newY = py + ry
+            local newZ = pz + rz
+
+            table.insert(self.points, {newX, newY, newZ})
+            local newIndex = #self.points
+            self.lines[newIndex] = {}
+            indexMap[idx] = newIndex
+        end
+
+        indexMaps[layer] = indexMap
+    end
+
+    -- Copy lines within each copy (so each ring has same internal edges)
+    for layer = 1, segments - 1 do
+        local indexMap = indexMaps[layer]
+        for _, i in ipairs(selectedIndices) do
+            local newI = indexMap[i]
+            local origLinks = self.lines[i]
+            if newI and origLinks then
+                for _, j in ipairs(origLinks) do
+                    if selectedSet[j] then
+                        local newJ = indexMap[j]
+                        if newJ then
+                            table.insert(self.lines[newI], newJ)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- Copy faces for each copy (original faces swept around)
+    if #facesToCopy > 0 then
+        for layer = 1, segments - 1 do
+            local indexMap = indexMaps[layer]
+            for _, fi in ipairs(facesToCopy) do
+                local origFace = self.faces[fi]
+                local newFace = {}
+
+                for _, vi in ipairs(origFace) do
+                    local newVi = indexMap[vi]
+                    if not newVi then
+                        newFace = nil
+                        break
+                    end
+                    table.insert(newFace, newVi)
+                end
+
+                if newFace and #newFace >= 3 then
+                    table.insert(self.faces, newFace)
+                    local col = self.faceColors[fi] or {1,1,1,1}
+                    table.insert(self.faceColors, {col[1], col[2], col[3], col[4]})
+                end
+            end
+        end
+    end
+
+    -- Bridge lines between consecutive layers (including last -> first)
+    -- For each selected vertex, connect corresponding vertices on
+    -- layer L and L+1, and finally layer (segments-1) back to 0.
+    for _, idx in ipairs(selectedIndices) do
+        for layer = 0, segments - 2 do
+            local a = indexMaps[layer][idx]
+            local b = indexMaps[layer + 1][idx]
+            if a and b then
+                table.insert(self.lines[a], b)
+            end
+        end
+
+        -- Close the loop: last layer to original layer 0
+        local last = indexMaps[segments - 1][idx]
+        local first = indexMaps[0][idx] -- original
+        if last and first then
+            table.insert(self.lines[last], first)
+        end
+    end
+
+    -- Bridge faces between layers using original edges
+    -- For each original edge (i,j) and each pair of layers,
+    -- create a quad: [i_L, j_L, j_(L+1), i_(L+1)]
+    -- plus closing ring between last and first.
+    local color = self.host:getActiveColor() or {1,1,1,1}
+    local r, g, b, o =color[1] or 1, color[2] or 1,
+        color[3] or 1, color[4] or 0.5
+
+    -- Between layer L and L+1
+    for _, edge in ipairs(edgeList) do
+        local i, j = edge[1], edge[2]
+
+        for layer = 0, segments - 2 do
+            local iA = indexMaps[layer][i]
+            local jA = indexMaps[layer][j]
+            local iB = indexMaps[layer + 1][i]
+            local jB = indexMaps[layer + 1][j]
+
+            if iA and jA and iB and jB then
+                self:addFace({iA, jA, jB, iB}, r, g, b, o)
+            end
+        end
+
+        -- Close ring: last layer <-> original (0)
+        local iLast = indexMaps[segments - 1][i]
+        local jLast = indexMaps[segments - 1][j]
+        local iFirst = indexMaps[0][i]
+        local jFirst = indexMaps[0][j]
+
+        if iLast and jLast and iFirst and jFirst then
+            self:addFace({iLast, jLast, jFirst, iFirst}, r, g, b, o)
+        end
+    end
+
+    return "Copied selection around pivot with bridges"
+end
+
+function Cool3d:extrudeSelectedTo(px, py, pz, autoselect)
+    local selectedIndices = {}
+    local selectedSet = {}
+    local autoselectVertices = {}
+
+    for i = 1, #self.points do
+        if self.selectedVertices[i] then
+            table.insert(selectedIndices, i)
+            selectedSet[i] = true
+        end
+    end
+
+    if #selectedIndices == 0 then
+        return "No vertices selected"
+    end
+
+    -- Compute selection center and translation offset to target
+    -- New copy will be translated so its center is at (px, py, pz)
+    local xSum, ySum, zSum = 0, 0, 0
+    for _, idx in ipairs(selectedIndices) do
+        local v = self.points[idx]
+        xSum = xSum + v[1]
+        ySum = ySum + v[2]
+        zSum = zSum + v[3]
+    end
+
+    local count = #selectedIndices
+    local cx = xSum / count
+    local cy = ySum / count
+    local cz = zSum / count
+
+    local offX = px - cx
+    local offY = py - cy
+    local offZ = pz - cz
+
+    -- Build edge list within selection (unique edges i<j)
+    local edges = {}
+    for _, i in ipairs(selectedIndices) do
+        local links = self.lines[i]
+        if links then
+            for _, j in ipairs(links) do
+                if selectedSet[j] then
+                    local a, b = i, j
+                    if a > b then a, b = b, a end
+                    edges[a] = edges[a] or {}
+                    edges[a][b] = true
+                end
+            end
+        end
+    end
+
+    local edgeList = {}
+    for i, row in pairs(edges) do
+        for j, _ in pairs(row) do
+            table.insert(edgeList, {i, j})
+        end
+    end
+
+    -- Determine faces fully inside selection (to duplicate)
+    local facesToCopy = {}
+    if self.faces and #self.faces > 0 then
+        for fi, face in ipairs(self.faces) do
+            local keepFace = true
+            for _, vi in ipairs(face) do
+                if not selectedSet[vi] then
+                    keepFace = false
+                    break
+                end
+            end
+            if keepFace then
+                table.insert(facesToCopy, fi)
+            end
+        end
+    end
+
+    -- Create translated copy of all selected vertices
+    local indexMap = {}
+
+    for _, idx in ipairs(selectedIndices) do
+        local v = self.points[idx]
+        local x, y, z = v[1], v[2], v[3]
+
+        local newX = x + offX
+        local newY = y + offY
+        local newZ = z + offZ
+
+        table.insert(self.points, {newX, newY, newZ})
+        local newIndex = #self.points
+        if autoselect then
+            table.insert(autoselectVertices, newIndex)
+        end
+        self.lines[newIndex] = {}
+
+        indexMap[idx] = newIndex
+    end
+
+    -- Copy internal lines into the new copy
+    for _, i in ipairs(selectedIndices) do
+        local newI = indexMap[i]
+        local links = self.lines[i]
+
+        if newI and links then
+            for _, j in ipairs(links) do
+                if selectedSet[j] then
+                    local newJ = indexMap[j]
+                    if newJ then
+                        table.insert(self.lines[newI], newJ)
+                    end
+                end
+            end
+        end
+    end
+
+    -- Copy fully selected faces for the new copy
+    if #facesToCopy > 0 then
+        for _, fi in ipairs(facesToCopy) do
+            local origFace = self.faces[fi]
+            local newFace = {}
+
+            for _, vi in ipairs(origFace) do
+                local newVi = indexMap[vi]
+                if not newVi then
+                    newFace = nil
+                    break
+                end
+                table.insert(newFace, newVi)
+            end
+
+            if newFace and #newFace >= 3 then
+                table.insert(self.faces, newFace)
+                local col = self.faceColors[fi] or {1,1,1,1}
+                table.insert(self.faceColors, {col[1], col[2], col[3], col[4]})
+            end
+        end
+    end
+
+    -- Bridging lines: connect each original vertex to its copy
+    for _, i in ipairs(selectedIndices) do
+        local newI = indexMap[i]
+        if newI then
+            table.insert(self.lines[i], newI)
+        end
+    end
+
+    -- Bridging faces: for each selected edge (i,j) add quad [i, j, newJ, newI]
+    local color = self.host:getActiveColor() or {1,1,1,1}
+    local r = color[1] or 1
+    local g = color[2] or 1
+    local b = color[3] or 1
+    local o = color[4] or 0.5
+
+    for _, edge in ipairs(edgeList) do
+        local i, j = edge[1], edge[2]
+        local newI = indexMap[i]
+        local newJ = indexMap[j]
+
+        if newI and newJ then
+            self:addFace({i, j, newJ, newI}, r, g, b, o)
+        end
+    end
+
+    if autoselect then
+        -- Automatically replace selection with the newly created vertices
+        self:deSelect()
+        for _, vi in ipairs(autoselectVertices) do
+            self:toggleVertexSelection(vi, true)
+        end
+    end
+
+    return "Translated copy of selection to pivot with bridges created"
+end
+
 function Cool3d:deSelect()
     self.selectedVertices = {}
     self.firstSelectedVert = nil
@@ -1305,6 +1710,7 @@ function Cool3d:getAxisMarkerX() return self.host:getX() + self.host:getW()/8 en
 function Cool3d:getAxisMarkerY() return self.host:getY() + self.host:getH() - self.host:getH()/8 end
 function Cool3d:getAllModelWithinView() return self.allModelWithinView end
 function Cool3d:getDZ(value) return self.dz end
+function Cool3d:getZCompression() return self.zCompression end
 function Cool3d:getFaces() return self.faces end
 function Cool3d:getFaceColors() return self.faceColors end
 function Cool3d:getSelectedCount()

@@ -251,10 +251,11 @@ function Panel2d:mousePressed(mx, my, button)
 
     if toolMode == "move selected" and self.currentModel:getSelectedCount() > 0 then
         self:getCurrentModel():saveToBuffer()
-    end 
+    end
 
     if not (((lShiftDown or lAltDown) and toolMode == "selection") 
-        or toolMode == "move selected" or toolMode == "move camera") then 
+        or toolMode == "move selected" or toolMode == "move camera"
+        or toolMode == "extrude selected") then 
         self.currentModel:deSelect() 
     end
 
@@ -262,6 +263,37 @@ function Panel2d:mousePressed(mx, my, button)
         self:getCurrentModel():saveToBuffer()
         local tx, ty = self:screenPosToModelPos(mx, my)
         self.currentModel:addVertexOnPlane(tx, ty, self.axes)
+    end
+
+    if toolMode == "extrude selected" then
+        if subMode == "around pivot" then
+            self:getCurrentModel():saveToBuffer()
+            local tx, ty = self:screenPosToModelPos(mx, my)
+            if self.axes == "xz" or self.axes == "zx" then
+                local _, sCenter, _ = self.currentModel:getSelectionCenter()
+                self.currentModel:extrudeSelectedAroundPivot(tx, sCenter, ty, self.axes, 8)
+            elseif self.axes == "xy" or self.axes == "yx" then
+                local _, _, sCenter = self.currentModel:getSelectionCenter()
+                self.currentModel:extrudeSelectedAroundPivot(tx, ty, sCenter, self.axes, 8)
+            elseif self.axes == "yz" or self.axes == "zy" then
+                local sCenter, _, _ = self.currentModel:getSelectionCenter()
+                self.currentModel:extrudeSelectedAroundPivot(Center, tx, ty, self.axes, 8)
+            end
+        elseif subMode == "along line" then
+            self:getCurrentModel():saveToBuffer()
+            local tx, ty = self:screenPosToModelPos(mx, my)
+            if self.axes == "xz" or self.axes == "zx" then
+                local _, sCenter, _ = self.currentModel:getSelectionCenter()
+                self.currentModel:extrudeSelectedTo(tx, sCenter, ty, self.axes, autoselect)
+            elseif self.axes == "xy" or self.axes == "yx" then
+                local _, _, sCenter = self.currentModel:getSelectionCenter()
+                self.currentModel:extrudeSelectedTo(tx, ty, sCenter, self.axes, autoselect)
+            elseif self.axes == "yz" or self.axes == "zy" then
+                local sCenter, _, _ = self.currentModel:getSelectionCenter()
+                local autoselect = true
+                self.currentModel:extrudeSelectedTo(sCenter, tx, ty, self.axes, autoselect)
+            end
+        end
     end
 
     self.prevClickX = mx
