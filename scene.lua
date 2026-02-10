@@ -41,7 +41,7 @@ function Scene.new(title, screenWidth, screenHeight)
 	self.subMode = "rectangle"
 	self.circleSegments = 64
 	self.sphereSegments = 12
-	self.activeColor = {0.4, 0.4, 0.8, 0.6} -- Default
+	self.activeColor = {0.4, 0.4, 0.8, 1} -- Default
 
 	-- Position console to bottom left third
 	local consoleW = screenWidth * (1 / 2)
@@ -109,6 +109,7 @@ function Scene.new(title, screenWidth, screenHeight)
 		["f"] = {function() self:byActionF() end, "Creates a face between selected vertices"},
 		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if left alt is held down"},
 		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
+		["x"] = {function() self:byActionX() end, "Turns extrusion mode on"},
 		["z"] = {function() self:byActionZ() end, "Reverts action if left ctrl is held down"},
 		["s"] = {function() self:byActionTurnSelectionModeOn() end, "Turns selection mode on"},
 		["e"] = {function() self:byActionTurnMoveModeOn() end, "Turns move selected mode on"},
@@ -267,7 +268,7 @@ function Scene:byActionC()
 	else
 		self.toolMode = "move camera"
 
-		-- If already in any vertex submode, shift submode forward
+		-- If already in any move camera submode, shift submode forward
 		self.subMode = self.toolbar:next(self.toolMode, self.subMode)
 	end
 end
@@ -297,6 +298,13 @@ function Scene:byActionF()
 	end
 end
 
+function Scene:byActionX()
+	self.toolMode = "extrude selected"
+
+	-- If already in any extrusion tool submode, shift submode forward
+	self.subMode = self.toolbar:next(self.toolMode, self.subMode)
+end
+
 function Scene:byActionZ()
 	if self.activeSection ~= self.console and love.keyboard.isDown("lctrl") then
 		self:getCurrentModel():loadFromBuffer()
@@ -311,7 +319,7 @@ end
 function Scene:byActionTurnMoveModeOn()
 	self.toolMode = "move selected"
 
-	-- If already in any vertex submode, shift submode forward
+	-- If already in any move selected submode, shift submode forward
 	self.subMode = self.toolbar:next(self.toolMode, self.subMode)
 end
 
