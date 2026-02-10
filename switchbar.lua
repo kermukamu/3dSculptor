@@ -13,6 +13,8 @@ function Switchbar.new(x, y, iconSize, host)
     local iconDrawFaces = love.graphics.newImage(path .. "flag_draw_faces.png")
     local iconAddLines = love.graphics.newImage(path .. "flag_add_lines.png")
     local iconAddFaces = love.graphics.newImage(path .. "flag_add_faces.png")
+    local iconSnapX = love.graphics.newImage(path .. "flag_snap_x.png")
+    local iconSnapY = love.graphics.newImage(path .. "flag_snap_y.png")
 
     self.modes = {
         ["axisMarker"] = {function() return self:getAxisMarker() end, iconAxisMarker, function() self:toggleAxisMarker() end},
@@ -20,7 +22,9 @@ function Switchbar.new(x, y, iconSize, host)
         ["drawLines"] = {function() return self:getDrawLines() end, iconDrawLines, function() self:toggleDrawLines() end},
         ["drawFaces"] = {function() return self:getDrawFaces() end, iconDrawFaces, function() self:toggleDrawFaces() end},
         ["addLines"] = {function() return self:getAddLines() end, iconAddLines, function() self:toggleAddLines() end},
-        ["addFaces"] = {function() return self:getAddFaces() end, iconAddFaces, function() self:toggleAddFaces() end}
+        ["addFaces"] = {function() return self:getAddFaces() end, iconAddFaces, function() self:toggleAddFaces() end},
+        ["snapX"] = {function() return self:getSnapX() end, iconSnapX, function() self:toggleSnapX() end},
+        ["snapY"] = {function() return self:getSnapY() end, iconSnapY, function() self:toggleSnapY() end}
     }
 
     self.x = x
@@ -122,6 +126,16 @@ function Switchbar:toggleAddFaces()
     self.host:setAddFaces(not previous)
 end
 
+function Switchbar:toggleSnapX()
+    local previous = self:getSnapX()
+    self.host:setSnapX(not previous)
+end
+
+function Switchbar:toggleSnapY()
+    local previous = self:getSnapY()
+    self.host:setSnapY(not previous)
+end
+
 -- Getters
 
 function Switchbar:getX()
@@ -154,6 +168,14 @@ end
 
 function Switchbar:getAddFaces()
     return self.host:addFacesIsOn()
+end
+
+function Switchbar:getSnapX()
+    return self.host:snapXIsOn()
+end
+
+function Switchbar:getSnapY()
+    return self.host:snapYIsOn()
 end
 
 return {Switchbar = Switchbar}
