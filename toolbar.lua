@@ -20,13 +20,15 @@ function Toolbar.new(x, y, iconSize, host)
     local iconCameraRotate = love.graphics.newImage(path .. "rotate_camera.png")
     local iconExtrusionAlongLine = love.graphics.newImage(path .. "extrude.png")
     local iconExtrusionAroundPivot = love.graphics.newImage(path .. "extrude_around_pivot.png")
+    local iconColorPicker = love.graphics.newImage(path .. "colorpicker.png")
 
     self.modes = {
         ["selection"] = {{"vertex", iconSelectionVertex}, {"face", iconSelectionFaces}},
         ["move selected"] = {{"translate", iconMove}, {"rotate", iconRotate}},
         ["vertex"] = {{"single", iconVertex}, {"circle", iconCircle}, {"sphere", iconSphere}, {"rectangle", iconRectangle}, {"cuboid", iconCuboid}},
         ["move camera"] = {{"translate", iconCameraMove}, {"rotate", iconCameraRotate}},
-        ["extrude selected"] = {{"to point", iconExtrusionAlongLine}, {"around pivot", iconExtrusionAroundPivot}}
+        ["extrude selected"] = {{"to point", iconExtrusionAlongLine}, {"around pivot", iconExtrusionAroundPivot}},
+        ["color picker"] = {{"Face", iconColorPicker}}
     }
 
     self.x = x
@@ -117,7 +119,7 @@ end
 
 function Toolbar:next(tool, sub)
     for i=1, #self.modes[tool]-1, 1 do
-        if self.modes[tool][i][1] == sub then 
+        if self.modes[tool][i][1] == sub then
             return self.modes[tool][i+1][1]
         end
     end

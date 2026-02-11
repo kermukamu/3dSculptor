@@ -105,6 +105,7 @@ function Scene.new(title, screenWidth, screenHeight)
 		["f"] = {function() self:byActionF() end, "Creates a face between selected vertices"},
 		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if left alt is held down"},
 		["q"] = {function() self:byActionQ() end, "Sets active color to selected faces"},
+		["r"] = {function() self:byActionR() end, "Turns color picker on"},
 		["s"] = {function() self:byActionS() end, "Turns selection mode on"},
 		["v"] = {function() self:byActionV() end, "Turns vertex mode on"},
 		["x"] = {function() self:byActionX() end, "Turns extrusion mode on"},
@@ -282,6 +283,13 @@ function Scene:byActionQ()
 	if currentModel ~= nil then
 		currentModel:setSelectedFacesColor(self.activeColor)
 	end
+end
+
+function Scene:byActionR()
+	self.toolMode = "color picker"
+	
+	-- If already in a color picker submode, shift submode forward
+	self.subMode = self.toolbar:next(self.toolMode, self.subMode)
 end
 
 function Scene:byActionS()
