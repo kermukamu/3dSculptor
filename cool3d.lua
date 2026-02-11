@@ -1575,6 +1575,50 @@ function Cool3d:toggleFaceSelectionWithinRectangle(x1, y1, x2, y2, val)
     end
 end
 
+function Cool3d:getFaceColorWithinClick(x, y)
+    if not self.faces or #self.faces == 0 then return end
+
+    local bestFace = nil
+    local bestDepth = nil
+
+    for fi, face in ipairs(self.faces) do
+        local poly = {}
+        local depthSum = 0
+        local count = 0
+        local allHaveScreen = true
+
+        -- Build 2D polygon from visible vertices
+        for _, vi in ipairs(face) do
+            local s = self.screen[vi]
+            if not s then
+                allHaveScreen = false
+                break
+            end
+            poly[#poly + 1] = s[1]
+            poly[#poly + 1] = s[2]
+            depthSum = depthSum + s[3]
+            count = count + 1
+        end
+
+        if allHaveScreen and count >= 3 then
+            if self:isPointInPolygon(x, y, poly) then
+                local depth = depthSum / count -- average depth for sorting
+
+                -- Pick the closest face to camera (smallest depth)
+                if (bestFace == nil) or (depth < bestDepth) then
+                    bestFace = fi
+                    bestDepth = depth
+                end
+            end
+        end
+    end
+
+    if bestFace then
+        local fc = self.faceColors[bestFace]
+        return {fc[1], fc[2], fc[3], fc[4]}
+    end
+end
+
 function Cool3d:transformSelected(dx, dy, dz)
     for i, selected in pairs(self.selectedVertices) do
         if selected then

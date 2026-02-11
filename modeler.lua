@@ -126,8 +126,14 @@ function Modeler:mousePressed(mx, my, button)
 	if not (((love.keyboard.isDown("lshift") or love.keyboard.isDown("lalt") 
 		or love.keyboard.isDown("space")) and toolMode == "selection") 
 		or toolMode == "move selected" or toolMode == "move camera"
-		or toolMode == "extrude selected") then
+		or toolMode == "extrude selected" or toolMode == "color picker") then
 		self:deSelectAll()
+	end
+	if toolMode == "color picker" and button == 1 then
+		local picked = self.currentModel:getFaceColorWithinClick(mx, my)
+		if picked ~= nil then
+			self.host:setActiveColor(picked[1], picked[2], picked[3], picked[4])
+		end
 	end
 	self.prevClickX = mx
 	self.prevClickY = my
