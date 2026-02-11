@@ -66,8 +66,6 @@ function ColorTool:update(dt)
         s:update(dt)
         if love.mouse.isDown(1) then
             self.selectedColor[i] = s:getState()
-            print(tostring(self.selectedColor[i]))
-            io.stdout:flush()
         end
     end
 end
