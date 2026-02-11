@@ -14,12 +14,5 @@ The project includes an example model (made with the tool itself), which can be 
 
 Example photos:
 
-1) A gem model and spheres with faces
-<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/8575b88a-3fc8-4c81-a94e-0ec1d2958a9f" />
-
-2) A "dude" modeled within the editor
-<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/c0d16a8d-7dd0-4302-8e9f-8aea3fd68599" />
-
-3) The gem model and two colored spheres with varying opacity. Wireframe and vertices are hidden.
-<img width="1918" height="1023" alt="image" src="https://github.com/user-attachments/assets/b87acc0b-12cb-4b08-aa72-d7aa8cece625" />
-
+1) A "rocket-like" structure shaped within the editor
+<img width="1918" height="1028" alt="image" src="https://github.com/user-attachments/assets/3943458a-937d-456f-9245-8034e60bb5bb" />
