@@ -1619,6 +1619,14 @@ function Cool3d:getFaceColorWithinClick(x, y)
     end
 end
 
+function Cool3d:transformModel(dx, dy, dz)
+    for i, p in ipairs(self.points) do
+        local v = p
+        local vx, vy, vz = v[1]+dx, v[2]+dy, v[3]+dz
+        self.points[i] = {vx, vy, vz}
+    end
+end
+
 function Cool3d:transformSelected(dx, dy, dz)
     for i, selected in pairs(self.selectedVertices) do
         if selected then
@@ -1785,6 +1793,31 @@ function Cool3d:multiplyModelSize(m)
             self.points[i] = {vx, vy, vz}
         end
     end
+end
+
+function Cool3d:centerModel()
+    local x, y, z = self:getModelCenter()
+    self:transformModel(-x, -y, -z)
+end
+
+function Cool3d:getModelCenter()
+    local xSum, ySum, zSum = 0, 0, 0
+    local count = 0
+    for _, p in pairs(self.points) do
+       local x, y, z = p[1], p[2], p[3]
+       xSum = xSum + x
+       ySum = ySum + y
+       zSum = zSum + z
+       count = count + 1
+    end
+    if count == 0 then
+        return 0, 0, 0
+    end
+
+    local xAvg = xSum / count
+    local yAvg = ySum / count
+    local zAvg = zSum / count
+    return xAvg, yAvg, zAvg
 end
 
 function Cool3d:getSelectionCenter()
