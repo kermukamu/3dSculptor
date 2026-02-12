@@ -1481,25 +1481,23 @@ end
 
 function Cool3d:toggleVertexSelectionWithinClick(x, y, val)
     local iSelected = nil
-    for i=1, #self.screen, 1 do
-        if self.screen[i] == nil then 
-            -- Silly lua doesn't support continue...
-        elseif self:isWithinCircle(x, y, self.screen[i][1], self.screen[i][2], 
-            self.clickRange) then
-            if (iSelected == nil) or (self.screen[i][3] < self.screen[iSelected][3]) then
+    for i = 1, #self.points do
+        local s = self.screen[i]
+        if s and self:isWithinCircle(x, y, s[1], s[2], self.clickRange) then
+            -- Closest to camera
+            if (not iSelected) or (s[3] < self.screen[iSelected][3]) then
                 iSelected = i
             end
         end
     end
-    if iSelected ~= nil then self:toggleVertexSelection(iSelected, val) end
+    if iSelected then self:toggleVertexSelection(iSelected, val) end
 end
 
 function Cool3d:toggleVertexSelectionWithinRectangle(x1, y1, x2, y2, val)
-    for i=1, #self.screen, 1 do
-        if self.screen[i] == nil then 
-            -- Silly lua doesn't support continue...
-        elseif self:isWithinRectangle(x1, y1, x2, y2, self.screen[i][1], self.screen[i][2]) then
-            if i ~= nil then self:toggleVertexSelection(i, val) end
+    for i = 1, #self.points do
+        local s = self.screen[i]
+        if s and self:isWithinRectangle(x1, y1, x2, y2, s[1], s[2]) then
+            self:toggleVertexSelection(i, val)
         end
     end
 end
