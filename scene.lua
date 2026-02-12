@@ -104,7 +104,7 @@ function Scene.new(title, screenWidth, screenHeight)
 		["e"] = {function() self:byActionE() end, "Turns move selected mode on"},
 		["f"] = {function() self:byActionF() end, "Creates a face between selected vertices"},
 		["j"] = {function() self:byActionJ() end, "Joins selected vertices or disconnects them if left alt is held down"},
-		["m"] = {function() self:byActionM() end, "Centers the model around origin if left control is held down"},
+		["m"] = {function() self:byActionM() end, "Centers selected vertices. Centers the complete model around origin if left control is held down"},
 		["q"] = {function() self:byActionQ() end, "Sets active color to selected faces"},
 		["r"] = {function() self:byActionR() end, "Turns color picker on"},
 		["s"] = {function() self:byActionS() end, "Turns selection mode on"},
@@ -282,9 +282,11 @@ end
 function Scene:byActionM()
 	local currentModel = self:getCurrentModel()
 	if currentModel ~= nil then
+		currentModel:saveToBuffer()
 		if love.keyboard.isDown("lctrl") then
-			currentModel:saveToBuffer()
 			currentModel:centerModel()
+		else
+			currentModel:centerSelected()
 		end
 	end
 end
