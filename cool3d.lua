@@ -1798,6 +1798,11 @@ function Cool3d:centerModel()
     self:transformModel(-x, -y, -z)
 end
 
+function Cool3d:centerSelected()
+    local x, y, z = self:getSelectionCenter()
+    self:transformSelected(-x, -y, -z)
+end
+
 function Cool3d:getModelCenter()
     local xSum, ySum, zSum = 0, 0, 0
     local count = 0
