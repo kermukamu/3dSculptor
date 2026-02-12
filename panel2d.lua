@@ -20,7 +20,7 @@ function Panel2d.new(x, y, w, h, axes, host)
     self.prevClickX = 0
     self.prevClickY = 0
 
-    self.panSpeed = 100
+    self.panSpeed = 400
     self.dx = 0
     self.dy = 0
     self.viewScale = 1

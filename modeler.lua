@@ -17,7 +17,7 @@ function Modeler.new(x, y, w, h, host)
 
 	self.toolMode = self.host:getToolMode()
 	self.subMode = self.host:getSubToolMode()
-	self.panSpeed = 100
+	self.panSpeed = 400
 
 	-- Setup 3D model
 	local modelX2D = (self.x + self.w) / 2 -- X of projection, in other words, x if z = 0 
