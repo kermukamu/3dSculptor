@@ -57,6 +57,7 @@ function Console.new(x, y, w, h, host)
 		["Space+LeftMouse"] = "Rotates 3D view",
 		["Shift+LeftMouse"] = "Holds selection if in selection mode",
 		["Ctrl+C"] = "Copy selection",
+		["Ctrl+M"] = "Transform model to origin",
 		["Ctrl+V"] = "Paste selection",
 		["Ctrl+Z"] = "Reverse action",
 		["Alt+J"] = "Disconnect selected vertices",
